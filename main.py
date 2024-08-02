@@ -24,6 +24,9 @@ class Word:
 
         self.text = text
 
+    def getSynonyms(self):
+        return self.synonyms
+
 class WordsDict:
     def __init__(self, wordsList, name = ""):
         self.wordsDict =  defaultdict(None)
@@ -44,13 +47,25 @@ class WordsDict:
     def printWordsDict(self):
         dictName = self.name if self.name else "WordsDict"
         print(f"Printing words for {dictName}:")
-        print([wordObj.text for wordObj in self.wordsDict.values()])
+        print([wordObj.text for wordObj in self.wordsDict.values()], "\n")
 
     def getWordObj(self, wordStr):
         return self.wordsDict[wordStr] if wordStr in self.wordsDict else None
     
     def getWordsStrs(self):
         return [wordObj.text for wordObj in self.wordsDict.values()]
+    
+    def addEdges(self, strEdges, edgeType = "synonyms"):
+        for wordStr1, wordStr2 in strEdges:
+            word1Obj, word2Obj = self.wordsDict[wordStr1], self.wordsDict[wordStr2]
+            getattr(word1Obj, edgeType).append(word2Obj)
+            getattr(word2Obj, edgeType).append(word1Obj)
+
+    def printEdges(self, edgeType = "synonyms"):
+        for wordObj in self.wordsDict.values():
+            print(f"{wordObj.text}'s synonyms:")
+            print([synonym.text for synonym in wordObj.getSynonyms()], "\n")
+
     
     
 
