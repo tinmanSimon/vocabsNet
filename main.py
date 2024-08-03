@@ -31,6 +31,20 @@ class Word:
         self.__edgesDict[edgeType].append(destWordObj)
         self.__edgesMemory[edgeType].add(destWordObj.text)
 
+    def removeEdge(self, destWordObj, edgeType):
+        if not destWordObj in self.__edgesDict[edgeType]:
+            print(f"Error: {self.text} tried to remove '{edgeType}' edge to {destWordObj.text}, but the edge doesn't exist!")
+            return 
+        self.__edgesDict[edgeType].remove(destWordObj)
+        self.__edgesMemory[edgeType].remove(destWordObj.text)
+
+    def removeEdgeByStr(self, destWordStr, edgeType):
+        destWordObj = next((wordObj for wordObj in self.__edgesDict[edgeType] if destWordStr == wordObj.text), None)
+        if not destWordObj:
+            print(f"Error: {self.text} tried to remove '{edgeType}' edge to {destWordStr}, but the edge doesn't exist!")
+            return 
+        self.removeEdge(destWordObj, edgeType)
+
     def printNeighbors(self, edgeType):
         wordsObjList = self.__edgesDict[edgeType]
         if not wordsObjList: return
@@ -50,13 +64,23 @@ class WordsDict:
             self.wordsDict[w] = Word(w)
         self.name = name
 
+    def __validationCheck(self, functionName, invalidExistStatus, wordStr1, wordStr2 = ""):
+        if self.wordExists(wordStr1) == invalidExistStatus:
+            print(f"Error {functionName}: {self.name} validationCheck, '{wordStr1}' exist status == {invalidExistStatus}!")
+            return False
+        elif wordStr2 and (self.wordExists(wordStr2) == invalidExistStatus):
+            print(f"Error {functionName}: {self.name} validationCheck, '{wordStr2}' exist status == {invalidExistStatus}!")
+            return False
+        elif wordStr1 == wordStr2:
+            print(f"Error {functionName}: {self.name} validationCheck, '{wordStr1}' is dealing with itself!")
+            return False
+        return True
+
     def wordExists(self, wordStr):
         return wordStr in self.wordsDict
 
     def addWordStr(self, wordStr):
-        if self.wordExists(wordStr): 
-            print(f"Error addWordStr: {self.name} tried to add '{wordStr}', but it already exists!")
-            return
+        if not self.__validationCheck("addWordStr", True, wordStr): return
         self.wordsDict[wordStr] = Word(wordStr)
 
     def addWordStrs(self, wordStrList):
@@ -64,9 +88,7 @@ class WordsDict:
             self.addWordStr(w)
 
     def addWordObj(self, wordObj):
-        if self.wordExists(wordObj.text): 
-            print(f"Error addWordObj: {self.name} tried to add '{wordObj.text}', but it already exists!")
-            return
+        if not self.__validationCheck("addWordObj", True, wordObj.text): return
         self.wordsDict[wordObj.text] = wordObj
 
     def getWordObj(self, wordStr):
@@ -76,6 +98,7 @@ class WordsDict:
         return list(self.wordsDict.keys())
     
     def addEdge(self, wordStr1, wordStr2, edgeType = "synonyms"):
+        if not self.__validationCheck("addEdge", False, wordStr1, wordStr2): return 
         wordObj1, wordObj2 = self.wordsDict[wordStr1], self.wordsDict[wordStr2]
         wordObj1.addEdge(wordObj2, edgeType)
         wordObj2.addEdge(wordObj1, edgeType)
@@ -83,6 +106,16 @@ class WordsDict:
     def addEdges(self, strEdges, edgeType = "synonyms"):
         for wordStr1, wordStr2 in strEdges:
             self.addEdge(wordStr1, wordStr2, edgeType)
+
+    def removeEdge(self, wordStr1, wordStr2, edgeType = "synonyms"):
+        if not self.__validationCheck("removeEdge", False, wordStr1, wordStr2): return 
+        wordObj1, wordObj2 = self.wordsDict[wordStr1], self.wordsDict[wordStr2]
+        wordObj1.removeEdgeByStr(wordObj2.text, edgeType)
+        wordObj2.removeEdgeByStr(wordObj1.text, edgeType)
+
+    def removeEdges(self, strEdges, edgeType = "synonyms"):
+        for wordStr1, wordStr2 in strEdges:
+            self.removeEdge(wordStr1, wordStr2, edgeType)
 
     def printWordsDict(self):
         print(f"Printing words for {self.name}:")
@@ -99,6 +132,7 @@ class WordsDict:
             wordObj.printAllNeighbors()
             print("\n")
         print("\n")
+
 
     
 
