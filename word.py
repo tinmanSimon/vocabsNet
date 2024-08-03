@@ -3,6 +3,10 @@ from collections import defaultdict
 class Word:
     def __init__(self, text):
         self.text = text
+
+        # internal dictionary for this Word's connected neighbors.
+        # the key is edgeType, like "synonyms", "antonyms", etc.
+        # the value is a list of connected neighbors under that edgeType.
         self.__edgesDict = defaultdict(list)
 
         # internal variable for memorizing the connected Words' texts
