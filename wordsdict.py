@@ -64,6 +64,16 @@ class WordsDict:
         for wordStr1, wordStr2 in strEdges:
             self.removeEdge(wordStr1, wordStr2, edgeType)
 
+    def removeWordByStr(self, wordStr):
+        if not self.__validationCheck("removeWordByStr", False, wordStr): return 
+        wordObj = self.__wordsDict[wordStr]
+        wordObj.disconnectAllEdges()
+        self.__wordsDict.pop(wordStr)
+
+    def removeWordByStrs(self, wordStrList):
+        for wordStr in wordStrList:
+            self.removeWordByStr(wordStr)
+
     def printWordsDict(self):
         print(f"Printing words for {self.name}:")
         print(self.getAllWordsStrs(), "\n")

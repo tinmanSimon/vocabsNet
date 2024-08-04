@@ -17,6 +17,10 @@ class Word:
 
     def __edgeExists(self, destWordStr, edgeType = "synonyms"):
         return destWordStr in self.__edgesMemory[edgeType]
+    
+    def __cleanUp(self):
+        self.__edgesDict.clear()
+        self.__edgesMemory.clear()
 
     def addEdge(self, destWordObj, edgeType = "synonyms"):
         if self.__isEdgeToMyself(destWordObj):
@@ -41,6 +45,12 @@ class Word:
             print(f"Error: {self.text} tried to remove '{edgeType}' edge to {destWordStr}, but the edge doesn't exist!")
             return 
         self.removeEdge(destWordObj, edgeType)
+
+    def disconnectAllEdges(self):
+        for edgeType, neighborsList in self.__edgesDict.items():
+            for neighbor in neighborsList:
+                neighbor.removeEdgeByStr(self.text, edgeType)
+        self.__cleanUp()
 
     def printNeighbors(self, edgeType):
         wordsObjList = self.__edgesDict[edgeType]
