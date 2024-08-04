@@ -1,0 +1,4 @@
+npm install http-server
+http-server --cors # this is important, have to run a local server with cors
+
+# then just run the html
