@@ -30,6 +30,6 @@ vocabDict.removeEdges([("C", "b"), ("repent", "a")], "uncategorized edges")
 vocabDict.printAllEdges()
 vocabDict.printWordsDict()
 
-# vocabDict.removeWordByStrs(["repent", "a"])
+vocabDict.removeWordByStrs(["repent", "a"])
 # vocabDict.printAllEdges()
 # vocabDict.printWordsDict()

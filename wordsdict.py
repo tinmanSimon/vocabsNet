@@ -10,6 +10,7 @@ class WordsDict:
         for w in wordsList:
             self.__wordsDict[w] = Word(w)
         self.name = name
+        self.__historyStack = [w for w in wordsList]
 
     def __validationCheck(self, functionName, invalidExistStatus, wordStr1, wordStr2 = ""):
         if self.wordExists(wordStr1) == invalidExistStatus:
@@ -29,6 +30,7 @@ class WordsDict:
     def addWordStr(self, wordStr):
         if not self.__validationCheck("addWordStr", True, wordStr): return
         self.__wordsDict[wordStr] = Word(wordStr)
+        self.__historyStack.append(wordStr)
 
     def addWordStrs(self, wordStrList):
         for w in wordStrList:
@@ -37,6 +39,7 @@ class WordsDict:
     def addWordObj(self, wordObj):
         if not self.__validationCheck("addWordObj", True, wordObj.text): return
         self.__wordsDict[wordObj.text] = wordObj
+        self.__historyStack.append(wordObj.text)
 
     def getWordObj(self, wordStr):
         return self.__wordsDict[wordStr] if self.wordExists(wordStr) else None
@@ -69,6 +72,7 @@ class WordsDict:
         wordObj = self.__wordsDict[wordStr]
         wordObj.disconnectAllEdges()
         self.__wordsDict.pop(wordStr)
+        self.__historyStack.remove(wordStr)
 
     def removeWordByStrs(self, wordStrList):
         for wordStr in wordStrList:
