@@ -8,7 +8,7 @@ import SpriteText from 'three-spritetext';
 function App() {
   const fg3dRef = useRef(null);
   const [nodesData, setNodesData] = useState({nodes : [], links : []}) 
-  const [nodeStyle, setNodeStyle] = useState("SpriteText") 
+  const [focusObject, setFocusObject] = useState({id:""}) 
   const fetchAPI = async () => {
     const response = await axios.get("http://127.0.0.1:8080/api/vocabnet");
     console.log(response.data);
@@ -19,7 +19,7 @@ function App() {
     fetchAPI()
   }, [])
 
-  const handleClick = useCallback(node => {
+  const handleNodeClick = useCallback(node => {
     // Aim at node from outside it
     const distance = 80;
     const distRatio = 1 + distance/Math.hypot(node.x, node.y, node.z);
@@ -28,23 +28,26 @@ function App() {
       node, // lookAt ({ x, y, z })
       3000  // ms transition duration
     );
+    setFocusObject(node);
+    console.log(node.description)
   }, [fg3dRef]);
 
-  const setNode3ObjectStyle = useCallback(node => {
-    if (nodeStyle == "SpriteText") {
+  const setNode3ObjectStyle = node => {
       const sprite = new SpriteText(node.id);
       sprite.material.depthWrite = false; // make sprite background transparent
       sprite.color = node.color;
       sprite.textHeight = 8;
       return sprite;
-    }
-  }, [nodeStyle]);
+  };
 
   return (
     <div>
+      <div>
+        {"focusObject: " + focusObject.id}
+      </div>
       <ForceGraph3d
         graphData={nodesData}
-        onNodeClick={handleClick}
+        onNodeClick={handleNodeClick}
         nodeAutoColorBy={"group"}
         nodeThreeObject={setNode3ObjectStyle}
         ref={fg3dRef}
