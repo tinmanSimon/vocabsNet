@@ -21,7 +21,7 @@ function App() {
 
   const handleClick = useCallback(node => {
     // Aim at node from outside it
-    const distance = 40;
+    const distance = 80;
     const distRatio = 1 + distance/Math.hypot(node.x, node.y, node.z);
     fg3dRef.current.cameraPosition(
       { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }, // new position
