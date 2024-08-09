@@ -114,13 +114,7 @@ function App() {
     const formData = new FormData(form);
     const formJson = Object.fromEntries(formData.entries());
     let searchId = String(formJson.myInput)
-    var mychildren = cloneArray(fg3dRef.current.scene().children)
-    let node = findNodeDataById(searchId)
-    if (node == null) {
-      console.error("Error: '" + searchId + "' doesn't exist in vocabNet!")
-      return
-    }
-    focusCameraOnNode(node)
+    focusCameraById(searchId)
   }
 
   return (
