@@ -7,7 +7,7 @@ from wordsdict import WordsDict
 app = Flask(__name__)
 cors = CORS(app, origins="*")
 dataConn = DataConnector()
-wordsList, edgesList = dataConn.getRandStrAndLinks(200, 150)
+wordsList, edgesList = dataConn.getAllWords(), dataConn.getAllEdges()
 vocabDict = WordsDict(wordsList, "Vocabularies")
 vocabDict.addEdges(edgesList, "synonyms")
 

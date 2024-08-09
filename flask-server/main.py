@@ -10,4 +10,9 @@ from word import Word
 from wordsdict import WordsDict
 from dataConnector import DataConnector
 
-d = DataConnector()
+def randGenUpdateDB():
+    d = DataConnector()
+    words, edges = d.getRandStrAndLinks(200, 300)
+    d.dropAll()
+    d.pushManyWords(words)
+    d.pushManyEdges(edges)

@@ -2,23 +2,42 @@ import random
 import string
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
-from credentials import uri
+from credentials import uri, dbName
 
 
 class DataConnector:
     def __init__(self):
-        self.client = None
-        self.connectMongo()
+        self.__mg_client = None
+        self.__connectMongo()
 
-    def connectMongo(self):
-        if self.client == None:
-            self.client = MongoClient(uri, server_api=ServerApi('1'))
-            try:
-                self.client.admin.command('ping')
-                print("Pinged your deployment. You successfully connected to MongoDB!")
-            except Exception as e:
-                print(e)
+    def __connectMongo(self):
+        if self.__mg_client == None:
+            self.__mg_client = MongoClient(uri, server_api=ServerApi('1'))
+            self.__mg_db = self.__mg_client[dbName]
+            self.__mg_nodes = self.__mg_db["nodes"]
+            self.__mg_edges = self.__mg_db["edges"]
 
+    def dropAll(self):
+        self.__mg_nodes.delete_many({})
+        self.__mg_edges.delete_many({})
+
+    def pushManyWords(self, wordsList):
+        self.__connectMongo()
+        self.__mg_nodes.insert_many([{"text" : w} for w in wordsList])
+
+    def pushManyEdges(self, edgesList):
+        self.__connectMongo()
+        self.__mg_edges.insert_many([
+            {"source" : source, "target" : target} for source, target in edgesList
+        ])
+
+    def getAllWords(self):
+        self.__connectMongo()
+        return [d["text"] for d in self.__mg_nodes.find()]
+    
+    def getAllEdges(self):
+        self.__connectMongo()
+        return [(d["source"], d["target"]) for d in self.__mg_edges.find()]
 
     def generate_random_string(self, min_length=3, max_length=20):
         length = random.randint(min_length, max_length)
