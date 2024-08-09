@@ -1,40 +1,40 @@
 import { useState , useEffect, useRef, useCallback} from 'react'
 import './App.css'
-import DescriptionCard from './DescriptionCard';
+import DescriptionCard from './DescriptionCard'
 import axios from "axios"
-import ForceGraph3d from "react-force-graph-3d";
-import SpriteText from 'three-spritetext';
-import { Sidebar, Menu, MenuItem, SubMenu } from 'react-pro-sidebar';
+import ForceGraph3d from "react-force-graph-3d"
+import SpriteText from 'three-spritetext'
+import { Sidebar, Menu, MenuItem, SubMenu } from 'react-pro-sidebar'
 
 
 let initFocusId = ""
 
 function App() {
-  const fg3dRef = useRef(null);
+  const fg3dRef = useRef(null)
   const [nodesData, setNodesData] = useState({nodes : [], links : []}) 
   const [focusObject, setFocusObject] = useState({id:""}) 
-  const [descriptionData, setDescriptionData] = useState({title: "", description: ""});
+  const [descriptionData, setDescriptionData] = useState({title: "", description: ""})
   const [descVisibility, setDescVisibility] = useState(false) 
-  const hasMounted = useRef(false);
+  const hasMounted = useRef(false)
 
   const fetchAPI = async () => {
-    const response = await axios.get("http://127.0.0.1:8080/api/vocabnet");
-    setNodesData(response.data);
+    const response = await axios.get("http://127.0.0.1:8080/api/vocabnet")
+    setNodesData(response.data)
     if (response.data != null && response.data.nodes != null)
       initFocusId = response.data.nodes[0].id
   }
 
   useEffect(() => {
-    if (hasMounted.current) { return; }
+    if (hasMounted.current) { return }
     fetchAPI()
     initFocus()
-    hasMounted.current = true;
+    hasMounted.current = true
   }, [])
 
 
   const initFocus = async () => {
     while (initFocusId == "")
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 1000))
     focusCameraById(initFocusId)
   }
 
@@ -77,29 +77,29 @@ function App() {
   const focusCameraOnNode = node => {
     console.log("focus on " + node.id)
     // Aim at node from outside it
-    const distance = 120;
-    const distRatio = 1 + distance/Math.hypot(node.x, node.y, node.z);
+    const distance = 120
+    const distRatio = 1 + distance/Math.hypot(node.x, node.y, node.z)
     fg3dRef.current.cameraPosition(
       { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }, // new position
       node, // lookAt ({ x, y, z })
       3000  // ms transition duration
-    );
+    )
     setFocusObject(node) 
     setDescriptionData({
       title: node.id,
       description: node.description
-    });
+    })
   }
 
-  const handleNodeClick = useCallback(focusCameraOnNode, []);
+  const handleNodeClick = useCallback(focusCameraOnNode, [])
 
   const setNode3ObjectStyle = node => {
-      const sprite = new SpriteText(node.id);
-      sprite.material.depthWrite = false; // make sprite background transparent
-      sprite.color = node.color;
-      sprite.textHeight = 8;
-      return sprite;
-  };
+      const sprite = new SpriteText(node.id)
+      sprite.material.depthWrite = false // make sprite background transparent
+      sprite.color = node.color
+      sprite.textHeight = 8
+      return sprite
+  }
 
   const handleDescClick = menuItem => {
     console.log("Sidebar: clicked on description! descVisibility: ", descVisibility)
@@ -108,10 +108,10 @@ function App() {
 
   // to do, add logic to refetch the data from server and focus on the node
   const handleSearchSubmit = e => {
-    e.preventDefault();
-    const form = e.target;
-    const formData = new FormData(form);
-    const formJson = Object.fromEntries(formData.entries());
+    e.preventDefault()
+    const form = e.target
+    const formData = new FormData(form)
+    const formJson = Object.fromEntries(formData.entries())
     let searchId = String(formJson.myInput)
     focusCameraById(searchId)
   }
