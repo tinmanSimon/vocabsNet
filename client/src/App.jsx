@@ -64,7 +64,6 @@ function App() {
       if (child.children != null) {
         mergeArray(children, child.children)
       }
-        
     }
     return null
   }
@@ -78,7 +77,7 @@ function App() {
   const focusCameraOnNode = node => {
     console.log("focus on " + node.id)
     // Aim at node from outside it
-    const distance = 80;
+    const distance = 120;
     const distRatio = 1 + distance/Math.hypot(node.x, node.y, node.z);
     fg3dRef.current.cameraPosition(
       { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }, // new position
@@ -125,8 +124,8 @@ function App() {
           <MenuItem onClick={handleDescClick}> Description </MenuItem>
           <form method="post" onSubmit={handleSearchSubmit}>
             <input name="myInput" defaultValue="Search" />
-            <button type="reset">Reset form</button>
-            <button type="submit">Submit form</button>
+            <button type="submit">Search</button>
+            <button type="reset">Reset</button>
           </form>
         </Menu>
       </Sidebar>
@@ -145,6 +144,8 @@ function App() {
             nodeThreeObject={setNode3ObjectStyle}
             nodeThreeObjectExtend={false}
             linkAutoColorBy={"value"}
+            linkWidth={1.5}
+            linkOpacity={0.3}
             ref={fg3dRef}
           />
         </div>
