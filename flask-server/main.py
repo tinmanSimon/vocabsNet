@@ -25,18 +25,42 @@ def testWordAndEdges():
 
     vocabDict.addWordStr("a")
     vocabDict.addWordStr("b")
-    vocabDict.addWordStr("a")
+    # vocabDict.addWordStr("a")
     vocabDict.addWordStrs(["c", "d"])
-    vocabDict.addWordStrs(["c", "d"])
+    # vocabDict.addWordStrs(["c", "d"])
     vocabDict.addWordStrs(["f", "g", "e", "k", "td", "zx"])
-    vocabDict.addWordStrs(["1", "2", "1"])
+    # vocabDict.addWordStrs(["1", "2", "1"])
 
     vocabDict.addEdge("a", "b", "antonym")
-    vocabDict.addEdge("a", "b", "antonym")
+    # vocabDict.addEdge("a", "b", "antonym")
     vocabDict.addEdge("c", "d", "synonym")
     vocabDict.addEdge("c", "d", "antonym")
     vocabDict.addEdges([("f", "g"), ("e", "k")], "uncat")
     vocabDict.addEdges([("f", "g"), ("e", "k")], "uncat2")
-    vocabDict.addEdges([("td", "zx"), ("td", "zx")], "uncat3")
+    vocabDict.addEdges([("a", "b"), ("a", "c"), ("a", "d"), ("f", "a"), ("e", "a")], "uncat3")
+    # vocabDict.addEdges([("td", "zx"), ("td", "zx")], "uncat3")
+
+    # vocabDict.removeWordByStr("c")
+    # vocabDict.removeWordByStr("c")
+    # vocabDict.removeWordByStrs(["f", "g", "e"])
+    # vocabDict.removeWordByStrs(["a", "b", "td", "zx", "b"])
+    # vocabDict.removeWordByStrs(["a", "b"])
+    # vocabDict.removeWordByStrs(["a", "b"])
+
+    # vocabDict.removeEdge("a", "b", "antonym")
+    # vocabDict.removeEdge("c", "d", "synonym")
+    # vocabDict.removeEdge("c", "d", "synonym")
+    # vocabDict.removeEdges([("f", "g"), ("e", "k")], "uncat")
+    # vocabDict.removeEdges([("f", "g"), ("e", "k"), ("f", "g")], "uncat2")
+    # vocabDict.removeEdges([("td", "zx")], "uncat3")
+
+
+    # vocabDict.removeWordByStr("a")
+
+def testBackup():
+    dataConn = DataConnector()
+    dataConn.localBackup()
+
+
 
 

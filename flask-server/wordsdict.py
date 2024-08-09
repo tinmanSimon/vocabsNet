@@ -87,28 +87,50 @@ class WordsDict:
         for wordStr1, wordStr2 in strEdges:
             self.addEdge(wordStr1, wordStr2, edgeType, syncWithDB = False)
 
-    def removeEdge(self, wordStr1, wordStr2, edgeType = "synonyms"):
-        if not self.__validationCheck("removeEdge", False, wordStr1, wordStr2, edgeType=edgeType, edgeInvalidExistStatus = False): return 
-        wordObj1, wordObj2 = self.__wordsDict[wordStr1], self.__wordsDict[wordStr2]
-        wordObj1.removeEdgeByStr(wordObj2.text, edgeType)
-        wordObj2.removeEdgeByStr(wordObj1.text, edgeType)
-
-    def removeEdges(self, strEdges, edgeType = "synonyms"):
-        for wordStr1, wordStr2 in strEdges:
-            if not self.__validationCheck("removeEdges", False, wordStr1, wordStr2, edgeType=edgeType, edgeInvalidExistStatus = False): return 
-            self.removeEdge(wordStr1, wordStr2, edgeType)
-
-    def removeWordByStr(self, wordStr):
+    def removeWordByStr(self, wordStr, syncWithDB = True):
         if not self.__validationCheck("removeWordByStr", False, wordStr): return 
+        if self.__dataConnector and syncWithDB:
+            dbRes = self.__dataConnector.dropManyWords([wordStr])
+            if dbRes == False: return 
         wordObj = self.__wordsDict[wordStr]
         wordObj.disconnectAllEdges()
         self.__wordsDict.pop(wordStr)
         self.__historyStack.remove(wordStr)
 
-    def removeWordByStrs(self, wordStrList):
+    def removeWordByStrs(self, wordStrList, syncWithDB = True):
+        if len(set(wordStrList)) != len(wordStrList): 
+            print(f"Error: removeWordByStrs wordStrList list has identical items inside! wordStrList: {wordStrList}")
+            return
         for wordStr in wordStrList:
             if not self.__validationCheck("removeWordByStrs", False, wordStr): return 
-            self.removeWordByStr(wordStr)
+        if self.__dataConnector and syncWithDB:
+            dbRes = self.__dataConnector.dropManyWords(wordStrList)
+            if dbRes == False: return 
+        for wordStr in wordStrList:
+            self.removeWordByStr(wordStr, False)
+        
+
+    def removeEdge(self, wordStr1, wordStr2, edgeType = "synonyms", syncWithDB = True):
+        if not self.__validationCheck("removeEdge", False, wordStr1, wordStr2, edgeType=edgeType, edgeInvalidExistStatus = False): return 
+        if self.__dataConnector and syncWithDB:
+            dbRes = self.__dataConnector.dropManyEdges([(wordStr1, wordStr2)], edgeType)
+            if dbRes == False: return 
+        wordObj1, wordObj2 = self.__wordsDict[wordStr1], self.__wordsDict[wordStr2]
+        wordObj1.removeEdgeByStr(wordObj2.text, edgeType)
+        wordObj2.removeEdgeByStr(wordObj1.text, edgeType)
+        self.__edgesDict[edgeType].remove((wordStr1, wordStr2))
+
+    def removeEdges(self, strEdges, edgeType = "synonyms", syncWithDB = True):
+        if len(set(strEdges)) != len(strEdges): 
+            print(f"Error: removeEdges strEdges list has identical items inside! strEdges: {strEdges}")
+            return
+        for wordStr1, wordStr2 in strEdges:
+            if not self.__validationCheck("removeEdges", False, wordStr1, wordStr2, edgeType=edgeType, edgeInvalidExistStatus = False): return 
+        if self.__dataConnector and syncWithDB:
+            dbRes = self.__dataConnector.dropManyEdges(strEdges, edgeType)
+            if dbRes == False: return 
+        for wordStr1, wordStr2 in strEdges:
+            self.removeEdge(wordStr1, wordStr2, edgeType, False)
 
     def printWordsDict(self):
         print(f"Printing words for {self.name}:")

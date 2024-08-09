@@ -3,7 +3,8 @@ import string
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from credentials import uri, dbName
-
+import json
+from datetime import datetime
 
 class DataConnector:
     def __init__(self):
@@ -43,6 +44,32 @@ class DataConnector:
                     "edgeType" : edgeType
                 } for source, target in edgesList
             ])
+            return True
+        except Exception as e:
+            print(e)
+            return False
+        
+    def dropManyWords(self, wordsList):
+        self.__connectMongo()
+        try:
+            self.__mg_nodes.delete_many({"text" : {"$in" : wordsList}})
+            self.__mg_edges.delete_many({
+                "$or": [
+                    {"source" : {"$in" : wordsList}},
+                    {"target" : {"$in" : wordsList}}
+                ]
+            })
+            return True
+        except Exception as e:
+            print(e)
+            return False
+        
+    def dropManyEdges(self, edgesList, edgeType):
+        self.__connectMongo()
+        try:
+            self.__mg_edges.delete_many({
+                "st_id" : {"$in" : [source + " " + target + " " + edgeType for source, target in edgesList]}
+            })
             return True
         except Exception as e:
             print(e)
@@ -92,4 +119,10 @@ class DataConnector:
                 } for source, target in edgesList
             ]
         } 
+    
+    def localBackup(self):
+        with open("backups/words-" + datetime.now().strftime("%d-%m-%Y-%H-%M-%S") + '.json', 'w') as f:
+            json.dump(self.getAllWords(), f)
+        with open("backups/edges-" + datetime.now().strftime("%d-%m-%Y-%H-%M-%S") + '.json', 'w') as f:
+            json.dump(self.getAllEdges(), f)
 
