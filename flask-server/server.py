@@ -1,5 +1,4 @@
 from flask import Flask, jsonify
-import json
 from flask_cors import CORS
 from  dataConnector import DataConnector
 from wordsdict import WordsDict
@@ -9,6 +8,7 @@ cors = CORS(app, origins="*")
 dataConn = DataConnector()
 wordsList, edgesList = dataConn.getAllWords(), dataConn.getAllEdges()
 vocabDict = WordsDict(wordsList, "Vocabularies")
+vocabDict.syncOnDB(dataConn)
 vocabDict.addEdges(edgesList, "synonyms")
 
 @app.route("/api/vocabnet", methods=["GET"])

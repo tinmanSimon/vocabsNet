@@ -16,6 +16,8 @@ class DataConnector:
             self.__mg_db = self.__mg_client[dbName]
             self.__mg_nodes = self.__mg_db["nodes"]
             self.__mg_edges = self.__mg_db["edges"]
+            self.__mg_nodes.create_index("text", unique=True)
+            self.__mg_edges.create_index("st_id", unique=True)
 
     def dropAll(self):
         self.__mg_nodes.delete_many({})
@@ -23,13 +25,28 @@ class DataConnector:
 
     def pushManyWords(self, wordsList):
         self.__connectMongo()
-        self.__mg_nodes.insert_many([{"text" : w} for w in wordsList])
+        try:
+            self.__mg_nodes.insert_many([{"text" : w} for w in wordsList])
+            return True
+        except Exception as e:
+            print(e)
+            return False
 
-    def pushManyEdges(self, edgesList):
+    def pushManyEdges(self, edgesList, edgeType):
         self.__connectMongo()
-        self.__mg_edges.insert_many([
-            {"source" : source, "target" : target} for source, target in edgesList
-        ])
+        try:
+            self.__mg_edges.insert_many([
+                {
+                    "source" : source, 
+                    "target" : target, 
+                    "st_id" : source + " " + target + " " + edgeType,
+                    "edgeType" : edgeType
+                } for source, target in edgesList
+            ])
+            return True
+        except Exception as e:
+            print(e)
+            return False
 
     def getAllWords(self):
         self.__connectMongo()

@@ -7,39 +7,56 @@ class WordsDict:
         # key is the string of the Word
         # value is the Word object
         self.__wordsDict =  defaultdict(None)
+        self.__edgesDict = defaultdict(set)
         for w in wordsList:
             self.__wordsDict[w] = Word(w)
         self.name = name
         self.__historyStack = [w for w in wordsList]
+        self.__dataConnector = None
 
-    def __validationCheck(self, functionName, invalidExistStatus, wordStr1, wordStr2 = ""):
-        if self.wordExists(wordStr1) == invalidExistStatus:
-            print(f"Error {functionName}: {self.name} validationCheck, '{wordStr1}' exist status == {invalidExistStatus}!")
+    def syncOnDB(self, dataConnector):
+        self.__dataConnector = dataConnector
+
+    def __validationCheck(self, functionName, wordsInvalidExistStatus, wordStr1, wordStr2 = "", edgeType = "", edgeInvalidExistStatus = True):
+        if self.wordExists(wordStr1) == wordsInvalidExistStatus:
+            print(f"Error {functionName}: {self.name} validationCheck, '{wordStr1}' exist status == {wordsInvalidExistStatus}!")
             return False
-        elif wordStr2 and (self.wordExists(wordStr2) == invalidExistStatus):
-            print(f"Error {functionName}: {self.name} validationCheck, '{wordStr2}' exist status == {invalidExistStatus}!")
+        elif wordStr2 and (self.wordExists(wordStr2) == wordsInvalidExistStatus):
+            print(f"Error {functionName}: {self.name} validationCheck, '{wordStr2}' exist status == {wordsInvalidExistStatus}!")
             return False
         elif wordStr1 == wordStr2:
             print(f"Error {functionName}: {self.name} validationCheck, '{wordStr1}' is dealing with itself!")
+            return False
+        elif edgeType and self.edgeExists((wordStr1, wordStr2), edgeType) == edgeInvalidExistStatus:
+            print(f"Error {functionName}: {self.name} validationCheck, edge ({wordStr1}, {wordStr2}) exist status == {edgeInvalidExistStatus}!")
             return False
         return True
 
     def wordExists(self, wordStr):
         return wordStr in self.__wordsDict
+    
+    def edgeExists(self, edge, edgeType):
+        return edge in self.__edgesDict[edgeType]
 
-    def addWordStr(self, wordStr):
+    def addWordStr(self, wordStr, syncWithDB = True):
         if not self.__validationCheck("addWordStr", True, wordStr): return
+        if self.__dataConnector and syncWithDB:
+            dbRes = self.__dataConnector.pushManyWords([wordStr])
+            if dbRes == False: return
         self.__wordsDict[wordStr] = Word(wordStr)
         self.__historyStack.append(wordStr)
 
-    def addWordStrs(self, wordStrList):
+    def addWordStrs(self, wordStrList, syncWithDB = True):
+        if len(set(wordStrList)) != len(wordStrList): 
+            print(f"Error: addWordStrs wordStrList has identical items inside! wordStrList: {wordStrList}")
+            return
         for w in wordStrList:
-            self.addWordStr(w)
-
-    def addWordObj(self, wordObj):
-        if not self.__validationCheck("addWordObj", True, wordObj.text): return
-        self.__wordsDict[wordObj.text] = wordObj
-        self.__historyStack.append(wordObj.text)
+            if not self.__validationCheck("addWordStrs", True, w): return
+        if self.__dataConnector and syncWithDB:
+            dbRes = self.__dataConnector.pushManyWords(wordStrList)
+            if dbRes == False: return
+        for w in wordStrList:
+            self.addWordStr(w, syncWithDB = False)
 
     def getWordObj(self, wordStr):
         return self.__wordsDict[wordStr] if self.wordExists(wordStr) else None
@@ -47,24 +64,38 @@ class WordsDict:
     def getAllWordsStrs(self):
         return list(self.__wordsDict.keys())
     
-    def addEdge(self, wordStr1, wordStr2, edgeType = "synonyms"):
-        if not self.__validationCheck("addEdge", False, wordStr1, wordStr2): return 
+    def addEdge(self, wordStr1, wordStr2, edgeType = "synonyms", syncWithDB = True):
+        if not self.__validationCheck("addEdge", False, wordStr1, wordStr2, edgeType=edgeType, edgeInvalidExistStatus = True): return 
+        if self.__dataConnector and syncWithDB:
+            dbRes = self.__dataConnector.pushManyEdges([(wordStr1, wordStr2)], edgeType)
+            if dbRes == False: return 
         wordObj1, wordObj2 = self.__wordsDict[wordStr1], self.__wordsDict[wordStr2]
         wordObj1.addEdge(wordObj2, edgeType)
         wordObj2.addEdge(wordObj1, edgeType)
+        self.__edgesDict[edgeType].add((wordStr1, wordStr2))
     
-    def addEdges(self, strEdges, edgeType = "synonyms"):
+    def addEdges(self, strEdges, edgeType = "synonyms", syncWithDB = True):
+        if len(set(strEdges)) != len(strEdges): 
+            print(f"Error: addEdges strEdges list has identical items inside! strEdges: {strEdges}")
+            return
         for wordStr1, wordStr2 in strEdges:
-            self.addEdge(wordStr1, wordStr2, edgeType)
+            if not self.__validationCheck("addEdges", False, wordStr1, wordStr2, edgeType=edgeType, edgeInvalidExistStatus = True): 
+                return 
+        if self.__dataConnector and syncWithDB:
+            dbRes = self.__dataConnector.pushManyEdges(strEdges, edgeType)
+            if dbRes == False: return 
+        for wordStr1, wordStr2 in strEdges:
+            self.addEdge(wordStr1, wordStr2, edgeType, syncWithDB = False)
 
     def removeEdge(self, wordStr1, wordStr2, edgeType = "synonyms"):
-        if not self.__validationCheck("removeEdge", False, wordStr1, wordStr2): return 
+        if not self.__validationCheck("removeEdge", False, wordStr1, wordStr2, edgeType=edgeType, edgeInvalidExistStatus = False): return 
         wordObj1, wordObj2 = self.__wordsDict[wordStr1], self.__wordsDict[wordStr2]
         wordObj1.removeEdgeByStr(wordObj2.text, edgeType)
         wordObj2.removeEdgeByStr(wordObj1.text, edgeType)
 
     def removeEdges(self, strEdges, edgeType = "synonyms"):
         for wordStr1, wordStr2 in strEdges:
+            if not self.__validationCheck("removeEdges", False, wordStr1, wordStr2, edgeType=edgeType, edgeInvalidExistStatus = False): return 
             self.removeEdge(wordStr1, wordStr2, edgeType)
 
     def removeWordByStr(self, wordStr):
@@ -76,6 +107,7 @@ class WordsDict:
 
     def removeWordByStrs(self, wordStrList):
         for wordStr in wordStrList:
+            if not self.__validationCheck("removeWordByStrs", False, wordStr): return 
             self.removeWordByStr(wordStr)
 
     def printWordsDict(self):
