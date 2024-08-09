@@ -13,6 +13,7 @@ function App() {
   const [nodesData, setNodesData] = useState({nodes : [], links : []}) 
   const [focusObject, setFocusObject] = useState({id:""}) 
   const [descriptionData, setDescriptionData] = useState({title: "", description: ""});
+  const [descVisibility, setDescVisibility] = useState(false) 
   const fetchAPI = async () => {
     const response = await axios.get("http://127.0.0.1:8080/api/vocabnet");
     setNodesData(response.data);
@@ -46,20 +47,27 @@ function App() {
       return sprite;
   };
 
+  const handleDescClick = menuItem => {
+    console.log("Sidebar: clicked on description! descVisibility: ", descVisibility)
+    setDescVisibility(!descVisibility && focusObject.id != "")
+  }
+
   return (
     <div className='side-container'>
       <Sidebar>
         <Menu>
-          <MenuItem> {focusObject.id}: </MenuItem>
-          <MenuItem> Description </MenuItem>
+          {focusObject.id != "" && (<MenuItem> {focusObject.id}: </MenuItem>)}
+          <MenuItem onClick={handleDescClick}> Description </MenuItem>
         </Menu>
       </Sidebar>
-      <div className='main-container'>
         <div className="overlay-container">
-          <DescriptionCard 
-            title={descriptionData.title}
-            description={descriptionData.description}
-          />
+          {descVisibility && (
+            <DescriptionCard 
+              style={descVisibility ? {} : { display: 'none' }}
+              title={descriptionData.title}
+              description={descriptionData.description}
+            />)
+          }
           <ForceGraph3d
             graphData={nodesData}
             onNodeClick={handleNodeClick}
@@ -68,8 +76,6 @@ function App() {
             ref={fg3dRef}
           />
         </div>
-      </div>
-      
     </div>
   )
 }

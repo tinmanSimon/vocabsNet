@@ -2,7 +2,7 @@ import random
 import string
 
 
-def generate_random_string(min_length=3, max_length=12):
+def generate_random_string(min_length=3, max_length=20):
     length = random.randint(min_length, max_length)
     characters = string.ascii_lowercase
     return ''.join(random.choice(characters) for _ in range(length))
@@ -27,7 +27,7 @@ def constructNodes(wordsList, edgesList):
             {
                 "id" : w,
                 "group" : random.randint(1,9),
-                "description" : " ".join(generate_random_string(2, 15) for s in range(30))
+                "description" : " ".join(generate_random_string(2, 20) for s in range(30))
             } for w in wordsList
         ],
         "links" : [
