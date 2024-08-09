@@ -27,7 +27,7 @@ def constructNodes(wordsList, edgesList):
             {
                 "id" : w,
                 "group" : random.randint(1,9),
-                "description" : generate_random_string(250, 300)
+                "description" : " ".join(generate_random_string(2, 15) for s in range(30))
             } for w in wordsList
         ],
         "links" : [

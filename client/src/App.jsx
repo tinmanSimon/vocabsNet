@@ -1,17 +1,20 @@
 import { useState , useEffect, useRef, useCallback} from 'react'
 import './App.css'
+import DescriptionCard from './DescriptionCard';
 import axios from "axios"
 import ForceGraph3d from "react-force-graph-3d";
 import SpriteText from 'three-spritetext';
+import { Sidebar, Menu, MenuItem, SubMenu } from 'react-pro-sidebar';
+
 
 
 function App() {
   const fg3dRef = useRef(null);
   const [nodesData, setNodesData] = useState({nodes : [], links : []}) 
   const [focusObject, setFocusObject] = useState({id:""}) 
+  const [descriptionData, setDescriptionData] = useState({title: "", description: ""});
   const fetchAPI = async () => {
     const response = await axios.get("http://127.0.0.1:8080/api/vocabnet");
-    console.log(response.data);
     setNodesData(response.data);
   }
 
@@ -29,7 +32,10 @@ function App() {
       3000  // ms transition duration
     );
     setFocusObject(node);
-    console.log(node.description)
+    setDescriptionData({
+      title: node.id,
+      description: node.description
+    });
   }, [fg3dRef]);
 
   const setNode3ObjectStyle = node => {
@@ -41,17 +47,29 @@ function App() {
   };
 
   return (
-    <div>
-      <div>
-        {"focusObject: " + focusObject.id}
+    <div className='side-container'>
+      <Sidebar>
+        <Menu>
+          <MenuItem> {focusObject.id}: </MenuItem>
+          <MenuItem> Description </MenuItem>
+        </Menu>
+      </Sidebar>
+      <div className='main-container'>
+        <div className="overlay-container">
+          <DescriptionCard 
+            title={descriptionData.title}
+            description={descriptionData.description}
+          />
+          <ForceGraph3d
+            graphData={nodesData}
+            onNodeClick={handleNodeClick}
+            nodeAutoColorBy={"group"}
+            nodeThreeObject={setNode3ObjectStyle}
+            ref={fg3dRef}
+          />
+        </div>
       </div>
-      <ForceGraph3d
-        graphData={nodesData}
-        onNodeClick={handleNodeClick}
-        nodeAutoColorBy={"group"}
-        nodeThreeObject={setNode3ObjectStyle}
-        ref={fg3dRef}
-      />
+      
     </div>
   )
 }

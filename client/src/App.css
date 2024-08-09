@@ -39,6 +39,21 @@
   color: #888;
 }
 
-.scene-container .clickable {
-  cursor: pointer;
+.side-container {
+  display: flex;
+  justify-content: space-between; 
 }
+
+.main-container {
+  position: relative;
+  width: 100%;
+  height: 100vh; /* Full height to cover the viewport */
+  overflow: hidden;
+}
+
+.overlay-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
