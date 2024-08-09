@@ -14,16 +14,27 @@ function App() {
   const [focusObject, setFocusObject] = useState({id:""}) 
   const [descriptionData, setDescriptionData] = useState({title: "", description: ""});
   const [descVisibility, setDescVisibility] = useState(false) 
+  const hasMounted = useRef(false);
+
   const fetchAPI = async () => {
     const response = await axios.get("http://127.0.0.1:8080/api/vocabnet");
     setNodesData(response.data);
   }
 
   useEffect(() => {
+    if (hasMounted.current) { return; }
     fetchAPI()
+    hasMounted.current = true;
+    initFocus()
   }, [])
 
-  const handleNodeClick = useCallback(node => {
+
+  const initFocus = async () => {
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    fg3dRef.current.zoomToFit(3000, 10)
+  }
+
+  const focusCameraOnNode = node => {
     // Aim at node from outside it
     const distance = 80;
     const distRatio = 1 + distance/Math.hypot(node.x, node.y, node.z);
@@ -37,7 +48,9 @@ function App() {
       title: node.id,
       description: node.description
     });
-  }, [fg3dRef]);
+  }
+
+  const handleNodeClick = useCallback(focusCameraOnNode, []);
 
   const setNode3ObjectStyle = node => {
       const sprite = new SpriteText(node.id);
@@ -52,12 +65,62 @@ function App() {
     setDescVisibility(!descVisibility && focusObject.id != "")
   }
 
+  const cloneArray = array => {
+    var newArray = []
+    for (let c = 0; c < array.length; ++c) {
+      let item = array[c]
+      newArray.push(item)
+    }
+    return newArray
+  }
+
+  const mergeArray = (array1, array2) => {
+    for (let c = 0; c < array2.length; ++c) {
+      let item = array2[c]
+      array1.push(item)
+    }
+  }
+
+  // recursively doing DFS to find the first child with id and returns the data , a small hack for now
+  const findNodeDataById = (id) => {
+    var children = cloneArray(fg3dRef.current.scene().children)
+    while (0 < children.length) {
+      var child = children.pop()
+      if (child != null && child.__data != null && child.__data.id == id) 
+        return child.__data
+      if (child.children != null) 
+        mergeArray(children, child.children)
+    }
+    return null
+  }
+
+  // to do, add logic to refetch the data from server and focus on the node
+  const handleSearchSubmit = e => {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+    const formJson = Object.fromEntries(formData.entries());
+    let searchId = String(formJson.myInput)
+    var mychildren = cloneArray(fg3dRef.current.scene().children)
+    let node = findNodeDataById(searchId)
+    if (node == null) {
+      console.error("Error: '" + searchId + "' doesn't exist in vocabNet!")
+      return
+    }
+    focusCameraOnNode(node)
+  }
+
   return (
     <div className='side-container'>
       <Sidebar>
         <Menu>
           {focusObject.id != "" && (<MenuItem> {focusObject.id}: </MenuItem>)}
           <MenuItem onClick={handleDescClick}> Description </MenuItem>
+          <form method="post" onSubmit={handleSearchSubmit}>
+            <input name="myInput" defaultValue="Search" />
+            <button type="reset">Reset form</button>
+            <button type="submit">Submit form</button>
+          </form>
         </Menu>
       </Sidebar>
         <div className="overlay-container">
@@ -73,6 +136,7 @@ function App() {
             onNodeClick={handleNodeClick}
             nodeAutoColorBy={"group"}
             nodeThreeObject={setNode3ObjectStyle}
+            nodeThreeObjectExtend={false}
             ref={fg3dRef}
           />
         </div>
