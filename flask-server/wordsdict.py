@@ -132,6 +132,52 @@ class WordsDict:
         for wordStr1, wordStr2 in strEdges:
             self.removeEdge(wordStr1, wordStr2, edgeType, False)
 
+    def getLastWordInHistory(self):
+        return self.__historyStack[-1] if self.__historyStack else None
+    
+    def findOneWordNotInSet(self, wordSet):
+        for w in self.__wordsDict.keys():
+            if not w in wordSet:
+                return w 
+        return ""
+
+    # Do a BFS to get words that are connected to focusWordStr, max limit n
+    def getConnectedWordsEdges(self, focusWordStr, n = 200):
+        focusWordObj = self.getWordObj(focusWordStr)
+        words = set()
+        edgeMap = defaultdict(set)
+        if not focusWordObj: return words, {}
+        bfsFrontier = [focusWordObj]
+        while n > 0:
+            if not bfsFrontier:
+                newWord = self.findOneWordNotInSet(words)
+                if not newWord: break
+                bfsFrontier = [self.getWordObj(newWord)]
+                continue
+            m = len(bfsFrontier)
+            newFrontier = []
+            for _ in range(m):
+                if n <= 0: 
+                    break
+                wordObj = bfsFrontier.pop()
+                if wordObj.text in words: continue
+                words.add(wordObj.text)
+                for edgeType, neighbors in wordObj.getAllConnectedWordsEdges().items():
+                    for neighbor in neighbors:
+                        edgeMap[edgeType].add((wordObj.text, neighbor.text))
+                    newFrontier += neighbors
+                n -= 1
+            bfsFrontier = newFrontier
+        for edgeType, edges in edgeMap.items():
+            edgeMap[edgeType] = set()
+            for source, target in edges:
+                if (source, target) in edgeMap[edgeType] or (target, source) in edgeMap[edgeType]:
+                    continue 
+                elif not (source in words and target in words):
+                    continue 
+                edgeMap[edgeType].add((source, target))
+        return list(words), edgeMap
+
     def printWordsDict(self):
         print(f"Printing words for {self.name}:")
         print(self.getAllWordsStrs(), "\n")

@@ -52,6 +52,12 @@ class Word:
                 neighbor.removeEdgeByStr(self.text, edgeType)
         self.__cleanUp()
 
+    def getAllConnectedWordsEdges(self):
+        allNeighbors = {}
+        for edgeType, _ in self.__edgesDict.items():
+            allNeighbors[edgeType] = [wordObj for wordObj in self.__edgesDict[edgeType]]
+        return allNeighbors
+
     def printNeighbors(self, edgeType):
         wordsObjList = self.__edgesDict[edgeType]
         if not wordsObjList: return

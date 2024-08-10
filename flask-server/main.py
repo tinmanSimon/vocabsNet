@@ -10,11 +10,12 @@ from word import Word
 from wordsdict import WordsDict
 from dataConnector import DataConnector
 
-def randGenUpdateDB(d):
-    words, edges = d.getRandStrAndLinks(200, 300)
+def randGenUpdateDB(d, n = 3, w = 200, e = 300):
+    words, edges = d.getRandStrAndLinks(w, e)
     d.dropAll()
     d.pushManyWords(words)
-    d.pushManyEdges(edges)
+    for i in range(n):
+        d.pushManyEdges(edges[e*i //n : e*(i + 1) // n], str(i))
 
 def testWordAndEdges():
     dataConn = DataConnector()
@@ -61,6 +62,23 @@ def testBackup():
     dataConn = DataConnector()
     dataConn.localBackup()
 
+def testGetConnectedWordsEdges():
+    dataConn = DataConnector()
+    dataConn.dropAll()
+    wordsList, edgesList = dataConn.getAllWords(), dataConn.getAllEdges()
+    vocabDict = WordsDict(wordsList, "Vocabularies")
+    vocabDict.syncOnDB(dataConn)
+
+    vocabDict.addWordStrs(["a", "b", "c", "d", "f", "g", "e", "k", "td", "zx"])
+    vocabDict.addEdges([("a", "b"), ("a", "zx")], "edgeType1")
+    vocabDict.addEdges([ ("a", "c"), ("a", "d")], "edgeType2")
+    vocabDict.addEdges([("b", "c"), ("b", "zx")], "edgeType1")
+    vocabDict.addEdges([("e", "k"), ("e", "f")], "edgeType3")
+    vocabDict.addEdges([("f", "k")], "edgeType2")
+    print(vocabDict.getConnectedWordsEdges("a"))
 
 
+dataConn = DataConnector()
+randGenUpdateDB(dataConn)
 
+# testGetConnectedWordsEdges()

@@ -5,6 +5,7 @@ from pymongo.server_api import ServerApi
 from credentials import uri, dbName
 import json
 from datetime import datetime
+from collections import defaultdict
 
 class DataConnector:
     def __init__(self):
@@ -81,7 +82,13 @@ class DataConnector:
     
     def getAllEdges(self):
         self.__connectMongo()
-        return [(d["source"], d["target"]) for d in self.__mg_edges.find()]
+        edgeMap = defaultdict(set)
+        for edge in self.__mg_edges.find():
+            source, target, edgeType = edge["source"], edge["target"], edge["edgeType"]
+            if (source, target) in edgeMap[edgeType] or (target, source) in edgeMap[edgeType]:
+                continue 
+            edgeMap[edgeType].add((source, target))
+        return edgeMap
 
     def generate_random_string(self, min_length=3, max_length=20):
         length = random.randint(min_length, max_length)
@@ -102,7 +109,7 @@ class DataConnector:
             edgeSet.add((source, target))
         return [words, edges]
 
-    def constructNodes(self, wordsList, edgesList):
+    def constructNodes(self, wordsList, edgeMap, focusNode = ""):
         return {
             "nodes" : [
                 {
@@ -111,13 +118,12 @@ class DataConnector:
                     "description" : " ".join(self.generate_random_string(2, 20) for s in range(30))
                 } for w in wordsList
             ],
-            "links" : [
-                {
-                    "source" : source,
-                    "target" : target,
-                    "value" : random.randint(1, 13)
-                } for source, target in edgesList
-            ]
+            "links" : [{
+                "source" : source,
+                "target" : target,
+                "value" : edgeType
+            } for edgeType, edges in edgeMap.items() for source, target in edges],
+            "focusNode" : focusNode
         } 
     
     def localBackup(self):

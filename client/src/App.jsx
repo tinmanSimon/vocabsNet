@@ -21,8 +21,8 @@ function App() {
   const fetchAPI = async () => {
     const response = await axios.get("http://127.0.0.1:8080/api/vocabnet")
     setNodesData(response.data)
-    if (response.data != null && response.data.nodes != null)
-      initFocusId = response.data.nodes[0].id
+    if (response.data != null && response.data.focusNode != null)
+      initFocusId = response.data.focusNode
   }
 
   useEffect(() => {
@@ -35,7 +35,7 @@ function App() {
 
   const initFocus = async () => {
     while (initFocusId == "")
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      await new Promise(resolve => setTimeout(resolve, 2000))
     focusCameraById(initFocusId)
   }
 
@@ -77,11 +77,14 @@ function App() {
 
   const focusCameraOnNode = node => {
     console.log("focus on word: " + node.id)
-    // Aim at node from outside it
-    const distance = 120
+    const distance = 80
     const distRatio = 1 + distance/Math.hypot(node.x, node.y, node.z)
+    let newPosition = { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }
+    if (node.x == 0 && node.y == 0 && node.z == 0) {
+      newPosition = {x: 40, y: 40, z: 40}
+    } 
     fg3dRef.current.cameraPosition(
-      { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }, // new position
+      newPosition, // new position
       node, // lookAt ({ x, y, z })
       3000  // ms transition duration
     )
