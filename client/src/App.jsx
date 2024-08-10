@@ -76,7 +76,7 @@ function App() {
   }
 
   const focusCameraOnNode = node => {
-    console.log("focus on " + node.id)
+    console.log("focus on word: " + node.id)
     // Aim at node from outside it
     const distance = 120
     const distRatio = 1 + distance/Math.hypot(node.x, node.y, node.z)
@@ -103,8 +103,7 @@ function App() {
   }
 
   const handleDescClick = (id) => {
-    console.log("Sidebar: clicked on description! descVisibility: ", descVisibility)
-    console.log(id)
+    console.log('Sidebar: clicked on %s!', id)
     if (sidebarFocus == id){
       setSidebarFocus("")
       setDescVisibility(false)
