@@ -114,14 +114,15 @@ function App() {
     }
   }
 
-  // to do, add logic to refetch the data from server and focus on the node
-  const handleSearchSubmit = e => {
-    e.preventDefault()
-    const form = e.target
-    const formData = new FormData(form)
-    const formJson = Object.fromEntries(formData.entries())
-    let searchId = String(formJson.searchInput)
-    focusCameraById(searchId)
+  const overlayCallback = data => {
+    switch (data.method) {
+      case "add-words":
+        // todo add words
+        console.log("we gon add words")
+
+        case "search-word":
+          focusCameraById(data.word)
+    }
   }
 
   return (
@@ -130,12 +131,8 @@ function App() {
         <Menu>
           {focusObject.id != "" && (<MenuItem> {focusObject.id}: </MenuItem>)}
           <MenuItem onClick={() => handleDescClick("description")}> Description </MenuItem>
-          <MenuItem onClick={() => handleDescClick("add-word")}> Add Word </MenuItem>
-          <form method="post" onSubmit={handleSearchSubmit}>
-            <input name="searchInput" defaultValue="Search" />
-            <button type="submit">Search</button>
-            <button type="reset">Reset</button>
-          </form>
+          <MenuItem onClick={() => handleDescClick("add-words")}> Add Words </MenuItem>
+          <MenuItem onClick={() => handleDescClick("search-words")}> Search Words </MenuItem>
         </Menu>
       </Sidebar>
         <div className="overlay-container">
@@ -143,6 +140,7 @@ function App() {
             <OverlayCard 
             descriptionData={descriptionData}
             sidebarFocus={sidebarFocus}
+            callbackFunc={overlayCallback}
             />)
           }
           <ForceGraph3d

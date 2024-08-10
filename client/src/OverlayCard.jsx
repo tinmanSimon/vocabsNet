@@ -1,14 +1,27 @@
-import React from 'react';
 import './OverlayCard.css';
+import { React, useState , useEffect, useRef, useCallback} from 'react'
 
-function OverlayCard({ descriptionData, sidebarFocus }) {
-  const handleWordEdgeSubmit = e => {
-    e.preventDefault()
-    const form = e.target
-    const formData = new FormData(form)
-    const formJson = Object.fromEntries(formData.entries())
-    let word = String(formJson.wordInput)
-    console.log(word)
+function OverlayCard({ descriptionData, sidebarFocus, callbackFunc }) {
+
+  const wordInputRef = useRef(null)
+  const searchInputRef = useRef(null)
+
+  const overlayButtonsClick = e => {
+    switch (e.target.id) {
+      case "add-button":
+        if (wordInputRef.current.value == "") return
+        callbackFunc({
+          "word" : wordInputRef.current.value,
+          "method" : "add-words"
+        })
+
+      case "search-button":
+        if (searchInputRef.current.value == "") return
+        callbackFunc({
+          "word" : searchInputRef.current.value,
+          "method" : "search-word"
+        })
+    }
   }
 
   switch (sidebarFocus) {
@@ -19,15 +32,21 @@ function OverlayCard({ descriptionData, sidebarFocus }) {
           <p className="overlay-text">{descriptionData.description}</p>
         </div>
       )
-    case "add-word":
+    case "add-words":
       return (
         <div className="overlay-card">
-          <form method="post" onSubmit={handleWordEdgeSubmit}>
-            <input name="wordInput" defaultValue="word" />
-            <button type="submit">add</button>
-          </form>
+          <p>To add multiple words, separate words with ","</p>
+          <input ref={wordInputRef} name="wordInput" placeholder="Word" />
+          <button id="add-button" onClick={overlayButtonsClick}>add</button>
         </div>
       )
+      case "search-words":
+        return (
+          <div className="overlay-card">
+            <input ref={searchInputRef} name="searchInput" placeholder="Search" />
+            <button id="search-button" onClick={overlayButtonsClick}>Search</button>
+          </div>
+        )
     default:
       return (<div></div>)
   }
