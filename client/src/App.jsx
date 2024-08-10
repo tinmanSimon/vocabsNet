@@ -15,6 +15,7 @@ function App() {
   const [focusObject, setFocusObject] = useState({id:""}) 
   const [descriptionData, setDescriptionData] = useState({title: "", description: ""})
   const [descVisibility, setDescVisibility] = useState(false) 
+  const [sidebarFocus, setSidebarFocus] = useState("")
   const hasMounted = useRef(false)
 
   const fetchAPI = async () => {
@@ -101,9 +102,16 @@ function App() {
       return sprite
   }
 
-  const handleDescClick = menuItem => {
+  const handleDescClick = (id) => {
     console.log("Sidebar: clicked on description! descVisibility: ", descVisibility)
-    setDescVisibility(!descVisibility && focusObject.id != "")
+    console.log(id)
+    if (sidebarFocus == id){
+      setSidebarFocus("")
+      setDescVisibility(false)
+    } else {
+      setSidebarFocus(id)
+      setDescVisibility(true)
+    }
   }
 
   // to do, add logic to refetch the data from server and focus on the node
@@ -112,7 +120,7 @@ function App() {
     const form = e.target
     const formData = new FormData(form)
     const formJson = Object.fromEntries(formData.entries())
-    let searchId = String(formJson.myInput)
+    let searchId = String(formJson.searchInput)
     focusCameraById(searchId)
   }
 
@@ -121,9 +129,10 @@ function App() {
       <Sidebar>
         <Menu>
           {focusObject.id != "" && (<MenuItem> {focusObject.id}: </MenuItem>)}
-          <MenuItem onClick={handleDescClick}> Description </MenuItem>
+          <MenuItem onClick={() => handleDescClick("description")}> Description </MenuItem>
+          <MenuItem onClick={() => handleDescClick("add-word")}> Add Word </MenuItem>
           <form method="post" onSubmit={handleSearchSubmit}>
-            <input name="myInput" defaultValue="Search" />
+            <input name="searchInput" defaultValue="Search" />
             <button type="submit">Search</button>
             <button type="reset">Reset</button>
           </form>
@@ -132,9 +141,8 @@ function App() {
         <div className="overlay-container">
           {descVisibility && (
             <OverlayCard 
-              style={descVisibility ? {} : { display: 'none' }}
-              title={descriptionData.title}
-              description={descriptionData.description}
+            descriptionData={descriptionData}
+            sidebarFocus={sidebarFocus}
             />)
           }
           <ForceGraph3d
