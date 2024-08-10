@@ -1,6 +1,6 @@
 import { useState , useEffect, useRef, useCallback} from 'react'
 import './App.css'
-import DescriptionCard from './DescriptionCard'
+import OverlayCard from './OverlayCard'
 import axios from "axios"
 import ForceGraph3d from "react-force-graph-3d"
 import SpriteText from 'three-spritetext'
@@ -131,7 +131,7 @@ function App() {
       </Sidebar>
         <div className="overlay-container">
           {descVisibility && (
-            <DescriptionCard 
+            <OverlayCard 
               style={descVisibility ? {} : { display: 'none' }}
               title={descriptionData.title}
               description={descriptionData.description}
