@@ -5,22 +5,29 @@ function OverlayCard({ descriptionData, sidebarFocus, callbackFunc }) {
 
   const wordInputRef = useRef(null)
   const searchInputRef = useRef(null)
+  const edgesInputRef = useRef(null)
+  const edgeTypeInputRef = useRef(null)
 
   const overlayButtonsClick = e => {
     switch (e.target.id) {
       case "add-button":
-        if (wordInputRef.current.value == "") return
+        if (wordInputRef.current == null) return
+        if (wordInputRef.current.value == "" && edgesInputRef.current.value == "") return
         callbackFunc({
-          "word" : wordInputRef.current.value,
+          "words" : wordInputRef.current.value,
+          "edges" : edgesInputRef.current.value,
+          "edgetype" : edgeTypeInputRef.current.value,
           "method" : "add-words"
         })
+        break
 
       case "search-button":
-        if (searchInputRef.current.value == "") return
+        if (searchInputRef.current == null || searchInputRef.current.value == "") return
         callbackFunc({
-          "word" : searchInputRef.current.value,
+          "words" : searchInputRef.current.value,
           "method" : "search-word"
         })
+        break
     }
   }
 
@@ -36,7 +43,11 @@ function OverlayCard({ descriptionData, sidebarFocus, callbackFunc }) {
       return (
         <div className="overlay-card">
           <p>To add multiple words, separate words with ","</p>
-          <input ref={wordInputRef} name="wordInput" placeholder="Word" />
+          <p>Words: <input ref={wordInputRef} name="wordInput" placeholder="Word" /></p>
+          <p>Single edge is source text separated by a single space. <br></br> Multiple edges are separate with ","</p>
+          <p>Edges: <input ref={edgesInputRef} name="edgesInput" placeholder="Edges" /></p>
+          <p>Edge type: <input ref={edgeTypeInputRef} name="edgeTypeInput" placeholder="Edges Type" /></p>
+          <br></br>
           <button id="add-button" onClick={overlayButtonsClick}>add</button>
         </div>
       )

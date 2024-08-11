@@ -78,7 +78,10 @@ def testGetConnectedWordsEdges():
     print(vocabDict.getConnectedWordsEdges("a"))
 
 
+# dataConn = DataConnector()
+# randGenUpdateDB(dataConn)
+
 dataConn = DataConnector()
-randGenUpdateDB(dataConn)
+dataConn.dropAll()
 
 # testGetConnectedWordsEdges()

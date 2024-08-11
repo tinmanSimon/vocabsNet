@@ -80,6 +80,8 @@ class WordsDict:
             return
         for wordStr1, wordStr2 in strEdges:
             if not self.__validationCheck("addEdges", False, wordStr1, wordStr2, edgeType=edgeType, edgeInvalidExistStatus = True): 
+                print(f"failed to addEdges wordStr1: {wordStr1}, wordStr2: {wordStr2}")
+                print(f"wordsDict: {self.__wordsDict}")
                 return 
         if self.__dataConnector and syncWithDB:
             dbRes = self.__dataConnector.pushManyEdges(strEdges, edgeType)

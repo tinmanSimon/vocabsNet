@@ -6,9 +6,6 @@ import ForceGraph3d from "react-force-graph-3d"
 import SpriteText from 'three-spritetext'
 import { Sidebar, Menu, MenuItem, SubMenu } from 'react-pro-sidebar'
 
-
-let initFocusId = ""
-
 function App() {
   const fg3dRef = useRef(null)
   const [nodesData, setNodesData] = useState({nodes : [], links : []}) 
@@ -19,25 +16,36 @@ function App() {
   const hasMounted = useRef(false)
 
   const fetchAPI = async () => {
-    const response = await axios.get("http://127.0.0.1:8080/api/vocabnet")
+    const response = await axios.get("http://127.0.0.1:8080/api/vocabnet/getdata")
     setNodesData(response.data)
     if (response.data != null && response.data.focusNode != null)
-      initFocusId = response.data.focusNode
+      delayFocus(response.data.focusNode)
+  }
+
+  const delayFocus = async (id) => {
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    focusCameraById(id)
+  }
+
+  const postAPI = async (reqParams) => {
+    axios.post(reqParams.uri, reqParams.data)
+    .then(function (response) {
+      console.log(response);
+      if (response.data != null && response.data.focusNode != null){
+        setNodesData(response.data)
+        delayFocus(response.data.focusNode)
+      }
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
   }
 
   useEffect(() => {
     if (hasMounted.current) { return }
     fetchAPI()
-    initFocus()
     hasMounted.current = true
   }, [])
-
-
-  const initFocus = async () => {
-    while (initFocusId == "")
-      await new Promise(resolve => setTimeout(resolve, 2000))
-    focusCameraById(initFocusId)
-  }
 
   const cloneArray = array => {
     var newArray = []
@@ -120,10 +128,20 @@ function App() {
     switch (data.method) {
       case "add-words":
         // todo add words
-        console.log("we gon add words")
+        console.log("adding words: ", data.words)
+        console.log("adding edges: ", data.edges, " edge type: ", data.edgetype)
+        postAPI({
+          uri: "http://127.0.0.1:8080/api/vocabnet/addwords",
+          data : {
+            "words" : data.words,
+            "edges" : data.edges,
+            "edgetype" : data.edgetype
+          }
+        })
+        break
 
         case "search-word":
-          focusCameraById(data.word)
+          focusCameraById(data.words)
     }
   }
 
