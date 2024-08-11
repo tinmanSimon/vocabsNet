@@ -9,16 +9,15 @@ app = Flask(__name__)
 cors = CORS(app, origins="*")
 dataConn = DataConnector()
 wordsList, edgeMap = dataConn.getAllWords(), dataConn.getAllEdges()
-# vocabDict = WordsDict(wordsList, "Vocabularies")
-vocabDict = current_app.config['SHARED_DATA']["vocabDict"]
+vocabDict = WordsDict(wordsList, "Vocabularies")
 for edgeType, edgesSet in edgeMap.items():
     vocabDict.addEdges(list(edgesSet), edgeType)
 vocabDict.syncOnDB(dataConn)
-app.config['SHARED_DATA'] = {'vocabDict': vocabDict}
+app.config['SHARED_DATA'] = vocabDict
 
 @app.route("/api/vocabnet/getdata", methods=["GET"])
 def vocabnet():
-    vocabDict = current_app.config['SHARED_DATA']["vocabDict"]
+    vocabDict = current_app.config['SHARED_DATA']
     
     wordsList, edgeMap = vocabDict.getConnectedWordsEdges(vocabDict.getLastWordInHistory())
     data = dataConn.constructNodes(wordsList, edgeMap, vocabDict.getLastWordInHistory())
@@ -47,7 +46,7 @@ def parseWordsEdges(data):
 
 @app.route("/api/vocabnet/addwords", methods=["POST"])
 def addwords():
-    vocabDict = current_app.config['SHARED_DATA']["vocabDict"]
+    vocabDict = current_app.config['SHARED_DATA']
     data = request.get_json()
     print("Received data:", data)
     wordsList, edges, edgeType = parseWordsEdges(data)
@@ -65,7 +64,7 @@ def addwords():
 
 @app.route("/api/vocabnet/removewords", methods=["POST"])
 def removeWords():
-    vocabDict = current_app.config['SHARED_DATA']["vocabDict"]
+    vocabDict = current_app.config['SHARED_DATA']
     data = request.get_json()
     print("Received data:", data)
     wordsList, edges, edgeType = parseWordsEdges(data)
