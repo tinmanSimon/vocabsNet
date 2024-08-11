@@ -64,10 +64,10 @@ def removeWords():
     print("Received data:", data)
     wordsList, edges, edgeType = parseWordsEdges(data)
     if wordsList: 
-        print(f"add words to vocab: {wordsList}")
+        print(f"remove words to vocab: {wordsList}")
         vocabDict.removeWordByStrs(wordsList)
     if edgeType and edges:
-        print(f"add type '{edgeType}' edges to vocab: {edges}")
+        print(f"remove type '{edgeType}' edges to vocab: {edges}")
         vocabDict.removeEdges(edges, edgeType)
 
     focusWord = vocabDict.getLastWordInHistory()
