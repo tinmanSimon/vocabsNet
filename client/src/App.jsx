@@ -16,7 +16,7 @@ function App() {
   const hasMounted = useRef(false)
 
   const fetchAPI = async () => {
-    const response = await axios.get("http://127.0.0.1:8080/api/vocabnet/getdata")
+    const response = await axios.get("http://89.116.212.110:8000/api/vocabnet/getdata")
     setNodesData(response.data)
     if (response.data != null && response.data.focusNode != null)
       delayFocus(response.data.focusNode)
@@ -137,7 +137,7 @@ function App() {
         console.log("adding words: ", data.words)
         console.log("adding edges: ", data.edges, " edge type: ", data.edgetype)
         postAPI({
-          uri: "http://127.0.0.1:8080/api/vocabnet/addwords",
+          uri: "http://89.116.212.110:8000/api/vocabnet/addwords",
           data : {
             "words" : data.words,
             "edges" : data.edges,
@@ -150,7 +150,7 @@ function App() {
         console.log("removing words: ", data.words)
         console.log("removing edges: ", data.edges, " edge type: ", data.edgetype)
         postAPI({
-          uri: "http://127.0.0.1:8080/api/vocabnet/removewords",
+          uri: "http://89.116.212.110:8000/api/vocabnet/removewords",
           data : {
             "words" : data.words,
             "edges" : data.edges,
