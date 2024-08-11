@@ -23,7 +23,7 @@ function App() {
   }
 
   const delayFocus = async (id) => {
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await new Promise(resolve => setTimeout(resolve, 1500))
     focusCameraById(id)
   }
 
@@ -194,7 +194,7 @@ function App() {
               // extend link with text sprite
               const sprite = new SpriteText(`${link.value}`);
               sprite.material.depthWrite = false // make sprite background transparent
-              sprite.textHeight = 4;
+              sprite.textHeight = 2;
               return sprite;
             }}
             linkAutoColorBy={"value"}

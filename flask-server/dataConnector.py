@@ -155,8 +155,9 @@ class DataConnector:
         } 
     
     def localBackup(self):
+        self.__connectMongo()
         with open("backups/words-" + datetime.now().strftime("%d-%m-%Y-%H-%M-%S") + '.json', 'w') as f:
-            json.dump(self.getAllWords(), f)
+            json.dump(list(self.__mg_nodes.find({}, {'_id': 0})), f)
         with open("backups/edges-" + datetime.now().strftime("%d-%m-%Y-%H-%M-%S") + '.json', 'w') as f:
-            json.dump(self.getAllEdges(), f)
+            json.dump(list(self.__mg_edges.find({}, {'_id': 0})), f)
 
