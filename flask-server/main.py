@@ -58,7 +58,7 @@ def testWordAndEdges():
 
     # vocabDict.removeWordByStr("a")
 
-def testBackup():
+def backup():
     dataConn = DataConnector()
     dataConn.localBackup()
 
@@ -77,11 +77,10 @@ def testGetConnectedWordsEdges():
     vocabDict.addEdges([("f", "k")], "edgeType2")
     print(vocabDict.getConnectedWordsEdges("a"))
 
+def dropAllData():
+    dataConn = DataConnector()
+    dataConn.dropAll()
 
-# dataConn = DataConnector()
-# randGenUpdateDB(dataConn)
 
-dataConn = DataConnector()
-dataConn.dropAll()
-
-# testGetConnectedWordsEdges()
+# dropAllData()
+backup()
