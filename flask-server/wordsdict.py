@@ -9,9 +9,9 @@ class WordsDict:
         self.__wordsDict =  defaultdict(None)
         self.__edgesDict = defaultdict(set)
         for w in wordsList:
-            self.__wordsDict[w] = Word(w)
+            self.__wordsDict[w["text"]] = Word(w["text"], w["definition"])
         self.name = name
-        self.__historyStack = [w for w in wordsList]
+        self.__historyStack = [w["text"] for w in wordsList]
         self.__dataConnector = None
 
     def syncOnDB(self, dataConnector):
@@ -43,7 +43,7 @@ class WordsDict:
         if self.__dataConnector and syncWithDB:
             dbRes = self.__dataConnector.pushManyWords([wordStr])
             if dbRes == False: return
-        self.__wordsDict[wordStr] = Word(wordStr)
+        self.__wordsDict[wordStr] = Word(wordStr, description = self.__dataConnector.getCachedDescription(wordStr))
         self.__historyStack.append(wordStr)
 
     def addWordStrs(self, wordStrList, syncWithDB = True):

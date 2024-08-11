@@ -59,7 +59,9 @@ function OverlayCard({ descriptionData, sidebarFocus, callbackFunc }) {
       return (
         <div className="overlay-card">
           <h1 className="overlay-title">{descriptionData.title}</h1>
-          <p className="overlay-text">{descriptionData.description}</p>
+          <p className="overlay-text" style={{whiteSpace: "pre-line", textAlign: "left"}}>
+            {descriptionData.description}
+          </p>
         </div>
       )
 

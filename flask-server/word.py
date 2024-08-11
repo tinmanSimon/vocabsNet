@@ -1,8 +1,9 @@
 from collections import defaultdict
 
 class Word:
-    def __init__(self, text):
+    def __init__(self, text, description = ""):
         self.text = text
+        self.description = description
 
         # internal dictionary for this Word's connected neighbors.
         # the key is edgeType, like "synonyms", "antonyms", etc.
@@ -11,6 +12,7 @@ class Word:
 
         # internal variable for memorizing the connected Words' texts
         self.__edgesMemory = defaultdict(set)
+        
 
     def __isEdgeToMyself(self, destWordObj):
         return destWordObj.text == self.text

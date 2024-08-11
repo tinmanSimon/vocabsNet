@@ -13,6 +13,7 @@ class DataConnector:
         self.__mg_client = None
         self.__connectMongo()
         self.__dictionaryUri = "https://api.dictionaryapi.dev/api/v2/entries/en/"
+        self.__descriptionDict = {}
 
     def __connectMongo(self):
         if self.__mg_client == None:
@@ -30,7 +31,12 @@ class DataConnector:
         if response.status_code == 200:
             res = response.json()
             meanings = res[0]["meanings"]
-        return meanings
+        definition = ""
+        for meaning in meanings:
+            definition += meaning["partOfSpeech"] + ":\n"
+            for i, dictDef in enumerate(meaning["definitions"]):
+                definition += f"{str(i + 1)}. {dictDef["definition"]}\n" 
+        return definition
 
     def dropAll(self):
         self.__mg_nodes.delete_many({})
@@ -41,6 +47,7 @@ class DataConnector:
         words = [{"text" : w, "definition" : ""} for w in wordsList]
         for w in words:
             w["definition"] = self.getDefinitions(w["text"])
+            self.__descriptionDict[w["text"]] = w["definition"]
         try:
             self.__mg_nodes.insert_many(words)
             return True
@@ -92,8 +99,15 @@ class DataConnector:
 
     def getAllWords(self):
         self.__connectMongo()
-        return [d["text"] for d in self.__mg_nodes.find()]
+        wordList = []
+        for d in self.__mg_nodes.find():
+            wordList.append(d)
+            self.__descriptionDict[d["text"]] = d["definition"]
+        return wordList
     
+    def getCachedDescription(self, word):
+        return self.__descriptionDict[word] if word in self.__descriptionDict else ""
+
     def getAllEdges(self):
         self.__connectMongo()
         edgeMap = defaultdict(set)
@@ -129,7 +143,7 @@ class DataConnector:
                 {
                     "id" : w,
                     "group" : random.randint(1,9),
-                    "description" : " ".join(self.generate_random_string(2, 20) for s in range(30))
+                    "description" : self.__descriptionDict[w] if w in self.__descriptionDict else ""
                 } for w in wordsList
             ],
             "links" : [{
