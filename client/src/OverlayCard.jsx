@@ -19,6 +19,9 @@ function OverlayCard({ descriptionData, sidebarFocus, callbackFunc }) {
           "edgetype" : edgeTypeInputRef.current.value,
           "method" : "add-words"
         })
+        wordInputRef.current.value = ""
+        edgesInputRef.current.value = ""
+        edgeTypeInputRef.current.value = ""
         break
 
       case "search-button":

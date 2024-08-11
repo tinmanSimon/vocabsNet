@@ -105,6 +105,14 @@ function App() {
 
   const handleNodeClick = useCallback(focusCameraOnNode, [])
 
+  const handleLinkClick = link => {
+    console.log("focus on link: ", link)
+    const middlePos = Object.assign(...['x', 'y', 'z'].map(c => ({
+      [c]: link.source[c] + (link.target[c] - link.source[c]) / 2 // calc middle point
+    })));
+    focusCameraOnNode(middlePos)
+  }
+
   const setNode3ObjectStyle = node => {
       const sprite = new SpriteText(node.id)
       sprite.material.depthWrite = false // make sprite background transparent
@@ -169,9 +177,25 @@ function App() {
             nodeAutoColorBy={"group"}
             nodeThreeObject={setNode3ObjectStyle}
             nodeThreeObjectExtend={false}
+            linkThreeObjectExtend={true}
+            linkThreeObject={link => {
+              // extend link with text sprite
+              const sprite = new SpriteText(`${link.value}`);
+              sprite.material.depthWrite = false // make sprite background transparent
+              sprite.textHeight = 4;
+              return sprite;
+            }}
             linkAutoColorBy={"value"}
             linkWidth={1.5}
             linkOpacity={0.3}
+            linkPositionUpdate={(sprite, { start, end }) => {
+              const middlePos = Object.assign(...['x', 'y', 'z'].map(c => ({
+                [c]: start[c] + (end[c] - start[c]) / 2 // calc middle point
+              })));
+              // Position sprite
+              Object.assign(sprite.position, middlePos);
+            }}
+            onLinkClick={handleLinkClick}
             ref={fg3dRef}
           />
         </div>

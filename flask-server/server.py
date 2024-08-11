@@ -53,8 +53,9 @@ def addwords():
         print(f"add type '{edgeType}' edges to vocab: {edges}")
         vocabDict.addEdges(edges, edgeType)
 
-    responseList, responseEdges = vocabDict.getConnectedWordsEdges(vocabDict.getLastWordInHistory())
-    responseData = dataConn.constructNodes(responseList, responseEdges, vocabDict.getLastWordInHistory())
+    focusWord = vocabDict.getLastWordInHistory()
+    responseList, responseEdges = vocabDict.getConnectedWordsEdges(focusWord)
+    responseData = dataConn.constructNodes(responseList, responseEdges, focusWord)
     return jsonify(responseData)
 
 if __name__ == "__main__" :
