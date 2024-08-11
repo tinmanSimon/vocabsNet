@@ -84,7 +84,6 @@ function App() {
   }
 
   const focusCameraOnNode = node => {
-    console.log("focus on word: " + node.id)
     const distance = 80
     const distRatio = 1 + distance/Math.hypot(node.x, node.y, node.z)
     let newPosition = { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }
@@ -135,11 +134,23 @@ function App() {
   const overlayCallback = data => {
     switch (data.method) {
       case "add-words":
-        // todo add words
         console.log("adding words: ", data.words)
         console.log("adding edges: ", data.edges, " edge type: ", data.edgetype)
         postAPI({
           uri: "http://127.0.0.1:8080/api/vocabnet/addwords",
+          data : {
+            "words" : data.words,
+            "edges" : data.edges,
+            "edgetype" : data.edgetype
+          }
+        })
+        break
+
+      case "remove-words":
+        console.log("removing words: ", data.words)
+        console.log("removing edges: ", data.edges, " edge type: ", data.edgetype)
+        postAPI({
+          uri: "http://127.0.0.1:8080/api/vocabnet/removewords",
           data : {
             "words" : data.words,
             "edges" : data.edges,
@@ -160,6 +171,7 @@ function App() {
           {focusObject.id != "" && (<MenuItem> {focusObject.id}: </MenuItem>)}
           <MenuItem onClick={() => handleDescClick("description")}> Description </MenuItem>
           <MenuItem onClick={() => handleDescClick("add-words")}> Add Words </MenuItem>
+          <MenuItem onClick={() => handleDescClick("remove-words")}> Remove Words </MenuItem>
           <MenuItem onClick={() => handleDescClick("search-words")}> Search Words </MenuItem>
         </Menu>
       </Sidebar>

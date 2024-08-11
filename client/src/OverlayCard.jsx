@@ -8,20 +8,40 @@ function OverlayCard({ descriptionData, sidebarFocus, callbackFunc }) {
   const edgesInputRef = useRef(null)
   const edgeTypeInputRef = useRef(null)
 
+  const refValidationCheck = () => {
+    if (wordInputRef.current == null) return false
+    if (wordInputRef.current.value == "" && edgesInputRef.current.value == "") return false 
+    return true
+  }
+
+  const getWordsEdgesReqParams = method => {
+    if (!refValidationCheck()) return {}
+    return {
+      "words" : wordInputRef.current.value,
+      "edges" : edgesInputRef.current.value,
+      "edgetype" : edgeTypeInputRef.current.value,
+      "method" : method
+    }
+  }
+
+  const resetInputs = () => {
+    wordInputRef.current.value = ""
+    edgesInputRef.current.value = ""
+    edgeTypeInputRef.current.value = ""
+  }
+
   const overlayButtonsClick = e => {
     switch (e.target.id) {
       case "add-button":
-        if (wordInputRef.current == null) return
-        if (wordInputRef.current.value == "" && edgesInputRef.current.value == "") return
-        callbackFunc({
-          "words" : wordInputRef.current.value,
-          "edges" : edgesInputRef.current.value,
-          "edgetype" : edgeTypeInputRef.current.value,
-          "method" : "add-words"
-        })
-        wordInputRef.current.value = ""
-        edgesInputRef.current.value = ""
-        edgeTypeInputRef.current.value = ""
+        if (!refValidationCheck()) return
+        callbackFunc(getWordsEdgesReqParams("add-words"))
+        resetInputs()
+        break
+      
+      case "remove-button":
+        if (!refValidationCheck()) return
+        callbackFunc(getWordsEdgesReqParams("remove-words"))
+        resetInputs()
         break
 
       case "search-button":
@@ -42,26 +62,29 @@ function OverlayCard({ descriptionData, sidebarFocus, callbackFunc }) {
           <p className="overlay-text">{descriptionData.description}</p>
         </div>
       )
-    case "add-words":
+
+    case "search-words":
       return (
         <div className="overlay-card">
-          <p>To add multiple words, separate words with ","</p>
-          <p>Words: <input ref={wordInputRef} name="wordInput" placeholder="Word" /></p>
-          <p>Single edge is source text separated by a single space. <br></br> Multiple edges are separate with ","</p>
-          <p>Edges: <input ref={edgesInputRef} name="edgesInput" placeholder="Edges" /></p>
-          <p>Edge type: <input ref={edgeTypeInputRef} name="edgeTypeInput" placeholder="Edges Type" /></p>
-          <br></br>
-          <button id="add-button" onClick={overlayButtonsClick}>add</button>
+          <input ref={searchInputRef} name="searchInput" placeholder="Search" />
+          <button id="search-button" onClick={overlayButtonsClick}>Search</button>
         </div>
       )
-      case "search-words":
+    default:
+      if (sidebarFocus == "add-words" || sidebarFocus == "remove-words") {
         return (
           <div className="overlay-card">
-            <input ref={searchInputRef} name="searchInput" placeholder="Search" />
-            <button id="search-button" onClick={overlayButtonsClick}>Search</button>
+            <p>To handle multiple words, separate words with ","</p>
+            <p>Words: <input ref={wordInputRef} name="wordInput" placeholder="Word" /></p>
+            <p>Single edge is source text separated by a single space. <br></br> Multiple edges are separate with ","</p>
+            <p>Edges: <input ref={edgesInputRef} name="edgesInput" placeholder="Edges" /></p>
+            <p>Edge type: <input ref={edgeTypeInputRef} name="edgeTypeInput" placeholder="Edges Type" /></p>
+            <br></br>
+            {sidebarFocus == "add-words" && <button id="add-button" onClick={overlayButtonsClick}>add</button>}
+            {sidebarFocus == "remove-words" && <button id="remove-button" onClick={overlayButtonsClick}>remove</button>}
           </div>
         )
-    default:
+      }
       return (<div></div>)
   }
   

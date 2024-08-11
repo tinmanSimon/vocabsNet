@@ -58,6 +58,23 @@ def addwords():
     responseData = dataConn.constructNodes(responseList, responseEdges, focusWord)
     return jsonify(responseData)
 
+@app.route("/api/vocabnet/removewords", methods=["POST"])
+def removeWords():
+    data = request.get_json()
+    print("Received data:", data)
+    wordsList, edges, edgeType = parseWordsEdges(data)
+    if wordsList: 
+        print(f"add words to vocab: {wordsList}")
+        vocabDict.removeWordByStrs(wordsList)
+    if edgeType and edges:
+        print(f"add type '{edgeType}' edges to vocab: {edges}")
+        vocabDict.removeEdges(edges, edgeType)
+
+    focusWord = vocabDict.getLastWordInHistory()
+    responseList, responseEdges = vocabDict.getConnectedWordsEdges(focusWord)
+    responseData = dataConn.constructNodes(responseList, responseEdges, focusWord)
+    return jsonify(responseData)
+
 if __name__ == "__main__" :
     app.run(debug=True, port=8080)
 
