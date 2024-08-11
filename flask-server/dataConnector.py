@@ -6,11 +6,13 @@ from credentials import uri, dbName
 import json
 from datetime import datetime
 from collections import defaultdict
+import requests
 
 class DataConnector:
     def __init__(self):
         self.__mg_client = None
         self.__connectMongo()
+        self.__dictionaryUri = "https://api.dictionaryapi.dev/api/v2/entries/en/"
 
     def __connectMongo(self):
         if self.__mg_client == None:
@@ -21,14 +23,26 @@ class DataConnector:
             self.__mg_nodes.create_index("text", unique=True)
             self.__mg_edges.create_index("st_id", unique=True)
 
+    def getDefinitions(self, wordStr):
+        uri = self.__dictionaryUri + wordStr
+        response = requests.get(uri)
+        meanings = []
+        if response.status_code == 200:
+            res = response.json()
+            meanings = res[0]["meanings"]
+        return meanings
+
     def dropAll(self):
         self.__mg_nodes.delete_many({})
         self.__mg_edges.delete_many({})
 
     def pushManyWords(self, wordsList):
         self.__connectMongo()
+        words = [{"text" : w, "definition" : ""} for w in wordsList]
+        for w in words:
+            w["definition"] = self.getDefinitions(w["text"])
         try:
-            self.__mg_nodes.insert_many([{"text" : w} for w in wordsList])
+            self.__mg_nodes.insert_many(words)
             return True
         except Exception as e:
             print(e)
