@@ -88,6 +88,4 @@ def dropAllData():
 
 
 # dropAllData()
-# backup()
-
-testFieldOfView()
+backup()
