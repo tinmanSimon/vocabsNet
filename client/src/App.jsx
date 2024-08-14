@@ -35,7 +35,10 @@ function App() {
     axios.post(reqParams.uri, reqParams.data)
     .then(function (response) {
       console.log(response);
-      if (response.data != null && response.data.focusNode != null){
+      if (response.data != null && response.data.error != null) {
+        console.log(response.data.error)
+      }
+      else if (response.data != null && response.data.focusNode != null){
         setNodesData(response.data)
         delayFocus(response.data.focusNode)
       }
@@ -163,8 +166,18 @@ function App() {
         })
         break
 
-        case "search-word":
-          focusCameraById(data.words)
+      case "search-word":
+        focusCameraById(data.word)
+        break 
+      
+      case "search-words-in-net":
+        console.log("Search through net with words: ", data.word)
+        postAPI({
+          uri: hostAndPort + "/api/vocabnet/search",
+          data : {
+            "word" : data.word
+          }
+        })
     }
   }
 
@@ -176,7 +189,8 @@ function App() {
           <MenuItem onClick={() => handleDescClick("description")}> Description </MenuItem>
           <MenuItem onClick={() => handleDescClick("add-words")}> Add Words </MenuItem>
           <MenuItem onClick={() => handleDescClick("remove-words")}> Remove Words </MenuItem>
-          <MenuItem onClick={() => handleDescClick("search-words")}> Search Words </MenuItem>
+          <MenuItem onClick={() => handleDescClick("search-words")}> Search Local Word </MenuItem>
+          <MenuItem onClick={() => handleDescClick("search-words-in-net")}> Search Through network </MenuItem>
         </Menu>
       </Sidebar>
         <div className="overlay-container">

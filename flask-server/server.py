@@ -80,6 +80,23 @@ def removeWords():
     responseData = dataConn.constructNodes(responseList, responseEdges, focusWord)
     return jsonify(responseData)
 
+@app.route("/api/vocabnet/search", methods=["POST"])
+def searchWord():
+    vocabDict = current_app.config['SHARED_DATA']
+    data = request.get_json()
+    print("Received data:", data)
+    wordsList = [w.strip() for w in re.split(r"[,\s]+", data['word']) if isAlphaOrNum(w)]
+    if len(wordsList) != 1:
+        print(f"Error: server searchWord received word: {data['word']}")
+        return jsonify({"error" : f"invalid search word: '{data['word']}'"})
+    focusWord = wordsList[0]
+    if not vocabDict.wordExists(focusWord):
+        print(f"Error: server searchWord received word: '{data['word']}' and it doesn't exist!")
+        return jsonify({"error" : f"Search word '{data['word']}' doesn't exist!"})
+    responseList, responseEdges = vocabDict.getConnectedWordsEdges(focusWord, dataConn.getFieldOfView())
+    responseData = dataConn.constructNodes(responseList, responseEdges, focusWord)
+    return jsonify(responseData)
+
 if __name__ == "__main__" :
     app.run(debug=True, port=8000)
 
