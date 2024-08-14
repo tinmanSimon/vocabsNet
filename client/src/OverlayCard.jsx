@@ -4,7 +4,7 @@ import { React, useState , useEffect, useRef, useCallback} from 'react'
 function OverlayCard({ descriptionData, sidebarFocus, callbackFunc }) {
 
   const wordInputRef = useRef(null)
-  const searchInputRef = useRef(null)
+  const singleInputRef = useRef(null)
   const edgesInputRef = useRef(null)
   const edgeTypeInputRef = useRef(null)
 
@@ -45,18 +45,26 @@ function OverlayCard({ descriptionData, sidebarFocus, callbackFunc }) {
         break
 
       case "search-button":
-        if (searchInputRef.current == null || searchInputRef.current.value == "") return
+        if (singleInputRef.current == null || singleInputRef.current.value == "") return
         callbackFunc({
-          "word" : searchInputRef.current.value,
+          "word" : singleInputRef.current.value,
           "method" : "search-word"
         })
         break
 
       case "search-in-net-button":
-        if (searchInputRef.current == null || searchInputRef.current.value == "") return
+        if (singleInputRef.current == null || singleInputRef.current.value == "") return
         callbackFunc({
-          "word" : searchInputRef.current.value,
+          "word" : singleInputRef.current.value,
           "method" : "search-words-in-net"
+        })
+        break
+
+      case "fov-button":
+        if (singleInputRef.current == null || singleInputRef.current.value == "") return
+        callbackFunc({
+          "fov" : singleInputRef.current.value,
+          "method" : "change-fov"
         })
         break
     }
@@ -73,14 +81,19 @@ function OverlayCard({ descriptionData, sidebarFocus, callbackFunc }) {
       )
     }
 
-    if (sidebarFocus == "search-words" || sidebarFocus == "search-words-in-net") {
+    let placeholder = "Search"
+    if (sidebarFocus == "field-of-view") placeholder = "Change FOV"
+
+    if (sidebarFocus == "search-words" || sidebarFocus == "search-words-in-net" || sidebarFocus == "field-of-view") {
       return (
         <div className="overlay-card">
-          <input ref={searchInputRef} name="searchInput" placeholder="Search" />
+          <input ref={singleInputRef} name="singleInput" placeholder={placeholder} />
           {sidebarFocus == "search-words" && 
             <button id="search-button" onClick={overlayButtonsClick}>Search</button>}
           {sidebarFocus == "search-words-in-net" && 
             <button id="search-in-net-button" onClick={overlayButtonsClick}>Search In Net</button>}
+          {sidebarFocus == "field-of-view" && 
+            <button id="fov-button" onClick={overlayButtonsClick}>Change field of view</button>}
         </div>
       )
     }

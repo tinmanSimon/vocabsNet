@@ -34,7 +34,6 @@ function App() {
   const postAPI = async (reqParams) => {
     axios.post(reqParams.uri, reqParams.data)
     .then(function (response) {
-      console.log(response);
       if (response.data != null && response.data.error != null) {
         console.log(response.data.error)
       }
@@ -86,7 +85,10 @@ function App() {
 
   const focusCameraById = (id) => {
     let node = findNodeDataById(id)
-    if (node == null) return 
+    if (node == null) {
+      console.log("Couldn't find word: ", id)
+      return
+    }
     focusCameraOnNode(node) 
   }
 
@@ -138,6 +140,14 @@ function App() {
     }
   }
 
+  const isInputSingleValidWord = (inputStr) => {
+    return /^[\w-]+$/.test(inputStr.trim());
+  }
+
+  const isInputSingleValidNum = (inputStr) => {
+    return /^\d+$/.test(inputStr.trim()) && parseInt(inputStr.trim(), 10) > 0;
+  }
+
   const overlayCallback = data => {
     switch (data.method) {
       case "add-words":
@@ -172,12 +182,32 @@ function App() {
       
       case "search-words-in-net":
         console.log("Search through net with words: ", data.word)
+        if (!isInputSingleValidWord(data.word)) {
+          console.log("Invalid word input: ", data.word)
+          break
+        }
         postAPI({
           uri: hostAndPort + "/api/vocabnet/search",
           data : {
             "word" : data.word
           }
         })
+        break 
+
+      case "change-fov":
+        console.log("Change fov: ", data.fov)
+        if (!isInputSingleValidNum(data.fov)) {
+          console.log("Invalid fov input: ", data.fov)
+          break
+        }
+        postAPI({
+          uri: hostAndPort + "/api/vocabnet/fov",
+          data : {
+            "fov" : data.fov,
+            "focusWord" : focusObject.id
+          }
+        })
+        break 
     }
   }
 
@@ -191,6 +221,7 @@ function App() {
           <MenuItem onClick={() => handleDescClick("remove-words")}> Remove Words </MenuItem>
           <MenuItem onClick={() => handleDescClick("search-words")}> Search Local Word </MenuItem>
           <MenuItem onClick={() => handleDescClick("search-words-in-net")}> Search Through network </MenuItem>
+          <MenuItem onClick={() => handleDescClick("field-of-view")}> Change field of view </MenuItem>
         </Menu>
       </Sidebar>
         <div className="overlay-container">

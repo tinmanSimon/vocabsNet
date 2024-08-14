@@ -27,6 +27,9 @@ def vocabnet():
 def isAlphaOrNum(w):
     return w and re.match("^[A-Za-z0-9_-]*$", w)
 
+def isNum(w):
+    return w and re.match("^[0-9]*$", w)
+
 def parseWordsEdges(data):
     wordsList = [w.strip() for w in re.split(r"[,\s]+", data['words']) if isAlphaOrNum(w)]
     edgeType = data['edgetype'].strip()
@@ -93,6 +96,26 @@ def searchWord():
     if not vocabDict.wordExists(focusWord):
         print(f"Error: server searchWord received word: '{data['word']}' and it doesn't exist!")
         return jsonify({"error" : f"Search word '{data['word']}' doesn't exist!"})
+    responseList, responseEdges = vocabDict.getConnectedWordsEdges(focusWord, dataConn.getFieldOfView())
+    responseData = dataConn.constructNodes(responseList, responseEdges, focusWord)
+    return jsonify(responseData)
+
+@app.route("/api/vocabnet/fov", methods=["POST"])
+def changeFov():
+    vocabDict = current_app.config['SHARED_DATA']
+    data = request.get_json()
+    print("Received data:", data)
+    wordsList = [w.strip() for w in re.split(r"[,\s]+", data['fov']) if isAlphaOrNum(w)]
+    if len(wordsList) != 1 or not isNum(wordsList[0]) or int(wordsList[0]) <= 0:
+        print(f"Error: server changeFov received fov: {data['fov']}")
+        return jsonify({"error" : f"invalid fov: '{data['fov']}'"})
+    fov = int(wordsList[0])
+    wordsList = [w.strip() for w in re.split(r"[,\s]+", data['focusWord']) if isAlphaOrNum(w)]
+    if len(wordsList) != 1:
+        print(f"Error: server changeFov received fov: {data['focusWord']}")
+        return jsonify({"error" : f"invalid fov: '{data['focusWord']}'"})
+    focusWord = wordsList[0]
+    dataConn.setAndPushFieldOfView(fov)
     responseList, responseEdges = vocabDict.getConnectedWordsEdges(focusWord, dataConn.getFieldOfView())
     responseData = dataConn.constructNodes(responseList, responseEdges, focusWord)
     return jsonify(responseData)
