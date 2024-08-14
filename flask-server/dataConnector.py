@@ -14,6 +14,8 @@ class DataConnector:
         self.__connectMongo()
         self.__dictionaryUri = "https://api.dictionaryapi.dev/api/v2/entries/en/"
         self.__descriptionDict = {}
+        self.__fieldOfView = 0
+        self.__defaultFov = 200
 
     def __connectMongo(self):
         if self.__mg_client == None:
@@ -21,8 +23,10 @@ class DataConnector:
             self.__mg_db = self.__mg_client[dbName]
             self.__mg_nodes = self.__mg_db["nodes"]
             self.__mg_edges = self.__mg_db["edges"]
+            self.__mg_metas = self.__mg_db["metas"]
             self.__mg_nodes.create_index("text", unique=True)
             self.__mg_edges.create_index("st_id", unique=True)
+            self.__mg_metas.create_index("key", unique=True)
 
     def getDefinitions(self, wordStr):
         uri = self.__dictionaryUri + wordStr
@@ -154,6 +158,24 @@ class DataConnector:
             "focusNode" : focusNode
         } 
     
+    def setAndPushFieldOfView(self, n):
+        if n <= 0:
+            print(f"Error: trying to set field of view of {n} which is <= 0!")
+            return
+        self.__mg_metas.update_one({"key" : {"$eq" : 'field_of_view'}}, {"$set": {'value': n}}, upsert=True)
+        self.__fieldOfView = n
+    
+    def getFieldOfView(self):
+        self.__connectMongo()
+        if self.__fieldOfView <= 0:
+            views = list(fov for fov in self.__mg_metas.find({"key" : {"$eq" : 'field_of_view'}}, {'_id': 0}))
+            if len(views) != 1:
+                print(f"Error: DB has {len(views)} different field of views now, this isn't right! Returning default fov value!")
+                return self.__defaultFov
+            self.__fieldOfView = views[0]['value']
+        return self.__fieldOfView 
+
+
     def localBackup(self):
         self.__connectMongo()
         with open("backups/words-" + datetime.now().strftime("%d-%m-%Y-%H-%M-%S") + '.json', 'w') as f:

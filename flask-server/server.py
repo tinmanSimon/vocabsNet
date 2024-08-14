@@ -19,7 +19,7 @@ app.config['SHARED_DATA'] = vocabDict
 def vocabnet():
     vocabDict = current_app.config['SHARED_DATA']
     
-    wordsList, edgeMap = vocabDict.getConnectedWordsEdges(vocabDict.getLastWordInHistory())
+    wordsList, edgeMap = vocabDict.getConnectedWordsEdges(vocabDict.getLastWordInHistory(), dataConn.getFieldOfView())
     data = dataConn.constructNodes(wordsList, edgeMap, vocabDict.getLastWordInHistory())
     print(f"last word in history: {vocabDict.getLastWordInHistory()}")
     return jsonify(data)
@@ -58,7 +58,7 @@ def addwords():
         vocabDict.addEdges(edges, edgeType)
 
     focusWord = vocabDict.getLastWordInHistory()
-    responseList, responseEdges = vocabDict.getConnectedWordsEdges(focusWord)
+    responseList, responseEdges = vocabDict.getConnectedWordsEdges(focusWord, dataConn.getFieldOfView())
     responseData = dataConn.constructNodes(responseList, responseEdges, focusWord)
     return jsonify(responseData)
 
@@ -76,7 +76,7 @@ def removeWords():
         vocabDict.removeEdges(edges, edgeType)
 
     focusWord = vocabDict.getLastWordInHistory()
-    responseList, responseEdges = vocabDict.getConnectedWordsEdges(focusWord)
+    responseList, responseEdges = vocabDict.getConnectedWordsEdges(focusWord, dataConn.getFieldOfView())
     responseData = dataConn.constructNodes(responseList, responseEdges, focusWord)
     return jsonify(responseData)
 

@@ -77,10 +77,17 @@ def testGetConnectedWordsEdges():
     vocabDict.addEdges([("f", "k")], "edgeType2")
     print(vocabDict.getConnectedWordsEdges("a"))
 
+def testFieldOfView():
+    dataConn = DataConnector()
+    dataConn.setAndPushFieldOfView(3)
+    print(dataConn.getFieldOfView())
+
 def dropAllData():
     dataConn = DataConnector()
     dataConn.dropAll()
 
 
 # dropAllData()
-backup()
+# backup()
+
+testFieldOfView()
