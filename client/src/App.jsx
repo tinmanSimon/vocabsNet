@@ -9,7 +9,7 @@ import { Sidebar, Menu, MenuItem, SubMenu } from 'react-pro-sidebar'
 function App() {
   const hostNameAndPort = "http://89.116.212.110:8000"
   const debugNameAndPort = "http://127.0.0.1:8000"
-  let hostAndPort = debugNameAndPort
+  let hostAndPort = hostNameAndPort
 
   const fg3dRef = useRef(null)
   const [nodesData, setNodesData] = useState({nodes : [], links : []}) 
