@@ -37,6 +37,9 @@ function App() {
       if (response.data != null && response.data.error != null) {
         console.log(response.data.error)
       }
+      else if (response.data != null && response.data.backup != null && response.data.backup == "done"){
+        console.log("Back up done.")
+      }
       else if (response.data != null && response.data.focusNode != null){
         setNodesData(response.data)
         delayFocus(response.data.focusNode)
@@ -208,6 +211,15 @@ function App() {
           }
         })
         break 
+
+      case "backup-server":
+        postAPI({
+          uri: hostAndPort + "/api/vocabnet/backup",
+          data : {
+            "backup" : true
+          }
+        })
+        break 
     }
   }
 
@@ -222,6 +234,7 @@ function App() {
           <MenuItem onClick={() => handleDescClick("search-words")}> Search Local Word </MenuItem>
           <MenuItem onClick={() => handleDescClick("search-words-in-net")}> Search Through network </MenuItem>
           <MenuItem onClick={() => handleDescClick("field-of-view")}> Change field of view </MenuItem>
+          <MenuItem onClick={() => handleDescClick("back-up")}> Back up </MenuItem>
         </Menu>
       </Sidebar>
         <div className="overlay-container">

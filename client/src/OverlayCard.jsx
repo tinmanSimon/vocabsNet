@@ -67,6 +67,12 @@ function OverlayCard({ descriptionData, sidebarFocus, callbackFunc }) {
           "method" : "change-fov"
         })
         break
+
+        case "backup-button":
+          callbackFunc({
+            "method" : "backup-server"
+          })
+          break
     }
   }
 
@@ -109,6 +115,14 @@ function OverlayCard({ descriptionData, sidebarFocus, callbackFunc }) {
           <br></br>
           {sidebarFocus == "add-words" && <button id="add-button" onClick={overlayButtonsClick}>add</button>}
           {sidebarFocus == "remove-words" && <button id="remove-button" onClick={overlayButtonsClick}>remove</button>}
+        </div>
+      )
+    }
+
+    if (sidebarFocus == "back-up") {
+      return (
+        <div className="overlay-card">
+          <button id="backup-button" onClick={overlayButtonsClick}>Back up</button>
         </div>
       )
     }
