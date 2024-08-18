@@ -120,6 +120,15 @@ def changeFov():
     responseData = dataConn.constructNodes(responseList, responseEdges, focusWord)
     return jsonify(responseData)
 
+@app.route("/api/vocabnet/backup", methods=["POST"])
+def backup():
+    vocabDict = current_app.config['SHARED_DATA']
+    data = request.get_json()
+    print("Received data:", data)
+    if data["backup"] == True:
+        dataConn.localBackup()
+    return jsonify({"backup" : "done"})
+
 if __name__ == "__main__" :
     app.run(debug=True, port=8000)
 
