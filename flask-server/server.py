@@ -18,9 +18,8 @@ app.config['SHARED_DATA'] = vocabDict
 @app.route("/api/vocabnet/getdata", methods=["GET"])
 def vocabnet():
     vocabDict = current_app.config['SHARED_DATA']
-    
     wordsList, edgeMap = vocabDict.getConnectedWordsEdges(vocabDict.getLastWordInHistory(), dataConn.getFieldOfView())
-    data = dataConn.constructNodes(wordsList, edgeMap, vocabDict.getLastWordInHistory())
+    data = dataConn.constructNodes(wordsList, edgeMap, vocabDict.getLastWordInHistory(), vocabDict.getWordHistory())
     print(f"last word in history: {vocabDict.getLastWordInHistory()}")
     return jsonify(data)
 
@@ -62,7 +61,7 @@ def addwords():
 
     focusWord = vocabDict.getLastWordInHistory()
     responseList, responseEdges = vocabDict.getConnectedWordsEdges(focusWord, dataConn.getFieldOfView())
-    responseData = dataConn.constructNodes(responseList, responseEdges, focusWord)
+    responseData = dataConn.constructNodes(responseList, responseEdges, focusWord, vocabDict.getWordHistory())
     return jsonify(responseData)
 
 @app.route("/api/vocabnet/removewords", methods=["POST"])
@@ -80,7 +79,7 @@ def removeWords():
 
     focusWord = vocabDict.getLastWordInHistory()
     responseList, responseEdges = vocabDict.getConnectedWordsEdges(focusWord, dataConn.getFieldOfView())
-    responseData = dataConn.constructNodes(responseList, responseEdges, focusWord)
+    responseData = dataConn.constructNodes(responseList, responseEdges, focusWord, vocabDict.getWordHistory())
     return jsonify(responseData)
 
 @app.route("/api/vocabnet/search", methods=["POST"])
@@ -97,7 +96,7 @@ def searchWord():
         print(f"Error: server searchWord received word: '{data['word']}' and it doesn't exist!")
         return jsonify({"error" : f"Search word '{data['word']}' doesn't exist!"})
     responseList, responseEdges = vocabDict.getConnectedWordsEdges(focusWord, dataConn.getFieldOfView())
-    responseData = dataConn.constructNodes(responseList, responseEdges, focusWord)
+    responseData = dataConn.constructNodes(responseList, responseEdges, focusWord, vocabDict.getWordHistory())
     return jsonify(responseData)
 
 @app.route("/api/vocabnet/fov", methods=["POST"])
@@ -117,7 +116,7 @@ def changeFov():
     focusWord = wordsList[0]
     dataConn.setAndPushFieldOfView(fov)
     responseList, responseEdges = vocabDict.getConnectedWordsEdges(focusWord, dataConn.getFieldOfView())
-    responseData = dataConn.constructNodes(responseList, responseEdges, focusWord)
+    responseData = dataConn.constructNodes(responseList, responseEdges, focusWord, vocabDict.getWordHistory())
     return jsonify(responseData)
 
 @app.route("/api/vocabnet/backup", methods=["POST"])

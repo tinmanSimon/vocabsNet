@@ -1,7 +1,7 @@
 import './OverlayCard.css';
 import { React, useState , useEffect, useRef, useCallback} from 'react'
 
-function OverlayCard({ descriptionData, sidebarFocus, callbackFunc }) {
+function OverlayCard({ descriptionData, sidebarFocus, callbackFunc, wordHistory}) {
 
   const wordInputRef = useRef(null)
   const singleInputRef = useRef(null)
@@ -123,6 +123,14 @@ function OverlayCard({ descriptionData, sidebarFocus, callbackFunc }) {
       return (
         <div className="overlay-card">
           <button id="backup-button" onClick={overlayButtonsClick}>Back up</button>
+        </div>
+      )
+    }
+
+    if (sidebarFocus == "get-history") { 
+      return (
+        <div className="overlay-card">
+          {wordHistory.slice().reverse().join(', ')}
         </div>
       )
     }
