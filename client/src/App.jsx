@@ -234,6 +234,7 @@ function App() {
           <MenuItem onClick={() => handleDescClick("search-words")}> Search Local Word </MenuItem>
           <MenuItem onClick={() => handleDescClick("search-words-in-net")}> Search Through network </MenuItem>
           <MenuItem onClick={() => handleDescClick("field-of-view")}> Change field of view </MenuItem>
+          <MenuItem onClick={() => handleDescClick("get-history")}> Get history </MenuItem>
           <MenuItem onClick={() => handleDescClick("back-up")}> Back up </MenuItem>
         </Menu>
       </Sidebar>
@@ -242,6 +243,7 @@ function App() {
             <OverlayCard 
             descriptionData={descriptionData}
             sidebarFocus={sidebarFocus}
+            wordHistory={nodesData.wordHistory}
             callbackFunc={overlayCallback}
             />)
           }

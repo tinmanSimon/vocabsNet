@@ -196,3 +196,6 @@ class WordsDict:
             print("\n")
         print("\n")
         
+    def getWordHistory(self):
+        return self.__historyStack
+    

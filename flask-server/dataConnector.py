@@ -141,7 +141,7 @@ class DataConnector:
             edgeSet.add((source, target))
         return [words, edges]
 
-    def constructNodes(self, wordsList, edgeMap, focusNode = ""):
+    def constructNodes(self, wordsList, edgeMap, focusNode = "", wordHistory = []):
         return {
             "nodes" : [
                 {
@@ -155,7 +155,8 @@ class DataConnector:
                 "target" : target,
                 "value" : edgeType
             } for edgeType, edges in edgeMap.items() for source, target in edges],
-            "focusNode" : focusNode
+            "focusNode" : focusNode,
+            "wordHistory" : wordHistory
         } 
     
     def setAndPushFieldOfView(self, n):
