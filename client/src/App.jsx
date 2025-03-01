@@ -7,8 +7,8 @@ import SpriteText from 'three-spritetext'
 import { Sidebar, Menu, MenuItem, SubMenu } from 'react-pro-sidebar'
 
 function App() {
-  const hostNameAndPort = "http://89.116.212.110:8000"
-  const debugNameAndPort = "http://127.0.0.1:8000"
+  const hostNameAndPort = "https://tinmansimon.uk"
+  const debugNameAndPort = "http://127.0.0.1"
   let hostAndPort = hostNameAndPort
 
   const fg3dRef = useRef(null)
