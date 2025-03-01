@@ -1,12 +1,10 @@
 from flask import Flask, jsonify, request, current_app
-from flask_cors import CORS
 from  dataConnector import DataConnector
 from wordsdict import WordsDict
 import re
 
 
 app = Flask(__name__)
-cors = CORS(app, origins="*")
 dataConn = DataConnector()
 wordsList, edgeMap = dataConn.getAllWords(), dataConn.getAllEdges()
 vocabDict = WordsDict(wordsList, "Vocabularies")
@@ -129,5 +127,5 @@ def backup():
     return jsonify({"backup" : "done"})
 
 if __name__ == "__main__" :
-    app.run(debug=True, port=8000)
+    app.run(host='0.0.0.0', port=8000, ssl_context=('cert.pem', 'key.pem'))
 
