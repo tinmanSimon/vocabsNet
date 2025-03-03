@@ -3,11 +3,12 @@ from dataConnector import DataConnector
 from wordsdict import WordsDict
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from credentials import JWT_SECRET_KEY
 
 import re
 
 app = Flask(__name__)
-app.config["JWT_SECRET_KEY"] = "nasdlkfkdsaf"
+app.config["JWT_SECRET_KEY"] = JWT_SECRET_KEY
 jwt = JWTManager(app)
 
 dataConn = DataConnector()
