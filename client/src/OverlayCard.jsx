@@ -152,6 +152,10 @@ function OverlayCard({ descriptionData, sidebarFocus, callbackFunc, wordHistory}
     } 
 
     if (sidebarFocus == "get-history") { 
+      if (wordHistory == null) {
+        return;
+      }
+
       return (
         <div className="overlay-card">
           {wordHistory.slice().reverse().join(', ')}

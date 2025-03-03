@@ -20,7 +20,9 @@ function App() {
   const hasMounted = useRef(false)
 
   const fetchAPI = async () => {
-    const response = await axios.get(hostAndPort + "/api/vocabnet/getdata")
+    let token = localStorage.getItem("token");
+    if (token === null) return;
+    const response = await axios.get(hostAndPort + "/api/vocabnet/getdata", {headers: {Authorization: `Bearer ${token}`}})
     setNodesData(response.data)
     if (response.data != null && response.data.focusNode != null)
       delayFocus(response.data.focusNode)
@@ -32,7 +34,12 @@ function App() {
   }
 
   const postAPI = async (reqParams) => {
-    axios.post(reqParams.uri, reqParams.data)
+    let token = localStorage.getItem("token");
+    if (reqParams.data.connectWithoutToken !== true && token === null) {
+      console.log("You don't have token for the connection!")
+      return;
+    }
+    axios.post(reqParams.uri, reqParams.data, {headers: {Authorization: `Bearer ${token}`}})
     .then(function (response) {
       if (response.data != null && response.data.error != null) {
         console.log(response.data.error)
@@ -45,10 +52,16 @@ function App() {
         delayFocus(response.data.focusNode)
       }
       else if (response.data != null && response.data.type == "login") {
-        console.log("Login status: ", response.data.status)
+        console.log("Login status: ", response.data.success)
+        if (response.data.success == true) {
+          localStorage.setItem("token", response.data.access_token);
+        }
       }
     })
     .catch(function (error) {
+      if (error.response?.status === 401){
+        localStorage.removeItem("token");
+      }
       console.log(error);
     });
   }
@@ -229,7 +242,8 @@ function App() {
           uri: hostAndPort + "/api/vocabnet/login",
           data : {
             "username" : data.username,
-            "password" : data.password
+            "password" : data.password,
+            "connectWithoutToken" : true
           }
         })
         break 
