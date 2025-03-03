@@ -4,12 +4,16 @@ from wordsdict import WordsDict
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from credentials import JWT_SECRET_KEY
+from datetime import timedelta
 
 import re
 
 app = Flask(__name__)
 app.config["JWT_SECRET_KEY"] = JWT_SECRET_KEY
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=7)
+
 jwt = JWTManager(app)
+bcrypt = Bcrypt(app)
 
 dataConn = DataConnector()
 wordsList, edgeMap = dataConn.getAllWords(), dataConn.getAllEdges()
@@ -23,9 +27,17 @@ app.config['SHARED_DATA'] = vocabDict
 def login():
     data = request.get_json()
     username = data.get("username")
-    password = data.get("password")
-    print(f"yeah username: {username}, password: {password}")
-    return jsonify({"type" : "login", "status" : "success"})
+    passwordInput = data.get("password")
+    correct_PWD_hash = dataConn.getPwdHash(username)
+    loginSuccess, access_token = False, ""
+    if correct_PWD_hash and bcrypt.check_password_hash(correct_PWD_hash, passwordInput):
+        access_token = create_access_token(identity=username)
+        loginSuccess = True
+    return jsonify({
+        "type" : "login", 
+        "success" : loginSuccess,
+        "access_token": access_token
+    })
 
 
 @app.route("/api/vocabnet/getdata", methods=["GET"])

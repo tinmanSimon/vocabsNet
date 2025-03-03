@@ -24,9 +24,11 @@ class DataConnector:
             self.__mg_nodes = self.__mg_db["nodes"]
             self.__mg_edges = self.__mg_db["edges"]
             self.__mg_metas = self.__mg_db["metas"]
+            self.__mg_credentials = self.__mg_db["credentials"]
             self.__mg_nodes.create_index("text", unique=True)
             self.__mg_edges.create_index("st_id", unique=True)
             self.__mg_metas.create_index("key", unique=True)
+            self.__mg_credentials.create_index("username", unique=True)
 
     def getDefinitions(self, wordStr):
         uri = self.__dictionaryUri + wordStr
@@ -176,7 +178,6 @@ class DataConnector:
             self.__fieldOfView = views[0]['value']
         return self.__fieldOfView 
 
-
     def localBackup(self):
         self.__connectMongo()
         with open("backups/words-" + datetime.now().strftime("%d-%m-%Y-%H-%M-%S") + '.json', 'w') as f:
@@ -184,3 +185,8 @@ class DataConnector:
         with open("backups/edges-" + datetime.now().strftime("%d-%m-%Y-%H-%M-%S") + '.json', 'w') as f:
             json.dump(list(self.__mg_edges.find({}, {'_id': 0})), f)
 
+    def getPwdHash(self, username):
+        self.__connectMongo()
+        credentials = list(cred for cred in self.__mg_credentials.find({"username" : {"$eq" : username}}, {'_id': 0}))
+        if len(credentials) != 1: return ""
+        return credentials[0]["password_hash"]
