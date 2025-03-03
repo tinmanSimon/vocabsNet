@@ -7,6 +7,8 @@ function OverlayCard({ descriptionData, sidebarFocus, callbackFunc, wordHistory}
   const singleInputRef = useRef(null)
   const edgesInputRef = useRef(null)
   const edgeTypeInputRef = useRef(null)
+  const usernameInputRef = useRef(null)
+  const passwordInputRef = useRef(null)
 
   const refValidationCheck = () => {
     if (wordInputRef.current == null) return false
@@ -28,6 +30,8 @@ function OverlayCard({ descriptionData, sidebarFocus, callbackFunc, wordHistory}
     wordInputRef.current.value = ""
     edgesInputRef.current.value = ""
     edgeTypeInputRef.current.value = ""
+    usernameInputRef.current.value = ""
+    passwordInputRef.current.value = ""
   }
 
   const overlayButtonsClick = e => {
@@ -68,11 +72,19 @@ function OverlayCard({ descriptionData, sidebarFocus, callbackFunc, wordHistory}
         })
         break
 
-        case "backup-button":
-          callbackFunc({
-            "method" : "backup-server"
-          })
-          break
+      case "backup-button":
+        callbackFunc({
+          "method" : "backup-server"
+        })
+        break
+
+      case "login-button":
+        callbackFunc({
+          "method" : "login-server",
+          "username" : usernameInputRef.current.value,
+          "password" : passwordInputRef.current.value
+        })
+        break
     }
   }
 
@@ -126,6 +138,18 @@ function OverlayCard({ descriptionData, sidebarFocus, callbackFunc, wordHistory}
         </div>
       )
     }
+
+    if (sidebarFocus == "log-in") {
+      return (
+        <div className="overlay-card">
+          <p>Please enter your username and password</p>
+          <p>Username: <input ref={usernameInputRef} name="usernameInput" placeholder="Username" /></p>
+          <p>Password: <input ref={passwordInputRef} name="passwordInput" placeholder="Password" /></p>
+          <br></br>
+          <button id="login-button" onClick={overlayButtonsClick}>Submit</button>
+        </div>
+      )
+    } 
 
     if (sidebarFocus == "get-history") { 
       return (

@@ -1,10 +1,15 @@
 from flask import Flask, jsonify, request, current_app
-from  dataConnector import DataConnector
+from dataConnector import DataConnector
 from wordsdict import WordsDict
+from flask_bcrypt import Bcrypt
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+
 import re
 
-
 app = Flask(__name__)
+app.config["JWT_SECRET_KEY"] = "nasdlkfkdsaf"
+jwt = JWTManager(app)
+
 dataConn = DataConnector()
 wordsList, edgeMap = dataConn.getAllWords(), dataConn.getAllEdges()
 vocabDict = WordsDict(wordsList, "Vocabularies")
@@ -13,7 +18,17 @@ for edgeType, edgesSet in edgeMap.items():
 vocabDict.syncOnDB(dataConn)
 app.config['SHARED_DATA'] = vocabDict
 
+@app.route("/api/vocabnet/login", methods=["POST"])
+def login():
+    data = request.get_json()
+    username = data.get("username")
+    password = data.get("password")
+    print(f"yeah username: {username}, password: {password}")
+    return jsonify({"type" : "login", "status" : "success"})
+
+
 @app.route("/api/vocabnet/getdata", methods=["GET"])
+@jwt_required()
 def vocabnet():
     vocabDict = current_app.config['SHARED_DATA']
     wordsList, edgeMap = vocabDict.getConnectedWordsEdges(vocabDict.getLastWordInHistory(), dataConn.getFieldOfView())
@@ -45,6 +60,7 @@ def parseWordsEdges(data):
     return wordsList, edges, edgeType
 
 @app.route("/api/vocabnet/addwords", methods=["POST"])
+@jwt_required()
 def addwords():
     vocabDict = current_app.config['SHARED_DATA']
     data = request.get_json()
@@ -63,6 +79,7 @@ def addwords():
     return jsonify(responseData)
 
 @app.route("/api/vocabnet/removewords", methods=["POST"])
+@jwt_required()
 def removeWords():
     vocabDict = current_app.config['SHARED_DATA']
     data = request.get_json()
@@ -81,6 +98,7 @@ def removeWords():
     return jsonify(responseData)
 
 @app.route("/api/vocabnet/search", methods=["POST"])
+@jwt_required()
 def searchWord():
     vocabDict = current_app.config['SHARED_DATA']
     data = request.get_json()
@@ -98,6 +116,7 @@ def searchWord():
     return jsonify(responseData)
 
 @app.route("/api/vocabnet/fov", methods=["POST"])
+@jwt_required()
 def changeFov():
     vocabDict = current_app.config['SHARED_DATA']
     data = request.get_json()
@@ -118,6 +137,7 @@ def changeFov():
     return jsonify(responseData)
 
 @app.route("/api/vocabnet/backup", methods=["POST"])
+@jwt_required()
 def backup():
     vocabDict = current_app.config['SHARED_DATA']
     data = request.get_json()

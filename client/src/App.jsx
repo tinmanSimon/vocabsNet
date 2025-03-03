@@ -44,6 +44,9 @@ function App() {
         setNodesData(response.data)
         delayFocus(response.data.focusNode)
       }
+      else if (response.data != null && response.data.type == "login") {
+        console.log("Login status: ", response.data.status)
+      }
     })
     .catch(function (error) {
       console.log(error);
@@ -220,6 +223,16 @@ function App() {
           }
         })
         break 
+
+      case "login-server":
+        postAPI({
+          uri: hostAndPort + "/api/vocabnet/login",
+          data : {
+            "username" : data.username,
+            "password" : data.password
+          }
+        })
+        break 
     }
   }
 
@@ -236,6 +249,7 @@ function App() {
           <MenuItem onClick={() => handleDescClick("field-of-view")}> Change field of view </MenuItem>
           <MenuItem onClick={() => handleDescClick("get-history")}> Get history </MenuItem>
           <MenuItem onClick={() => handleDescClick("back-up")}> Back up </MenuItem>
+          <MenuItem onClick={() => handleDescClick("log-in")}> Log in </MenuItem>
         </Menu>
       </Sidebar>
         <div className="overlay-container">
