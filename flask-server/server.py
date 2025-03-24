@@ -7,6 +7,7 @@ from credentials import JWT_SECRET_KEY
 from datetime import timedelta
 
 import re
+import logging
 
 app = Flask(__name__)
 app.config["JWT_SECRET_KEY"] = JWT_SECRET_KEY
@@ -39,6 +40,79 @@ def login():
         "access_token": access_token
     })
 
+@app.route("/api/vocabnet/note", methods=["GET", "POST", "DELETE"])
+@jwt_required()
+def note():
+    try:
+        vocabDict = current_app.config['SHARED_DATA']
+        current_user = get_jwt_identity()
+        
+        if request.method == "GET":
+            # Get note for a word
+            focus_word = request.args.get("focusWord")
+            if not focus_word:
+                return jsonify({"error": "focusWord parameter is required"}), 400
+                
+            if not vocabDict.wordExists(focus_word):
+                return jsonify({"error": f"Word '{focus_word}' does not exist"}), 404
+                
+            note_content = dataConn.getNote(focus_word)
+            return jsonify({
+                "word": focus_word,
+                "note": note_content
+            })
+            
+        elif request.method == "POST":
+            # Save or update a note
+            data = request.get_json()
+            if not data:
+                return jsonify({"error": "Missing request data"}), 400
+                
+            focus_word = data.get("focusWord")
+            note_content = data.get("note", "")
+            
+            if not focus_word:
+                return jsonify({"error": "focusWord is required"}), 400
+                
+            if not vocabDict.wordExists(focus_word):
+                return jsonify({"error": f"Word '{focus_word}' does not exist"}), 404
+                
+            success = dataConn.saveNote(focus_word, note_content, current_user)
+            
+            if success:
+                return jsonify({
+                    "word": focus_word,
+                    "note": note_content,
+                    "success": True
+                })
+            else:
+                return jsonify({
+                    "error": "Failed to save note",
+                    "success": False
+                }), 500
+                
+        elif request.method == "DELETE":
+            # Delete a note
+            focus_word = request.args.get("focusWord")
+            if not focus_word:
+                return jsonify({"error": "focusWord parameter is required"}), 400
+                
+            if not vocabDict.wordExists(focus_word):
+                return jsonify({"error": f"Word '{focus_word}' does not exist"}), 404
+                
+            success = dataConn.deleteNote(focus_word)
+            
+            return jsonify({
+                "word": focus_word,
+                "success": success
+            })
+            
+    except Exception as e:
+        logging.error(f"Error handling note: {str(e)}")
+        return jsonify({
+            "error": "Server error processing note",
+            "success": False
+        }), 500
 
 @app.route("/api/vocabnet/getdata", methods=["GET"])
 @jwt_required()
@@ -158,6 +232,27 @@ def backup():
     if data["backup"] == True:
         dataConn.localBackup()
     return jsonify({"backup" : "done"})
+
+@app.route("/api/vocabnet/notes/all", methods=["GET"])
+@jwt_required()
+def get_all_notes():
+    try:
+        vocabDict = current_app.config['SHARED_DATA']
+        notes = dataConn.getAllNotes()
+        
+        # Filter notes to only include words that exist in the vocabulary
+        filtered_notes = {word: note for word, note in notes.items() if vocabDict.wordExists(word)}
+        
+        return jsonify({
+            "notes": filtered_notes,
+            "count": len(filtered_notes)
+        })
+    except Exception as e:
+        logging.error(f"Error retrieving all notes: {str(e)}")
+        return jsonify({
+            "error": "Server error retrieving notes",
+            "success": False
+        }), 500
 
 if __name__ == "__main__" :
     app.run(host='0.0.0.0', port=8000, ssl_context=('cert.pem', 'key.pem'))

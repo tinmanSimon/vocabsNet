@@ -7,9 +7,7 @@ import SpriteText from 'three-spritetext'
 import { Sidebar, Menu, MenuItem, SubMenu } from 'react-pro-sidebar'
 
 function App() {
-  const hostNameAndPort = "https://tinmansimon.uk"
-  const debugNameAndPort = "http://127.0.0.1"
-  let hostAndPort = hostNameAndPort
+  let hostAndPort = "https://tinmansimon.uk"
 
   const fg3dRef = useRef(null)
   const [nodesData, setNodesData] = useState({nodes : [], links : []}) 
@@ -264,6 +262,7 @@ function App() {
           <MenuItem onClick={() => handleDescClick("get-history")}> Get history </MenuItem>
           <MenuItem onClick={() => handleDescClick("back-up")}> Back up </MenuItem>
           <MenuItem onClick={() => handleDescClick("log-in")}> Log in </MenuItem>
+          <MenuItem onClick={() => handleDescClick("note")}> Note </MenuItem>
         </Menu>
       </Sidebar>
         <div className="overlay-container">
@@ -272,6 +271,7 @@ function App() {
             descriptionData={descriptionData}
             sidebarFocus={sidebarFocus}
             wordHistory={nodesData.wordHistory}
+            focusWord={focusObject.id}
             callbackFunc={overlayCallback}
             />)
           }
