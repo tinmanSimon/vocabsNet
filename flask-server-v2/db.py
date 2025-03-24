@@ -12,7 +12,7 @@ logger = logging.getLogger("vocab_db")
 
 # Create MongoDB client
 try:
-    client = AsyncIOMotorClient(MONGO_URI)
+    client = AsyncIOMotorClient(MONGO_URI)  # Exposing client for testing purposes
     db = client[dbName]
     logger.info(f"MongoDB connection established to database: {dbName}")
 except Exception as e:
