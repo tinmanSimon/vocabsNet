@@ -1,7 +1,10 @@
 import './OverlayCard.css';
+import axios from "axios"
 import { React, useState , useEffect, useRef, useCallback} from 'react'
 
-function OverlayCard({ descriptionData, sidebarFocus, callbackFunc, wordHistory}) {
+function OverlayCard({ descriptionData, sidebarFocus, callbackFunc, wordHistory, focusWord}) {
+
+  let hostAndPort = "https://tinmansimon.uk"
 
   const wordInputRef = useRef(null)
   const singleInputRef = useRef(null)
@@ -9,6 +12,21 @@ function OverlayCard({ descriptionData, sidebarFocus, callbackFunc, wordHistory}
   const edgeTypeInputRef = useRef(null)
   const usernameInputRef = useRef(null)
   const passwordInputRef = useRef(null)
+  const [focusWordNote, setFocusWordNote] = useState("")
+
+  const fetchNote = async (focusWord) => {
+    let token = localStorage.getItem("token");
+    if (token === null) return;
+    console.log(focusWord)
+    const response = await axios.get(hostAndPort + "/api/vocabnet/note", {
+      params: { focusWord: focusWord }, 
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    if (response.data != null && response.data.note != null) {
+      setFocusWordNote(response.data.note)
+      console.log(response.data.note)
+    }
+  }
 
   const refValidationCheck = () => {
     if (wordInputRef.current == null) return false
@@ -162,6 +180,17 @@ function OverlayCard({ descriptionData, sidebarFocus, callbackFunc, wordHistory}
         </div>
       )
     }
+
+    if (sidebarFocus == "note") {
+      console.log("asdfasdf")
+      fetchNote(focusWord)
+      return (
+        <div className="overlay-card">
+          {/* <br>{focusWordNote}</br> */}
+          <button id="login-button" onClick={overlayButtonsClick}>Submit</button>
+        </div>
+      )
+    } 
 
     return (<div></div>)
   

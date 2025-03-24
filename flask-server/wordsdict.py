@@ -64,6 +64,34 @@ class WordsDict:
     def getAllWordsStrs(self):
         return list(self.__wordsDict.keys())
     
+    def getWordDetails(self, wordStr):
+        """Get all details for a word including definition and custom attributes."""
+        wordObj = self.getWordObj(wordStr)
+        if not wordObj:
+            return None
+        
+        # Get basic word information
+        result = {
+            "text": wordObj.text,
+            "definition": wordObj.description
+        }
+        
+        # Add notes if using a data connector with notes support
+        if self.__dataConnector and hasattr(self.__dataConnector, 'getNote'):
+            result["note"] = self.__dataConnector.getNote(wordStr)
+            
+        return result
+    
+    def getWordsWithNotes(self):
+        """Get a list of all words that have associated notes."""
+        words_with_notes = []
+        
+        if self.__dataConnector and hasattr(self.__dataConnector, 'getAllNotes'):
+            notes = self.__dataConnector.getAllNotes()
+            words_with_notes = [word for word in notes.keys() if self.wordExists(word)]
+            
+        return words_with_notes
+
     def addEdge(self, wordStr1, wordStr2, edgeType = "synonyms", syncWithDB = True):
         if not self.__validationCheck("addEdge", False, wordStr1, wordStr2, edgeType=edgeType, edgeInvalidExistStatus = True): return 
         if self.__dataConnector and syncWithDB:
