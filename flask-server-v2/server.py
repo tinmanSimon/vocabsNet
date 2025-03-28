@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends, status
 from auth_service import AuthService
 from credentials import MONGO_URI, DB_NAME, DEBUG_DB_NAME
-from pydantics import Token, UserInfo, RegisterResponse
+from vocab_types import Token, UserInfo, RegisterResponse
 from contextlib import asynccontextmanager
 import motor.motor_asyncio
 
