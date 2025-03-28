@@ -1,6 +1,38 @@
 from fastapi.testclient import TestClient
 from server import app
 import pytest
+from credentials import MONGO_URI, DB_NAME, DEBUG_DB_NAME
+from vocab_logger import logger
+from pymongo import MongoClient
+
+def clear_database(database_name: str, connection_string: str):
+    logger.info(f"Starting to clear database: {database_name}")
+    client = MongoClient(connection_string)
+    db = client[database_name]
+
+    try:
+        collection_names = db.list_collection_names()
+        for collection_name in collection_names:
+            logger.info(f"Dropping collection: {collection_name}")
+            db[collection_name].drop()
+        logger.info(f"Successfully cleared all collections in database: {database_name}")
+
+    except Exception as e:
+        logger.error(f"An error occurred while clearing the database: {e}")
+
+    finally:
+        client.close()
+        logger.info("MongoDB client closed.")
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_and_teardown_session():
+    logger.info("\n-- Session Start: Setting up resources --")
+    clear_database(DEBUG_DB_NAME, MONGO_URI)
+
+    yield  
+
+    logger.info("\n-- Session End: Tearing down resources --")
+    clear_database(DEBUG_DB_NAME, MONGO_URI)
 
 @pytest.fixture(scope="module", autouse=True)
 def client():
@@ -8,14 +40,50 @@ def client():
         yield client  
 
 def test_read_root(client):
+    logger.info("\n-- Test test_read_root Start --")
     response = client.get("/api/vocabnet/test")
     assert response.status_code == 200
     assert response.json() == {"message": "request received"}
 
-def test_register_user(client):
+def test_register_short_password(client):
+    logger.info("\n-- Test test_register_short_password Start --")
     response = client.post("/api/vocabnet/register", json={
         "username" : "najksdfujweqhdjsbhf",
-        "password" : "pwqaASDFuwe278336#@"
+        "password" : "asdc323"
+    })
+    assert response.status_code == 400
+
+def test_register_invalid_username(client):
+    logger.info("\n-- Test test_register_invalid_username Start --")
+    response = client.post("/api/vocabnet/register", json={
+        "username" : "najksdfujweq#hdjsbhf",
+        "password" : "pwqaASDFuwe278336"
+    })
+    assert response.status_code == 400
+
+def test_register_user(client):
+    logger.info("\n-- Test test_register_user Start --")
+    clear_database(DEBUG_DB_NAME, MONGO_URI)
+    response = client.post("/api/vocabnet/register", json={
+        "username" : "najksdfujweqhdjsbhf",
+        "password" : "pwqaASDFuwe278336"
     })
     assert response.status_code == 201
-    assert response.json()["success"] == True
+    assert response.json()["register_success"] == True
+
+def test_register_same_user(client):
+    logger.info("\n-- Test test_register_same_user Start --")
+    clear_database(DEBUG_DB_NAME, MONGO_URI)
+    response = client.post("/api/vocabnet/register", json={
+        "username" : "najksdfujweqhdjsbhf",
+        "password" : "pwqaASDFuwe278336"
+    })
+    assert response.status_code == 201
+    assert response.json()["register_success"] == True
+
+    response = client.post("/api/vocabnet/register", json={
+        "username" : "najksdfujweqhdjsbhf",
+        "password" : "pwqaASDFuwe278336"
+    })
+    assert response.status_code == 400
+

@@ -2,7 +2,9 @@ from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import bcrypt
 import jwt
-from pydantics import Token, UserInfo
+from vocab_types import Token, UserInfo, ACCESS_TOKEN_EXPIRE_DAYS, ALGORITHM
+import aiorwlock
+from vocab_logger import logger
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/vocabnet/login")
 
@@ -10,6 +12,7 @@ class AuthService:
     # database is mongoDB database
     def __init__(self, database):
         self.db = database
+        self.rw_lock = aiorwlock.RWLock() # Read-Write Lock
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
         return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
@@ -18,16 +21,16 @@ class AuthService:
         return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
     def create_access_token(self, username: str) -> str:
-        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.utcnow() + timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
         return jwt.encode({"sub": username, "exp": expire}, JWT_SECRET_KEY, algorithm=ALGORITHM)
 
     async def get_user(self, username: str):
-        if user_dict := await self.db.users.find_one({"username": username}):
-            return UserInfo(
-                username=user_dict["username"],
-                full_name=user_dict.get("full_name"),
-                hashed_password=user_dict["hashed_password"]
-            )
+        async with self.rw_lock.reader_lock:
+            if user_dict := await self.db.users.find_one({"username": username}):
+                return UserInfo(
+                    username=user_dict["username"],
+                    hashed_password=user_dict["hashed_password"]
+                )
 
     async def authenticate_user(self, username: str, password: str):
         if user := await self.get_user(username):
@@ -49,7 +52,24 @@ class AuthService:
         )
 
     async def register_user(self, user_data: UserInfo):
-        return {
-            "username" : "alkjsd",
-            "success" : True
-        }
+        if len(user_data.password) < 8:
+            raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+        if not user_data.username.isalnum():
+            raise HTTPException(status_code=400, detail="Username must be alphanumeric")
+        if user := await self.get_user(user_data.username):
+            raise HTTPException(status_code=400, detail="Username already exists")
+
+        try:
+            user_dict = user_data.model_dump(exclude={"password"})
+            user_dict["hashed_password"] = self.get_password_hash(user_data.password)
+            async with self.rw_lock.writer_lock:
+                await self.db.users.insert_one(user_dict)
+            return {
+                "username" : user_data.username,
+                "register_success" : True
+            }
+        except Exception as e:
+            logger.error(f"Registration error: {e}")
+            raise HTTPException(status_code=500, detail="Internal server error")
+
+        
