@@ -28,16 +28,18 @@ def clear_database(database_name: str, connection_string: str):
 def setup_and_teardown_session():
     logger.info("\n-- Session Start: Setting up resources --")
     clear_database(DEBUG_DB_NAME, MONGO_URI)
-
     yield  
-
     logger.info("\n-- Session End: Tearing down resources --")
-    clear_database(DEBUG_DB_NAME, MONGO_URI)
 
 @pytest.fixture(scope="module", autouse=True)
 def client():
     with TestClient(app) as client:  # Runs `lifespan`
         yield client  
+
+@pytest.fixture(scope="function", autouse=True)
+def setup_and_teardown_function():
+    yield 
+    clear_database(DEBUG_DB_NAME, MONGO_URI) 
 
 def test_read_root(client):
     logger.info("\n-- Test test_read_root Start --")
@@ -63,7 +65,6 @@ def test_register_invalid_username(client):
 
 def test_register_user(client):
     logger.info("\n-- Test test_register_user Start --")
-    clear_database(DEBUG_DB_NAME, MONGO_URI)
     response = client.post("/api/vocabnet/register", json={
         "username" : "najksdfujweqhdjsbhf",
         "password" : "pwqaASDFuwe278336"
@@ -73,7 +74,9 @@ def test_register_user(client):
 
 def test_register_same_user(client):
     logger.info("\n-- Test test_register_same_user Start --")
-    clear_database(DEBUG_DB_NAME, MONGO_URI)
+    response = client.post("/api/vocabnet/register", json={})
+    assert response.status_code == 422
+
     response = client.post("/api/vocabnet/register", json={
         "username" : "najksdfujweqhdjsbhf",
         "password" : "pwqaASDFuwe278336"
@@ -86,4 +89,21 @@ def test_register_same_user(client):
         "password" : "pwqaASDFuwe278336"
     })
     assert response.status_code == 400
+
+def test_invalid_user_me(client):
+    logger.info("\n-- Test test_invalid_user_me Start --")
+    response = client.get("/api/vocabnet/user/me")
+    assert response.status_code == 401
+
+def test_invalid_login(client):
+    logger.info("\n-- Test test_invalid_login Start --")
+    response = client.post("/api/vocabnet/login", json={})
+    assert response.status_code == 422
+
+    response = client.post("/api/vocabnet/login", json={
+        "username" : "najksdfujweqhdjsbhf",
+        "password" : "pwqaASDFuwe278336"
+    })
+    assert response.status_code == 401
+
 
