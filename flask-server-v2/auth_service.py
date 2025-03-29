@@ -5,6 +5,7 @@ import jwt
 from vocab_types import Token, UserInfo, ACCESS_TOKEN_EXPIRE_DAYS, ALGORITHM
 import aiorwlock
 from vocab_logger import logger
+from credentials import JWT_SECRET_KEY
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/vocabnet/login")
 
@@ -12,7 +13,6 @@ class AuthService:
     # database is mongoDB database
     def __init__(self, database):
         self.db = database
-        self.rw_lock = aiorwlock.RWLock() # Read-Write Lock
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
         return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
@@ -25,12 +25,11 @@ class AuthService:
         return jwt.encode({"sub": username, "exp": expire}, JWT_SECRET_KEY, algorithm=ALGORITHM)
 
     async def get_user(self, username: str):
-        async with self.rw_lock.reader_lock:
-            if user_dict := await self.db.users.find_one({"username": username}):
-                return UserInfo(
-                    username=user_dict["username"],
-                    hashed_password=user_dict["hashed_password"]
-                )
+        if user_dict := await self.db.users.find_one({"username": username}):
+            return UserInfo(
+                username=user_dict["username"],
+                hashed_password=user_dict["hashed_password"]
+            )
 
     async def authenticate_user(self, username: str, password: str):
         if user := await self.get_user(username):
@@ -62,8 +61,7 @@ class AuthService:
         try:
             user_dict = user_data.model_dump(exclude={"password"})
             user_dict["hashed_password"] = self.get_password_hash(user_data.password)
-            async with self.rw_lock.writer_lock:
-                await self.db.users.insert_one(user_dict)
+            await self.db.users.insert_one(user_dict)
             return {
                 "username" : user_data.username,
                 "register_success" : True
