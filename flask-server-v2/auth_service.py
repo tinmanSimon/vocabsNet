@@ -1,13 +1,11 @@
-from fastapi import FastAPI, HTTPException, Depends, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi import FastAPI, HTTPException, status
 import bcrypt
 import jwt
 from vocab_types import Token, UserInfo, ACCESS_TOKEN_EXPIRE_DAYS, ALGORITHM
 import aiorwlock
 from vocab_logger import logger
 from credentials import JWT_SECRET_KEY
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/vocabnet/login")
+from datetime import datetime, timedelta
 
 class AuthService:
     # database is mongoDB database
@@ -37,7 +35,7 @@ class AuthService:
                 return user
         return None
 
-    async def get_current_user(self, token: str = Depends(oauth2_scheme)):
+    async def get_current_user(self, token: str):
         try:
             payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[ALGORITHM])
             if user := await self.get_user(payload.get("sub")):
