@@ -1,11 +1,11 @@
 from fastapi import FastAPI, HTTPException, status
 import bcrypt
 import jwt
-from vocab_types import Token, UserInfo, ACCESS_TOKEN_EXPIRE_DAYS, ALGORITHM
+from core.vocab_types import Token, UserInfo, ACCESS_TOKEN_EXPIRE_DAYS, ALGORITHM
 import aiorwlock
-from vocab_logger import logger
-from credentials import JWT_SECRET_KEY
-from datetime import datetime, timedelta
+from app.vocab_logger import logger
+from core.credentials import JWT_SECRET_KEY
+from datetime import datetime, timezone, timedelta
 
 class AuthService:
     # database is mongoDB database
@@ -19,7 +19,7 @@ class AuthService:
         return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
     def create_access_token(self, username: str) -> str:
-        expire = datetime.utcnow() + timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
+        expire = datetime.now(timezone.utc) + timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
         return jwt.encode({"sub": username, "exp": expire}, JWT_SECRET_KEY, algorithm=ALGORITHM)
 
     async def get_user(self, username: str):
@@ -67,5 +67,3 @@ class AuthService:
         except Exception as e:
             logger.error(f"Registration error: {e}")
             raise HTTPException(status_code=500, detail="Internal server error")
-
-        
