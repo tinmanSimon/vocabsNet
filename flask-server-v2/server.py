@@ -4,8 +4,12 @@ from credentials import MONGO_URI, DB_NAME, DEBUG_DB_NAME
 from vocab_types import Token, UserInfo, RegisterResponse
 from contextlib import asynccontextmanager
 import motor.motor_asyncio
+from fastapi.security import OAuth2PasswordBearer
+
 
 DEBUG_MODE = True
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/vocabnet/user/login")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -28,8 +32,8 @@ async def test():
 async def register_user(user_data: UserInfo):
     return await app.state.auth_service.register_user(user_data)
 
-async def get_current_user():
-    return await app.state.auth_service.get_current_user()
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    return await app.state.auth_service.get_current_user(token)
 
 @app.get("/api/vocabnet/user/me")
 async def get_user_me(user: UserInfo = Depends(get_current_user)):
