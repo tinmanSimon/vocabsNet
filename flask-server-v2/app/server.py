@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends, status
-from auth_service import AuthService
-from credentials import MONGO_URI, DB_NAME, DEBUG_DB_NAME
-from vocab_types import Token, UserInfo, RegisterResponse
+from app.auth_service import AuthService
+from core.credentials import MONGO_URI, DB_NAME, DEBUG_DB_NAME
+from core.vocab_types import Token, UserInfo, RegisterResponse
 from contextlib import asynccontextmanager
 import motor.motor_asyncio
 from fastapi.security import OAuth2PasswordBearer
