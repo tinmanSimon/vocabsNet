@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 
 ACCESS_TOKEN_EXPIRE_DAYS = 7
@@ -17,3 +17,6 @@ class RegisterResponse(BaseModel):
     username: str 
     register_success: bool
     
+class Word(BaseModel):
+    model_config = ConfigDict(extra='allow')
+    name: str 
