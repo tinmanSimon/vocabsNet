@@ -7,7 +7,8 @@ from app.vocab_graph import VocabularyGraph
 async def test_add_word(client):
     VG = VocabularyGraph()
     await VG.add_word({
-        "name" : "casdfew",
-        "description" : "passion, fire"
+        "name" : "asdf",
+        "description" : "owieru jaksldfj",
+        "environment" : "test"
     })
 
