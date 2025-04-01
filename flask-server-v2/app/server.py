@@ -1,10 +1,11 @@
 from fastapi import FastAPI, HTTPException, Depends, status
 from app.auth_service import AuthService
-from core.credentials import MONGO_URI, DB_NAME, DEBUG_DB_NAME
+from core.credentials import neo4j_uri, neo4j_username, neo4j_pwd
 from core.vocab_types import Token, UserInfo, RegisterResponse
 from contextlib import asynccontextmanager
 import motor.motor_asyncio
 from fastapi.security import OAuth2PasswordBearer
+from neo4j import AsyncGraphDatabase
 
 
 DEBUG_MODE = True
@@ -13,12 +14,10 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/vocabnet/user/login")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    mongo_client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URI)
-    app.state.mongo_client = mongo_client
-    CHOSEN_DB = DEBUG_DB_NAME if DEBUG_MODE else DB_NAME
-    app.state.auth_service = AuthService(mongo_client[CHOSEN_DB])  
+    neo4j_driver = AsyncGraphDatabase.driver(neo4j_uri, auth=(neo4j_username, neo4j_pwd))
+    app.state.neo4j_driver = neo4j_driver
+    app.state.auth_service = AuthService(neo4j_driver)
     yield
-    app.state.mongo_client.close()
 
 app = FastAPI(lifespan=lifespan)
 

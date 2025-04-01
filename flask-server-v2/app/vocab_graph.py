@@ -1,4 +1,4 @@
-from neo4j import GraphDatabase, AsyncGraphDatabase
+from neo4j import AsyncGraphDatabase
 from core.credentials import neo4j_uri, neo4j_username, neo4j_pwd
 from core.vocab_types import Word
 

@@ -2,32 +2,28 @@ import pytest
 from fastapi.testclient import TestClient
 from app.server import app  
 from app.vocab_logger import logger
-from core.credentials import MONGO_URI, DB_NAME, DEBUG_DB_NAME
-from pymongo import MongoClient
+from core.credentials import neo4j_uri, neo4j_username, neo4j_pwd
+from neo4j import GraphDatabase
 
-def clear_database(database_name: str, connection_string: str):
-    logger.info(f"Starting to clear database: {database_name}")
-    client = MongoClient(connection_string)
-    db = client[database_name]
+def _clear_graph(tx):
+    tx.run("MATCH (n) DETACH DELETE n")
+
+def clear_database():
+    logger.info(f"Starting to clear neo4j")
 
     try:
-        collection_names = db.list_collection_names()
-        for collection_name in collection_names:
-            logger.info(f"Dropping collection: {collection_name}")
-            db[collection_name].drop()
-        logger.info(f"Successfully cleared all collections in database: {database_name}")
+        driver = GraphDatabase.driver(neo4j_uri, auth=(neo4j_username, neo4j_pwd))
+        with driver.session() as session:
+            session.execute_write(_clear_graph)
+        driver.close()
 
     except Exception as e:
         logger.error(f"An error occurred while clearing the database: {e}")
 
-    finally:
-        client.close()
-        logger.info("MongoDB client closed.")
-
 @pytest.fixture(scope="session", autouse=True)
 def setup_and_teardown_session():
     logger.info("\n-- Session Start: Setting up resources --")
-    clear_database(DEBUG_DB_NAME, MONGO_URI)
+    clear_database()
     yield  
     logger.info("\n-- Session End: Tearing down resources --")
 
@@ -39,4 +35,4 @@ def client():
 @pytest.fixture(scope="function", autouse=True)
 def setup_and_teardown_function():
     yield 
-    clear_database(DEBUG_DB_NAME, MONGO_URI) 
+    clear_database() 
