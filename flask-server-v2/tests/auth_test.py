@@ -5,7 +5,8 @@ def test_register_short_password(client):
     logger.info("\n-- Test test_register_short_password Start --")
     response = client.post("/api/vocabnet/register", json={
         "username" : "najksdfujweqhdjsbhf",
-        "password" : "asdc323"
+        "password" : "asdc323",
+        "environment" : "test"
     })
     assert response.status_code == 400
 
@@ -13,7 +14,8 @@ def test_register_invalid_username(client):
     logger.info("\n-- Test test_register_invalid_username Start --")
     response = client.post("/api/vocabnet/register", json={
         "username" : "najksdfujweq#hdjsbhf",
-        "password" : "pwqaASDFuwe278336"
+        "password" : "pwqaASDFuwe278336",
+        "environment" : "test"
     })
     assert response.status_code == 400
 
@@ -21,7 +23,8 @@ def test_register_user(client):
     logger.info("\n-- Test test_register_user Start --")
     response = client.post("/api/vocabnet/register", json={
         "username" : "najksdfujweqhdjsbhf",
-        "password" : "pwqaASDFuwe278336"
+        "password" : "pwqaASDFuwe278336",
+        "environment" : "test"
     })
     assert response.status_code == 201
     assert response.json()["register_success"] == True
@@ -33,14 +36,16 @@ def test_register_same_user(client):
 
     response = client.post("/api/vocabnet/register", json={
         "username" : "najksdfujweqhdjsbhf",
-        "password" : "pwqaASDFuwe278336"
+        "password" : "pwqaASDFuwe278336",
+        "environment" : "test"
     })
     assert response.status_code == 201
     assert response.json()["register_success"] == True
 
     response = client.post("/api/vocabnet/register", json={
         "username" : "najksdfujweqhdjsbhf",
-        "password" : "pwqaASDFuwe278336"
+        "password" : "pwqaASDFuwe278336",
+        "environment" : "test"
     })
     assert response.status_code == 400
 
@@ -58,26 +63,30 @@ def test_invalid_login(client):
 
     response = client.post("/api/vocabnet/login", json={
         "username" : "najksdfujweqhdjsbhf",
-        "password" : "pwqaASDFuwe278336"
+        "password" : "pwqaASDFuwe278336",
+        "environment" : "test"
     })
     assert response.status_code == 401
 
     response = client.post("/api/vocabnet/register", json={
         "username" : "najksdfujweqhdjsbhf",
-        "password" : "pwqaASDFuwe278336"
+        "password" : "pwqaASDFuwe278336",
+        "environment" : "test"
     })
     assert response.status_code == 201
     assert response.json()["register_success"] == True
 
     response = client.post("/api/vocabnet/login", json={
         "username" : "najksdfujweqhdjsbhf",
-        "password" : "pwqaASDFuwe27833"
+        "password" : "pwqaASDFuwe27833",
+        "environment" : "test"
     })
     assert response.status_code == 401
 
     response = client.post("/api/vocabnet/login", json={
         "username" : "najksdfujweqhdjsbf",
-        "password" : "pwqaASDFuwe278336"
+        "password" : "pwqaASDFuwe278336",
+        "environment" : "test"
     })
     assert response.status_code == 401
 
@@ -88,14 +97,16 @@ def test_register_and_login(client):
 
     response = client.post("/api/vocabnet/register", json={
         "username" : test_username,
-        "password" : test_pwd
+        "password" : test_pwd,
+        "environment" : "test"
     })
     assert response.status_code == 201
     assert response.json()["register_success"] == True
 
     response = client.post("/api/vocabnet/login", json={
         "username" : test_username,
-        "password" : test_pwd
+        "password" : test_pwd,
+        "environment" : "test"
     })
     assert response.status_code == 200
     assert response.json()["access_token"] is not None

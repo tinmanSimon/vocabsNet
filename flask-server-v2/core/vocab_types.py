@@ -12,6 +12,7 @@ class UserInfo(BaseModel):
     username: str
     password: Optional[str] = None 
     hashed_password: Optional[str] = None 
+    environment: Optional[str] = None 
 
 class RegisterResponse(BaseModel):
     username: str 

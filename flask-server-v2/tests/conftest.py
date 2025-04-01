@@ -6,7 +6,8 @@ from core.credentials import neo4j_uri, neo4j_username, neo4j_pwd
 from neo4j import GraphDatabase
 
 def _clear_graph(tx):
-    tx.run("MATCH (n) DETACH DELETE n")
+    query = "MATCH (n) WHERE n.environment = 'test' DETACH DELETE n"
+    tx.run(query)
 
 def clear_database():
     logger.info(f"Starting to clear neo4j")

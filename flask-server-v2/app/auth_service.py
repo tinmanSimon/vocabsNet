@@ -26,14 +26,13 @@ class AuthService:
     async def _get_neo4j_user(self, tx: AsyncTransaction, username: str):
         result = await tx.run(
             "MATCH (u:User {username: $username}) "
-            "RETURN u.username AS username, u.hashed_password AS hashed_password",
+            "RETURN u",
             {"username": username}
         )
         if record := await result.single():
-            return UserInfo(
-                username=record["username"],
-                hashed_password=record["hashed_password"]
-            )
+            user_node = record["u"]
+            user_props = dict(user_node)
+            return UserInfo(**user_props)
         return None
 
     async def get_user(self, username: str):
@@ -84,8 +83,9 @@ class AuthService:
         try:
             user_dict = user_data.model_dump(exclude={"password"})
             user_dict["hashed_password"] = self.get_password_hash(user_data.password)
+            props_string = ", ".join([f"{key}: ${key}" for key in user_dict.keys()])
             query = (
-                "CREATE (u:User {username: $username, hashed_password: $hashed_password}) "
+                f"CREATE (u:User {{{props_string}}}) "
                 "RETURN u.username AS created_username"
             )
             async with self._driver.session() as session:
