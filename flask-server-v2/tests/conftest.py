@@ -31,6 +31,14 @@ def setup_and_teardown_session():
 @pytest.fixture(scope="module", autouse=True)
 def client():
     with TestClient(app) as client:  # Runs `lifespan`
+        # Define a wrapper that adds environment="test" to all JSON payloads
+        original_post = client.post
+        def post_with_test_env(url, **kwargs):
+            if 'json' in kwargs and isinstance(kwargs['json'], dict):
+                kwargs['json']['environment'] = "test"
+            return original_post(url, **kwargs)
+        client.post = post_with_test_env
+
         yield client  
 
 @pytest.fixture(scope="function", autouse=True)

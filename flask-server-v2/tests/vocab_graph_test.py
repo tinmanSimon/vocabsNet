@@ -8,7 +8,6 @@ async def test_add_word(client):
     VG = VocabularyGraph()
     await VG.add_word({
         "name" : "asdf",
-        "description" : "owieru jaksldfj",
-        "environment" : "test"
+        "description" : "owieru jaksldfj"
     })
 
