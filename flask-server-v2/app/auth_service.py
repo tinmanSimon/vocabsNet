@@ -9,7 +9,6 @@ from datetime import datetime, timezone, timedelta
 from neo4j import AsyncTransaction
 
 class AuthService:
-    # database is mongoDB database
     def __init__(self, neo4j_driver):
         self._driver = neo4j_driver
 
