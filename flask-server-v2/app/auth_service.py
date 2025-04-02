@@ -6,10 +6,10 @@ import aiorwlock
 from app.vocab_logger import logger
 from core.credentials import JWT_SECRET_KEY
 from datetime import datetime, timezone, timedelta
-from neo4j import AsyncTransaction
+from neo4j import AsyncTransaction, AsyncGraphDatabase
 
 class AuthService:
-    def __init__(self, neo4j_driver):
+    def __init__(self, neo4j_driver: AsyncGraphDatabase):
         self._driver = neo4j_driver
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
