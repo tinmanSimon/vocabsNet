@@ -1,6 +1,10 @@
 import pytest
 from app.vocab_logger import logger
-from core.vocab_types import TEST_USERNAME, TEST_PWD, TEST_SEMANTIC_UNIT_1, TEST_SEMANTIC_UNIT_2, TEST_SEMANTIC_UNIT_3
+from core.vocab_types import (
+    TEST_USERNAME, TEST_PWD, 
+    TEST_SEMANTIC_UNIT_1, TEST_SEMANTIC_UNIT_2, TEST_SEMANTIC_UNIT_3, 
+    TEST_SEMANTIC_UNIT_4, TEST_SEMANTIC_UNIT_5
+)
 
 def equal_semantics(semantics_1, semantics_2):
     if len(semantics_1) != len(semantics_2): return False
@@ -52,6 +56,28 @@ async def test_add_words(client, auth_headers, test_data):
         "added_words": [TEST_SEMANTIC_UNIT_1, TEST_SEMANTIC_UNIT_2, TEST_SEMANTIC_UNIT_3],
         "remove_words": [TEST_SEMANTIC_UNIT_1],
         "remain_words": [TEST_SEMANTIC_UNIT_2, TEST_SEMANTIC_UNIT_3],
+    },
+    {
+        "added_words": [
+            TEST_SEMANTIC_UNIT_1, 
+            TEST_SEMANTIC_UNIT_2, 
+            TEST_SEMANTIC_UNIT_3,
+            TEST_SEMANTIC_UNIT_4,
+            TEST_SEMANTIC_UNIT_5
+        ],
+        "remove_words": [TEST_SEMANTIC_UNIT_1, TEST_SEMANTIC_UNIT_3, TEST_SEMANTIC_UNIT_5],
+        "remain_words": [TEST_SEMANTIC_UNIT_2, TEST_SEMANTIC_UNIT_4],
+    },
+    {
+        "added_words": [
+            TEST_SEMANTIC_UNIT_1, 
+            TEST_SEMANTIC_UNIT_2, 
+            TEST_SEMANTIC_UNIT_3,
+            TEST_SEMANTIC_UNIT_4,
+            TEST_SEMANTIC_UNIT_5
+        ],
+        "remove_words": [TEST_SEMANTIC_UNIT_2, TEST_SEMANTIC_UNIT_4],
+        "remain_words": [TEST_SEMANTIC_UNIT_1, TEST_SEMANTIC_UNIT_3, TEST_SEMANTIC_UNIT_5],
     }
 ])
 async def test_remove_words(client, auth_headers, test_case):

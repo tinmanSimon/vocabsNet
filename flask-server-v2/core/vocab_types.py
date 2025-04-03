@@ -26,6 +26,17 @@ TEST_SEMANTIC_UNIT_3 = {
     "star" : True
 }
 
+TEST_SEMANTIC_UNIT_4 = {
+    "name": "existentialism" ,
+    "username": TEST_USERNAME
+}
+
+TEST_SEMANTIC_UNIT_5 = {
+    "name": "absurdism" ,
+    "username": TEST_USERNAME,
+    "belief" : "meaningless and irrational"
+}
+
 class Token(BaseModel):
     access_token: str
     token_type: str
