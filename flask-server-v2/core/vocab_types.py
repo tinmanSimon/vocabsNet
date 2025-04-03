@@ -7,6 +7,45 @@ MAX_NAME_LENGTH = 100
 TEST_USERNAME = "najksdfujweqhdjsbhf"
 TEST_PWD = "pwqaASDFuwe278336"
 
+TEST_SEMANTIC_UNITS_1 = [
+    {
+        "name": "philosophy",
+        "username": TEST_USERNAME,
+        "notes": "A key concept in ancient Greece"
+    }
+]
+
+TEST_SEMANTIC_UNITS_2 = [
+    {
+        "name": "philosophy",
+        "username": TEST_USERNAME,
+        "notes": "A key concept in ancient Greece"
+    },
+    {
+        "name": "stoicism" ,
+        "username": TEST_USERNAME,
+        "notes": "I practice this daily"
+    }
+]
+
+TEST_SEMANTIC_UNITS_3 = [
+    {
+        "name": "philosophy",
+        "username": TEST_USERNAME,
+        "notes": "A key concept in ancient Greece"
+    },
+    {
+        "name": "stoicism" ,
+        "username": TEST_USERNAME,
+        "notes": "I practice this daily"
+    },
+    {
+        "name": "nihilism" ,
+        "username": TEST_USERNAME,
+        "star" : True
+    }
+]
+
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -31,6 +70,11 @@ class SemanticUnit(BaseModel):
     model_config = ConfigDict(extra='allow')
 
 class DataCreateRequest(BaseModel):
+    semantic_units: list[SemanticUnit] = []
+    edges: list[str] = [] 
+    tags: list[str] = []
+
+class DataRemoveRequest(BaseModel):
     semantic_units: list[SemanticUnit] = []
     edges: list[str] = [] 
     tags: list[str] = []

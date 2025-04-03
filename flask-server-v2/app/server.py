@@ -3,7 +3,7 @@ from app.auth_service import AuthService
 from app.vocab_graph import VocabularyGraph
 from app.vocab_logger import logger
 from core.credentials import neo4j_uri, neo4j_username, neo4j_pwd
-from core.vocab_types import Token, UserInfo, RegisterResponse, Word, SemanticUnit, DataCreateRequest
+from core.vocab_types import Token, UserInfo, RegisterResponse, Word, SemanticUnit, DataCreateRequest, DataRemoveRequest
 from contextlib import asynccontextmanager
 import motor.motor_asyncio
 from fastapi.security import OAuth2PasswordBearer
@@ -72,6 +72,21 @@ async def createdata(request: DataCreateRequest, user: UserInfo = Depends(get_cu
     await add_semantic_units(request.semantic_units)
     return {"user" : user, "message": "Data created successfully"}
 
+async def remove_semantic_units(semantic_units: list[SemanticUnit]):
+    try:
+        await app.state.vocab_graph.remove_semantic_units(semantic_units)
+    except ValueError as e:  
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+
+@app.post("/api/vocabnet/removedata")
+async def removedata(request: DataRemoveRequest, user: UserInfo = Depends(get_current_user)):
+    if not user:
+        raise HTTPException(status_code=401, detail="Token not found")
+    await remove_semantic_units(request.semantic_units)
+    return {"user" : user, "message": "Data removed successfully"}
+    
 @app.get("/api/vocabnet/getdata")
 async def getdata(user: UserInfo = Depends(get_current_user)):
     if not user:

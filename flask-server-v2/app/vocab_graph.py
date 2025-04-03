@@ -21,19 +21,19 @@ class VocabularyGraph:
             raise ValueError(f"Invalid Semantic: '{semantic_unit.name}'")
         if len(semantic_unit.name) > MAX_NAME_LENGTH:
             raise ValueError(f"Semantic name exceeds max length ({MAX_NAME_LENGTH}): '{semantic_unit.name}'")
-        
+    def _validate_semantics(self, semantic_units):
+        unique_semantics = {(s.name, s.username): s for s in semantic_units}.values()
+        if len(unique_semantics) != len(semantic_units):
+            raise ValueError(f"Semantic units have duplicate values")
+        for semantic in semantic_units:
+            self._validate_semantic(semantic)
+
     async def add_semantic_units(self, semantic_units: list[SemanticUnit]):
-        logger.info(f"semantic_units: {semantic_units}")
         if not semantic_units: 
             return
-
-        valid_semantics = []
-        for semantic_unit in semantic_units:
-            self._validate_semantic(semantic_unit)
-            valid_semantics.append(semantic_unit.model_dump())
-
-        # Deduplicate semantic units by (name, username)
-        unique_semantics = {(s["name"], s["username"]): s for s in valid_semantics}.values()
+        
+        self._validate_semantics(semantic_units)
+        semantic_dicts = [semantic_unit.model_dump() for semantic_unit in semantic_units]
 
         query = """
         UNWIND $semantic_units AS semantic
@@ -54,13 +54,14 @@ class VocabularyGraph:
         MERGE (final_su)-[:_Belongs_To]->(w)
         MERGE (w)-[:_Referred_By]->(final_su)
 
-        RETURN COUNT(DISTINCT final_su) AS created_semantics, 
+        WITH COUNT(DISTINCT final_su) AS created_semantics, 
             COUNT(DISTINCT w) AS referenced_words
+        RETURN created_semantics, referenced_words
         """
 
         async with self._driver.session() as session:
             try:
-                result = await session.run(query, semantic_units=list(unique_semantics))
+                result = await session.run(query, semantic_units=semantic_dicts)
                 summary = await result.single()
                 return {
                     "created_semantics": summary["created_semantics"],
@@ -69,6 +70,51 @@ class VocabularyGraph:
             except Exception as e:
                 logger.error(f"Database error in add_semantic_units: {str(e)}", exc_info=True)
                 raise ValueError("Internal Server Error: Failed to insert semantic units.")
+    
+    async def remove_semantic_units(self, semantic_units: list[SemanticUnit]):
+        logger.info(f"semantic_units: {semantic_units}")
+        if not semantic_units: 
+            return
+        
+        self._validate_semantics(semantic_units)
+        semantic_dicts = [semantic_unit.model_dump() for semantic_unit in semantic_units]
+    
+        async with self._driver.session() as session:
+            try:
+                query = """
+                WITH $semantic_units AS semantics_to_delete, SIZE($semantic_units) AS requested_count
+
+                UNWIND semantics_to_delete AS semantic
+                MATCH (su:SemanticUnit {name: semantic.name, username: semantic.username})
+
+                WITH COLLECT(su) AS found_semantics, requested_count
+                WHERE SIZE(found_semantics) = requested_count
+
+                WITH SIZE(found_semantics) AS deleted_semantics, found_semantics
+
+                FOREACH (su IN found_semantics | DETACH DELETE su)
+
+                RETURN deleted_semantics 
+                """
+                
+                result = await session.run(query, semantic_units=semantic_dicts)
+                summary = await result.single()
+                
+                # If we get a result, the deletion was successful
+                if summary:
+                    return {
+                        "deleted_semantics": summary["deleted_semantics"]
+                    }
+                else:
+                    # If no result, it means the WHERE clause wasn't satisfied
+                    raise ValueError("Some semantic units do not exist in the database.")
+                    
+            except Exception as e:
+                if isinstance(e, ValueError):
+                    raise e
+                logger.error(f"Database error in remove_semantic_units: {str(e)}", exc_info=True)
+                raise ValueError("Internal Server Error: Failed to remove semantic units.")
+
 
     async def get_data(self, username: str):
         query = """
