@@ -7,44 +7,24 @@ MAX_NAME_LENGTH = 100
 TEST_USERNAME = "najksdfujweqhdjsbhf"
 TEST_PWD = "pwqaASDFuwe278336"
 
-TEST_SEMANTIC_UNITS_1 = [
-    {
-        "name": "philosophy",
-        "username": TEST_USERNAME,
-        "notes": "A key concept in ancient Greece"
-    }
-]
+TEST_SEMANTIC_UNIT_1 = {
+    "name": "philosophy",
+    "username": TEST_USERNAME,
+    "notes": "A key concept in ancient Greece"
+}
 
-TEST_SEMANTIC_UNITS_2 = [
-    {
-        "name": "philosophy",
-        "username": TEST_USERNAME,
-        "notes": "A key concept in ancient Greece"
-    },
-    {
-        "name": "stoicism" ,
-        "username": TEST_USERNAME,
-        "notes": "I practice this daily"
-    }
-]
 
-TEST_SEMANTIC_UNITS_3 = [
-    {
-        "name": "philosophy",
-        "username": TEST_USERNAME,
-        "notes": "A key concept in ancient Greece"
-    },
-    {
-        "name": "stoicism" ,
-        "username": TEST_USERNAME,
-        "notes": "I practice this daily"
-    },
-    {
-        "name": "nihilism" ,
-        "username": TEST_USERNAME,
-        "star" : True
-    }
-]
+TEST_SEMANTIC_UNIT_2 = {
+    "name": "stoicism" ,
+    "username": TEST_USERNAME,
+    "notes": "I practice this daily"
+}
+
+TEST_SEMANTIC_UNIT_3 = {
+    "name": "nihilism" ,
+    "username": TEST_USERNAME,
+    "star" : True
+}
 
 class Token(BaseModel):
     access_token: str
