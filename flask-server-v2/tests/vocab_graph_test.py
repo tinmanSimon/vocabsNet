@@ -1,6 +1,6 @@
 import pytest
 from app.vocab_logger import logger
-from core.vocab_types import TEST_USERNAME, TEST_PWD, TEST_SEMANTIC_UNITS_1, TEST_SEMANTIC_UNITS_2, TEST_SEMANTIC_UNITS_3
+from core.vocab_types import TEST_USERNAME, TEST_PWD, TEST_SEMANTIC_UNIT_1, TEST_SEMANTIC_UNIT_2, TEST_SEMANTIC_UNIT_3
 
 def equal_semantics(semantics_1, semantics_2):
     if len(semantics_1) != len(semantics_2): return False
@@ -13,9 +13,9 @@ def equal_semantics(semantics_1, semantics_2):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("test_data", [
-    TEST_SEMANTIC_UNITS_1,
-    TEST_SEMANTIC_UNITS_2,
-    TEST_SEMANTIC_UNITS_3
+    [TEST_SEMANTIC_UNIT_1],
+    [TEST_SEMANTIC_UNIT_1, TEST_SEMANTIC_UNIT_2],
+    [TEST_SEMANTIC_UNIT_1, TEST_SEMANTIC_UNIT_2, TEST_SEMANTIC_UNIT_3]
 ], ids=["one_word", "two_words", "three_words"])
 async def test_add_words(client, auth_headers, test_data):
     headers = auth_headers
@@ -34,52 +34,24 @@ async def test_add_words(client, auth_headers, test_data):
 @pytest.mark.asyncio
 @pytest.mark.parametrize("test_case", [
     {
-        "added_words": TEST_SEMANTIC_UNITS_1,
-        "remove_words": [{
-            "name": "philosophy",
-            "username": TEST_USERNAME
-        }],
+        "added_words": [TEST_SEMANTIC_UNIT_1],
+        "remove_words": [TEST_SEMANTIC_UNIT_1],
         "remain_words": [],
     },
     {
-        "added_words": TEST_SEMANTIC_UNITS_2,
-        "remove_words": [{
-            "name": "philosophy",
-            "username": TEST_USERNAME
-        }],
-        "remain_words": [{
-            "name": "stoicism",
-            "username": TEST_USERNAME,
-            "notes": "I practice this daily"
-        }],
+        "added_words": [TEST_SEMANTIC_UNIT_1, TEST_SEMANTIC_UNIT_2],
+        "remove_words": [TEST_SEMANTIC_UNIT_1],
+        "remain_words": [TEST_SEMANTIC_UNIT_2],
     },
     {
-        "added_words": TEST_SEMANTIC_UNITS_2,
-        "remove_words": [{
-            "name": "philosophy",
-            "username": TEST_USERNAME
-        }, {
-            "name": "stoicism",
-            "username": TEST_USERNAME
-        }],
+        "added_words": [TEST_SEMANTIC_UNIT_1, TEST_SEMANTIC_UNIT_2],
+        "remove_words": [TEST_SEMANTIC_UNIT_1, TEST_SEMANTIC_UNIT_2],
         "remain_words": [],
     },
     {
-        "added_words": TEST_SEMANTIC_UNITS_3,
-        "remove_words": [{
-            "name": "stoicism",
-            "username": TEST_USERNAME
-        }],
-        "remain_words": [{
-            "name": "philosophy",
-            "username": TEST_USERNAME,
-            "notes": "A key concept in ancient Greece"
-        },
-        {
-            "name": "nihilism",
-            "username": TEST_USERNAME,
-            "star": True
-        }],
+        "added_words": [TEST_SEMANTIC_UNIT_1, TEST_SEMANTIC_UNIT_2, TEST_SEMANTIC_UNIT_3],
+        "remove_words": [TEST_SEMANTIC_UNIT_1],
+        "remain_words": [TEST_SEMANTIC_UNIT_2, TEST_SEMANTIC_UNIT_3],
     }
 ])
 async def test_remove_words(client, auth_headers, test_case):
