@@ -1,7 +1,13 @@
 from neo4j import AsyncGraphDatabase
+from neo4j.exceptions import TransientError
 from core.credentials import neo4j_uri, neo4j_username, neo4j_pwd
-from core.vocab_types import Word, SemanticUnit, MAX_NAME_LENGTH
+from core.vocab_types import (
+    Word, SemanticUnit, MAX_NAME_LENGTH, 
+    UserInfo, NEO4J_MAX_RETRIES, NEO4J_RETRY_DELAY 
+)
 from app.vocab_logger import logger
+import asyncio
+import random
 
 class VocabularyGraph:
     def __init__(self, neo4j_driver: AsyncGraphDatabase):
@@ -16,23 +22,25 @@ class VocabularyGraph:
         async with self._driver.session() as session:
             await session.run(query, **word_data)
 
-    def _validate_semantic(self, semantic_unit):
+    def _validate_semantic(self, semantic_unit, user: UserInfo):
         if not semantic_unit.name.strip() or not semantic_unit.username.strip():
             raise ValueError(f"Invalid Semantic: '{semantic_unit.name}'")
         if len(semantic_unit.name) > MAX_NAME_LENGTH:
             raise ValueError(f"Semantic name exceeds max length ({MAX_NAME_LENGTH}): '{semantic_unit.name}'")
-    def _validate_semantics(self, semantic_units):
+        if user.username != semantic_unit.username:
+            raise ValueError(f"Semantic username does't match request username: {user.username}") 
+    def _validate_semantics(self, semantic_units, user: UserInfo):
         unique_semantics = {(s.name, s.username): s for s in semantic_units}.values()
         if len(unique_semantics) != len(semantic_units):
             raise ValueError(f"Semantic units have duplicate values")
         for semantic in semantic_units:
-            self._validate_semantic(semantic)
+            self._validate_semantic(semantic, user)
 
-    async def add_semantic_units(self, semantic_units: list[SemanticUnit]):
+    async def add_semantic_units(self, semantic_units: list[SemanticUnit], user: UserInfo):
         if not semantic_units: 
             return
         
-        self._validate_semantics(semantic_units)
+        self._validate_semantics(semantic_units, user)
         semantic_dicts = [semantic_unit.model_dump() for semantic_unit in semantic_units]
 
         query = """
@@ -71,59 +79,57 @@ class VocabularyGraph:
                 logger.error(f"Database error in add_semantic_units: {str(e)}", exc_info=True)
                 raise ValueError("Internal Server Error: Failed to insert semantic units.")
     
-    async def remove_semantic_units(self, semantic_units: list[SemanticUnit]):
+    async def attempt_removal(self, semantic_dicts: list[dict]):
+        query = """
+        WITH $semantic_units AS semantics_to_delete, SIZE($semantic_units) AS requested_count
+        UNWIND semantics_to_delete AS semantic
+        MATCH (su:SemanticUnit {name: semantic.name, username: semantic.username})
+        WITH COLLECT(su) AS found_semantics, requested_count
+        WHERE SIZE(found_semantics) = requested_count
+        WITH SIZE(found_semantics) AS deleted_semantics, found_semantics
+        FOREACH (su IN found_semantics | DETACH DELETE su)
+        RETURN deleted_semantics
+        """
+        
+        async with self._driver.session() as session:
+            result = await session.run(query, semantic_units=semantic_dicts)
+            summary = await result.single()
+            if not summary:
+                raise ValueError("Some semantic units do not exist in the database.")
+                
+            return {"deleted_semantics": summary["deleted_semantics"]}
+
+    async def remove_semantic_units(self, semantic_units: list[SemanticUnit], user: UserInfo):
         logger.info(f"semantic_units: {semantic_units}")
         if not semantic_units: 
             return
         
-        self._validate_semantics(semantic_units)
+        self._validate_semantics(semantic_units, user)
         semantic_dicts = [semantic_unit.model_dump() for semantic_unit in semantic_units]
-    
-        async with self._driver.session() as session:
+
+        for attempt in range(NEO4J_MAX_RETRIES):
             try:
-                query = """
-                WITH $semantic_units AS semantics_to_delete, SIZE($semantic_units) AS requested_count
-
-                UNWIND semantics_to_delete AS semantic
-                MATCH (su:SemanticUnit {name: semantic.name, username: semantic.username})
-
-                WITH COLLECT(su) AS found_semantics, requested_count
-                WHERE SIZE(found_semantics) = requested_count
-
-                WITH SIZE(found_semantics) AS deleted_semantics, found_semantics
-
-                FOREACH (su IN found_semantics | DETACH DELETE su)
-
-                RETURN deleted_semantics 
-                """
-                
-                result = await session.run(query, semantic_units=semantic_dicts)
-                summary = await result.single()
-                
-                # If we get a result, the deletion was successful
-                if summary:
-                    return {
-                        "deleted_semantics": summary["deleted_semantics"]
-                    }
-                else:
-                    # If no result, it means the WHERE clause wasn't satisfied
-                    raise ValueError("Some semantic units do not exist in the database.")
-                    
+                return await self.attempt_removal(semantic_dicts)
+            except TransientError as e:
+                if "DeadlockDetected" not in str(e) or attempt == max_retries - 1:
+                    raise
+                # Add a small random delay before retrying
+                await asyncio.sleep(NEO4J_RETRY_DELAY * random.random())
+            except ValueError as e:
+                raise e
             except Exception as e:
-                if isinstance(e, ValueError):
-                    raise e
                 logger.error(f"Database error in remove_semantic_units: {str(e)}", exc_info=True)
                 raise ValueError("Internal Server Error: Failed to remove semantic units.")
 
 
-    async def get_data(self, username: str):
+    async def get_data(self, user: UserInfo):
         query = """
         MATCH (u:User { username: $username })-[:_Has_Semantic]->(su:SemanticUnit)
         RETURN su
         """
         async with self._driver.session() as session:
             try:
-                result = await session.run(query, username=username)
+                result = await session.run(query, username=user.username)
                 semantic_units = []
                 async for record in result:
                     # Collect all the fields from the SemanticUnit node
@@ -131,7 +137,7 @@ class VocabularyGraph:
                     semantic_units.append(semantic_unit_data)
                 return semantic_units
             except Exception as e:
-                logger.error(f"Database error in get_data for user '{username}': {str(e)}", exc_info=True)
+                logger.error(f"Database error in get_data for user '{user.username}': {str(e)}", exc_info=True)
                 raise ValueError("Failed to retrieve data for the specified username.")
 
 

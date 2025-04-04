@@ -57,9 +57,9 @@ async def login(user_data: UserInfo):
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-async def add_semantic_units(semantic_units: list[SemanticUnit]):
+async def add_semantic_units(semantic_units: list[SemanticUnit], user: UserInfo):
     try:
-        await app.state.vocab_graph.add_semantic_units(semantic_units)
+        await app.state.vocab_graph.add_semantic_units(semantic_units, user)
     except ValueError as e:  
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -69,32 +69,33 @@ async def add_semantic_units(semantic_units: list[SemanticUnit]):
 async def createdata(request: DataCreateRequest, user: UserInfo = Depends(get_current_user)):
     if not user:
         raise HTTPException(status_code=401, detail="Token not found")
-    await add_semantic_units(request.semantic_units)
+    await add_semantic_units(request.semantic_units, user)
     return {"user" : user, "message": "Data created successfully"}
 
-async def remove_semantic_units(semantic_units: list[SemanticUnit]):
+async def remove_semantic_units(semantic_units: list[SemanticUnit], user: UserInfo):
     try:
-        await app.state.vocab_graph.remove_semantic_units(semantic_units)
+        await app.state.vocab_graph.remove_semantic_units(semantic_units, user)
     except ValueError as e:  
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
+        logger.error(f"Error removing semantic units: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 @app.post("/api/vocabnet/removedata")
 async def removedata(request: DataRemoveRequest, user: UserInfo = Depends(get_current_user)):
     if not user:
         raise HTTPException(status_code=401, detail="Token not found")
-    await remove_semantic_units(request.semantic_units)
+    await remove_semantic_units(request.semantic_units, user)
     return {"user" : user, "message": "Data removed successfully"}
     
 @app.get("/api/vocabnet/getdata")
 async def getdata(user: UserInfo = Depends(get_current_user)):
     if not user:
         raise HTTPException(status_code=401, detail="Token not found")
-    semantic_units = await app.state.vocab_graph.get_data(user.username)
+    semantic_units = await app.state.vocab_graph.get_data(user)
     return {"user" : user, "semantic_units" : semantic_units}
     
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8001) 
+    uvicorn.run(app, host="0.0.0.0", port=8000) 
