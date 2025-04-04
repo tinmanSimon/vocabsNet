@@ -81,7 +81,8 @@ class VocabularyGraph:
 
         // Create the semantic unit if it doesn't exist
         MERGE (final_su:SemanticUnit {name: semantic.name, username: semantic.username})
-        ON CREATE SET final_su += semantic
+        ON CREATE SET final_su += semantic, final_su.created_at = datetime(), 
+            final_su.timestamp = timestamp()
 
         // Check if the word exists
         MERGE (w:Word {name: semantic.name})

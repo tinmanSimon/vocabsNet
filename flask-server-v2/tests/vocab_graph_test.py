@@ -15,8 +15,13 @@ RANDOM_DELAY = 2.0
 
 def equal_semantics(semantics_1, semantics_2):
     if len(semantics_1) != len(semantics_2): return False
-    sorted_1 = sorted(semantics_1, key=lambda semantic: (semantic["name"], semantic["username"]))
-    sorted_2 = sorted(semantics_2, key=lambda semantic: (semantic["name"], semantic["username"]))
+    ignore_fields = ["timestamp", "created_at"]
+    filtered_1 = [{k: v for k, v in semantic.items() if k not in ignore_fields} 
+                 for semantic in semantics_1]
+    filtered_2 = [{k: v for k, v in semantic.items() if k not in ignore_fields} 
+                 for semantic in semantics_2]
+    sorted_1 = sorted(filtered_1, key=lambda semantic: (semantic["name"], semantic["username"]))
+    sorted_2 = sorted(filtered_2, key=lambda semantic: (semantic["name"], semantic["username"]))
     for s1, s2 in zip(sorted_1, sorted_2):
         if s1 != s2:
             return False
