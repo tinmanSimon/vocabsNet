@@ -37,16 +37,45 @@ class VocabularyGraph:
         for semantic in semantic_units:
             self._validate_semantic(semantic, user)
 
-    async def add_semantic_units(self, semantic_units: list[SemanticUnit], user: UserInfo):
-        if not semantic_units: 
-            return
-        
-        self._validate_semantics(semantic_units, user)
-        semantic_dicts = [semantic_unit.model_dump() for semantic_unit in semantic_units]
+    def _validate_edge(self, edge, user: UserInfo):
+        if not edge.edge_name.strip() or not edge.username.strip():
+            raise ValueError(f"Invalid edge: '{edge.edge_name}'")
+        if not edge.from_name.strip() or not edge.to_name.strip():
+            raise ValueError(f"Invalid edge from_name or to_name")
+        if edge.from_name.strip() == edge.to_name.strip():
+            raise ValueError(f"Invalid edge with the same from_name and to_name")
+        if len(edge.edge_name) > MAX_NAME_LENGTH:
+            raise ValueError(f"Edge name exceeds max length ({MAX_NAME_LENGTH}): '{edge.edge_name}'")
+        if user.username != edge.username:
+            raise ValueError(f"Edge's username does't match request username: {user.username}") 
 
+    def _validate_edges(self, edges: list[Edge], user: UserInfo):
+        unique_edges = {(e.edge_name, e.from_name, e.to_name): e for e in edges}.values()
+        if len(unique_edges) != len(edges):
+            raise ValueError(f"Edges have duplicate values")
+        for edge in edges:
+            self._validate_edge(edge, user)
+
+    async def _execute_with_retry(self, operation_name, query_func, *args):
+        """Generic retry mechanism for database operations with deadlock detection"""
+        for attempt in range(NEO4J_MAX_RETRIES):
+            try:
+                return await query_func(*args)
+            except TransientError as e:
+                if "DeadlockDetected" not in str(e) or attempt == NEO4J_MAX_RETRIES - 1:
+                    raise
+                # Add a small random delay before retrying
+                await asyncio.sleep(NEO4J_RETRY_DELAY * random.random())
+            except ValueError as e:
+                raise e
+            except Exception as e:
+                logger.error(f"Database error in {operation_name}: {str(e)}", exc_info=True)
+                raise ValueError(f"Internal Server Error: Failed to {operation_name}.")
+
+    async def _execute_semantic_units_query(self, semantic_dicts):
+        """Execute the semantic unit creation query"""
         query = """
         UNWIND $semantic_units AS semantic
-        // First ensure the user exists
         MATCH (u:User {username: semantic.username})
         WITH u, semantic
 
@@ -69,63 +98,37 @@ class VocabularyGraph:
         """
 
         async with self._driver.session() as session:
-            try:
-                result = await session.run(query, semantic_units=semantic_dicts)
-                summary = await result.single()
-                return {
-                    "created_semantics": summary["created_semantics"],
-                    "referenced_words": summary["referenced_words"]
-                }
-            except Exception as e:
-                logger.error(f"Database error in add_semantic_units: {str(e)}", exc_info=True)
-                raise ValueError("Internal Server Error: Failed to insert semantic units.")
-    
-    def _validate_edge(self, edge, user: UserInfo):
-        logger.info(f"vdasfadsf edge: {edge}")
-        if not edge.edge_name.strip() or not edge.username.strip():
-            raise ValueError(f"Invalid edge: '{edge.edge_name}'")
-        if not edge.from_name.strip() or not edge.to_name.strip():
-            raise ValueError(f"Invalid edge from_name or to_name")
-        logger.info(f"askjdfkjadshf edge.from_name: {edge.from_name}")
-        if edge.from_name.strip() == edge.to_name.strip():
-            raise ValueError(f"Invalid edge with the same from_name and to_name")
-        if len(edge.edge_name) > MAX_NAME_LENGTH:
-            raise ValueError(f"Edge name exceeds max length ({MAX_NAME_LENGTH}): '{edge.edge_name}'")
-        if user.username != edge.username:
-            raise ValueError(f"Edge's username does't match request username: {user.username}") 
+            result = await session.run(query, semantic_units=semantic_dicts)
+            summary = await result.single()
+            if not summary:
+                raise ValueError("Failed to create semantic units.")
+            return {
+                "created_semantics": summary["created_semantics"],
+                "referenced_words": summary["referenced_words"]
+            }
 
-    def _validate_edges(self, edges: list[Edge], user: UserInfo):
-        unique_edges = {(e.edge_name, e.from_name, e.to_name): e for e in edges}.values()
-        logger.info(f"basdfasdf edges: {edges}")
-        if len(unique_edges) != len(edges):
-            raise ValueError(f"Edges have duplicate values")
-        for edge in edges:
-            self._validate_edge(edge, user)
-
-    async def add_edges_attemp(self, edge_dicts: list[dict]):
+    async def _execute_edge_query(self, edge_dicts):
+        """Execute the edge creation query"""
         query = """
         UNWIND $edges AS edge
         MATCH (from:SemanticUnit {name: edge.from_name, username: edge.username})
         MATCH (to:SemanticUnit {name: edge.to_name, username: edge.username})
 
-        MERGE (from)-[r1:SEMANTIC_CONNECT {
-        edge_name: edge.edge_name,
-        username: edge.username
-        }]->(to)
-
-        WITH edge, from, to, count(r1) AS count1
-
-        FOREACH (_ IN CASE WHEN edge.double_edge THEN [1] ELSE [] END |
-        MERGE (to)-[r2:SEMANTIC_CONNECT {
+        MERGE (from)-[r:SEMANTIC_CONNECT {
             edge_name: edge.edge_name,
             username: edge.username
-        }]->(from)
+        }]->(to)
+
+        WITH edge, from, to
+
+        FOREACH (_ IN CASE WHEN edge.double_edge THEN [1] ELSE [] END |
+            MERGE (to)-[:SEMANTIC_CONNECT {
+                edge_name: edge.edge_name,
+                username: edge.username
+            }]->(from)
         )
 
-        WITH count1 + 
-        CASE WHEN edge.double_edge THEN 1 ELSE 0 END AS total_created
-
-        RETURN sum(total_created) AS total_edges_created
+        RETURN count(*) AS total_edges_created
         """
 
         async with self._driver.session() as session:
@@ -135,29 +138,8 @@ class VocabularyGraph:
                 raise ValueError("Some edges do not exist in the database.")
             return {"total_edges_created": summary["total_edges_created"]}
 
-    async def add_edges(self, edges: list[Edge], user: UserInfo):
-        logger.info(f"edges: {edges}")
-        if not edges: 
-            return
-        
-        self._validate_edges(edges, user)
-        edge_dicts = [edge.model_dump() for edge in edges]
-
-        for attempt in range(NEO4J_MAX_RETRIES):
-            try:
-                return await self.add_edges_attemp(edge_dicts)
-            except TransientError as e:
-                if "DeadlockDetected" not in str(e) or attempt == max_retries - 1:
-                    raise
-                # Add a small random delay before retrying
-                await asyncio.sleep(NEO4J_RETRY_DELAY * random.random())
-            except ValueError as e:
-                raise e
-            except Exception as e:
-                logger.error(f"Database error in add_edges: {str(e)}", exc_info=True)
-                raise ValueError("Internal Server Error: Failed to add edges.")
-
-    async def attempt_removal(self, semantic_dicts: list[dict]):
+    async def _execute_semantic_removal(self, semantic_dicts):
+        """Execute the semantic unit removal query"""
         query = """
         WITH $semantic_units AS semantics_to_delete, SIZE($semantic_units) AS requested_count
         UNWIND semantics_to_delete AS semantic
@@ -177,28 +159,44 @@ class VocabularyGraph:
                 
             return {"deleted_semantics": summary["deleted_semantics"]}
 
-    async def remove_semantic_units(self, semantic_units: list[SemanticUnit], user: UserInfo):
-        logger.info(f"semantic_units: {semantic_units}")
-        if not semantic_units: 
-            return
-        
+    async def add_semantic_units(self, semantic_units: list[SemanticUnit], user: UserInfo):
+        if not semantic_units:
+            return {}
+            
         self._validate_semantics(semantic_units, user)
         semantic_dicts = [semantic_unit.model_dump() for semantic_unit in semantic_units]
+        
+        return await self._execute_with_retry(
+            "add semantic units", 
+            self._execute_semantic_units_query, 
+            semantic_dicts
+        )
 
-        for attempt in range(NEO4J_MAX_RETRIES):
-            try:
-                return await self.attempt_removal(semantic_dicts)
-            except TransientError as e:
-                if "DeadlockDetected" not in str(e) or attempt == max_retries - 1:
-                    raise
-                # Add a small random delay before retrying
-                await asyncio.sleep(NEO4J_RETRY_DELAY * random.random())
-            except ValueError as e:
-                raise e
-            except Exception as e:
-                logger.error(f"Database error in remove_semantic_units: {str(e)}", exc_info=True)
-                raise ValueError("Internal Server Error: Failed to remove semantic units.")
+    async def add_edges(self, edges: list[Edge], user: UserInfo):
+        if not edges:
+            return {}
+            
+        self._validate_edges(edges, user)
+        edge_dicts = [edge.model_dump() for edge in edges]
+        
+        return await self._execute_with_retry(
+            "add edges", 
+            self._execute_edge_query, 
+            edge_dicts
+        )
 
+    async def remove_semantic_units(self, semantic_units: list[SemanticUnit], user: UserInfo):
+        if not semantic_units:
+            return {}
+            
+        self._validate_semantics(semantic_units, user)
+        semantic_dicts = [semantic_unit.model_dump() for semantic_unit in semantic_units]
+        
+        return await self._execute_with_retry(
+            "remove semantic units", 
+            self._execute_semantic_removal, 
+            semantic_dicts
+        )
 
     async def get_data(self, user: UserInfo):
         query = """
@@ -217,7 +215,6 @@ class VocabularyGraph:
             except Exception as e:
                 logger.error(f"Database error in get_data for user '{user.username}': {str(e)}", exc_info=True)
                 raise ValueError("Failed to retrieve data for the specified username.")
-
 
     def add_relationship(self, word1: str, word2: str, relation: str):
         # Todo
