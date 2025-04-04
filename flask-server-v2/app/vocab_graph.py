@@ -117,7 +117,9 @@ class VocabularyGraph:
 
         MERGE (from)-[r:SEMANTIC_CONNECT {
             edge_name: edge.edge_name,
-            username: edge.username
+            username: edge.username,
+            created_at: datetime(),
+            timestamp: timestamp()
         }]->(to)
 
         WITH edge, from, to
