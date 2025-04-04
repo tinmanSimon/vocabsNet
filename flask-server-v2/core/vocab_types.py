@@ -4,7 +4,10 @@ from typing import Optional
 ACCESS_TOKEN_EXPIRE_DAYS = 7
 ALGORITHM = "HS256"
 MAX_NAME_LENGTH = 100
+NEO4J_MAX_RETRIES = 6
+NEO4J_RETRY_DELAY = 1.0
 TEST_USERNAME = "najksdfujweqhdjsbhf"
+TEST_USERNAME2 = "bweiaofhsadfjd"
 TEST_PWD = "pwqaASDFuwe278336"
 
 TEST_SEMANTIC_UNIT_1 = {
