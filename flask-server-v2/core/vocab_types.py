@@ -40,6 +40,14 @@ TEST_SEMANTIC_UNIT_5 = {
     "belief" : "meaningless and irrational"
 }
 
+
+TEST_EDGE_1_TO_2 = {
+    "edge_name": "edge_1" ,
+    "from_name": "philosophy" ,
+    "to_name": "stoicism" ,
+    "username": TEST_USERNAME
+}
+
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -63,12 +71,19 @@ class SemanticUnit(BaseModel):
     username: str
     model_config = ConfigDict(extra='allow')
 
+class Edge(BaseModel):
+    edge_name: str
+    from_name: str 
+    to_name: str
+    username: str
+    double_edge: Optional[bool] = False 
+
 class DataCreateRequest(BaseModel):
     semantic_units: list[SemanticUnit] = []
-    edges: list[str] = [] 
+    edges: list[Edge] = [] 
     tags: list[str] = []
 
 class DataRemoveRequest(BaseModel):
     semantic_units: list[SemanticUnit] = []
-    edges: list[str] = [] 
+    edges: list[Edge] = [] 
     tags: list[str] = []

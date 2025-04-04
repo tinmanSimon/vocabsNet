@@ -3,7 +3,8 @@ from app.vocab_logger import logger
 from core.vocab_types import (
     TEST_USERNAME, TEST_USERNAME2, TEST_PWD, 
     TEST_SEMANTIC_UNIT_1, TEST_SEMANTIC_UNIT_2, TEST_SEMANTIC_UNIT_3, 
-    TEST_SEMANTIC_UNIT_4, TEST_SEMANTIC_UNIT_5
+    TEST_SEMANTIC_UNIT_4, TEST_SEMANTIC_UNIT_5,
+    TEST_EDGE_1_TO_2
 )
 import asyncio
 from httpx import AsyncClient
@@ -128,6 +129,25 @@ async def test_remove_words(client, auth_headers, test_case):
     assert response.status_code == 200
     assert response.json()["user"]["username"] == TEST_USERNAME
     assert equal_semantics(response.json()["semantic_units"], test_case["remain_words"])
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("test_case", [
+    {
+        "added_words": [TEST_SEMANTIC_UNIT_1, TEST_SEMANTIC_UNIT_2],
+        "added_edges": [TEST_EDGE_1_TO_2]
+    }
+])
+async def test_add_edges(client, auth_headers, test_case):
+    headers = auth_headers
+    response = client.post(
+        "/api/vocabnet/createdata", 
+        headers=headers, 
+        json={
+            "semantic_units": test_case["added_words"],
+            "edges": test_case["added_edges"]
+        }
+    )
+    assert response.status_code == 200, (f"response.json(): {response.json()}")
 
 @pytest.mark.asyncio
 async def test_concurrent_user_flows():
