@@ -3,7 +3,10 @@ from app.auth_service import AuthService
 from app.vocab_graph import VocabularyGraph
 from app.vocab_logger import logger
 from core.credentials import neo4j_uri, neo4j_username, neo4j_pwd
-from core.vocab_types import Token, UserInfo, RegisterResponse, Word, SemanticUnit, DataCreateRequest, DataRemoveRequest
+from core.vocab_types import (
+    Token, UserInfo, RegisterResponse, Word, Edge, SemanticUnit, 
+    DataCreateRequest, DataRemoveRequest
+)
 from contextlib import asynccontextmanager
 import motor.motor_asyncio
 from fastapi.security import OAuth2PasswordBearer
@@ -65,11 +68,20 @@ async def add_semantic_units(semantic_units: list[SemanticUnit], user: UserInfo)
     except Exception as e:
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
+async def add_edges(edges: list[Edge], user: UserInfo):
+    try:
+        await app.state.vocab_graph.add_edges(edges, user)
+    except ValueError as e:  
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+
 @app.post("/api/vocabnet/createdata")
 async def createdata(request: DataCreateRequest, user: UserInfo = Depends(get_current_user)):
     if not user:
         raise HTTPException(status_code=401, detail="Token not found")
     await add_semantic_units(request.semantic_units, user)
+    await add_edges(request.edges, user)
     return {"user" : user, "message": "Data created successfully"}
 
 async def remove_semantic_units(semantic_units: list[SemanticUnit], user: UserInfo):
