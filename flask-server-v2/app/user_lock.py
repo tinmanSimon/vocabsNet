@@ -1,6 +1,7 @@
 import aiorwlock
 
-# This is only useful for single server single process implementation.
+# This is not used right now. Besides,
+# this is only useful for single server single process implementation.
 # FASTAPI gives each worker its own memory space, meaning each process
 # will have a different UserLockManager. So if two workers handle the 
 # same user's requests at the same time, then we have a race condition.
