@@ -1,16 +1,16 @@
 from fastapi import FastAPI, HTTPException, Depends, status
 from app.auth_service import AuthService
-from app.vocab_graph import VocabularyGraph
 from app.vocab_logger import logger
+from app.graph_cache import GraphCacheManager
+from app.graph_service import GraphService
 from core.credentials import MONGO_URI, DB_NAME, DEBUG_DB_NAME
 from core.vocab_types import (
-    Token, UserInfo, RegisterResponse, Word, Edge, SemanticUnit, 
+    Token, UserInfo, RegisterResponse, Word, Edge, 
     DataCreateRequest, DataRemoveRequest
 )
 from contextlib import asynccontextmanager
 import motor.motor_asyncio
 from fastapi.security import OAuth2PasswordBearer
-from neo4j import AsyncGraphDatabase
 
 
 DEBUG_MODE = True
@@ -22,7 +22,11 @@ async def lifespan(app: FastAPI):
     mongo_client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URI)
     app.state.mongo_client = mongo_client
     CHOSEN_DB = DEBUG_DB_NAME if DEBUG_MODE else DB_NAME
-    app.state.auth_service = AuthService(mongo_client[CHOSEN_DB])  
+    database = mongo_client[CHOSEN_DB]
+
+    app.state.auth_service = AuthService(database)  
+    app.state.graph_cache = GraphCacheManager()
+    app.state.graph_service = await GraphService.create(database, app.state.graph_cache)
     yield
 
 app = FastAPI(lifespan=lifespan)
@@ -60,52 +64,28 @@ async def login(user_data: UserInfo):
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-async def add_semantic_units(semantic_units: list[SemanticUnit], user: UserInfo):
-    try:
-        await app.state.vocab_graph.add_semantic_units(semantic_units, user)
-    except ValueError as e:  
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal Server Error")
-
-async def add_edges(edges: list[Edge], user: UserInfo):
-    try:
-        await app.state.vocab_graph.add_edges(edges, user)
-    except ValueError as e:  
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal Server Error")
-
 @app.post("/api/vocabnet/createdata")
 async def createdata(request: DataCreateRequest, user: UserInfo = Depends(get_current_user)):
     if not user:
         raise HTTPException(status_code=401, detail="Token not found")
-    await add_semantic_units(request.semantic_units, user)
-    await add_edges(request.edges, user)
+    await app.state.graph_service.add_words(request.words, user)
     return {"user" : user, "message": "Data created successfully"}
 
-async def remove_semantic_units(semantic_units: list[SemanticUnit], user: UserInfo):
-    try:
-        await app.state.vocab_graph.remove_semantic_units(semantic_units, user)
-    except ValueError as e:  
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.error(f"Error removing semantic units: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal Server Error")
-
-@app.post("/api/vocabnet/removedata")
-async def removedata(request: DataRemoveRequest, user: UserInfo = Depends(get_current_user)):
-    if not user:
-        raise HTTPException(status_code=401, detail="Token not found")
-    await remove_semantic_units(request.semantic_units, user)
-    return {"user" : user, "message": "Data removed successfully"}
+# @app.post("/api/vocabnet/removedata")
+# async def removedata(request: DataRemoveRequest, user: UserInfo = Depends(get_current_user)):
+#     if not user:
+#         raise HTTPException(status_code=401, detail="Token not found")
+#     await remove_words(request.words, user)
+#     return {"user" : user, "message": "Data removed successfully"}
     
 @app.get("/api/vocabnet/getdata")
 async def getdata(user: UserInfo = Depends(get_current_user)):
     if not user:
         raise HTTPException(status_code=401, detail="Token not found")
-    semantic_units = await app.state.vocab_graph.get_data(user)
-    return {"user" : user, "semantic_units" : semantic_units}
+    user_data = await app.state.graph_service.get_data(user)
+    if not isinstance(user_data, dict):
+        raise HTTPException(status_code=500, detail="Invalid user data")
+    return {"user" : user, "words" : user_data.get("words", [])}
     
 
 if __name__ == "__main__":

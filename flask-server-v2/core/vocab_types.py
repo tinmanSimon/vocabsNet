@@ -10,31 +10,31 @@ TEST_USERNAME = "najksdfujweqhdjsbhf"
 TEST_USERNAME2 = "bweiaofhsadfjd"
 TEST_PWD = "pwqaASDFuwe278336"
 
-TEST_SEMANTIC_UNIT_1 = {
+TEST_WORD_UNIT_1 = {
     "name": "philosophy",
     "username": TEST_USERNAME,
     "notes": "A key concept in ancient Greece"
 }
 
 
-TEST_SEMANTIC_UNIT_2 = {
+TEST_WORD_UNIT_2 = {
     "name": "stoicism" ,
     "username": TEST_USERNAME,
     "notes": "I practice this daily"
 }
 
-TEST_SEMANTIC_UNIT_3 = {
+TEST_WORD_UNIT_3 = {
     "name": "nihilism" ,
     "username": TEST_USERNAME,
     "star" : True
 }
 
-TEST_SEMANTIC_UNIT_4 = {
+TEST_WORD_UNIT_4 = {
     "name": "existentialism" ,
     "username": TEST_USERNAME
 }
 
-TEST_SEMANTIC_UNIT_5 = {
+TEST_WORD_UNIT_5 = {
     "name": "absurdism" ,
     "username": TEST_USERNAME,
     "belief" : "meaningless and irrational"
@@ -64,12 +64,7 @@ class RegisterResponse(BaseModel):
 class Word(BaseModel):
     model_config = ConfigDict(extra='allow')
     name: str 
-
-# SemanticUnit is the intermediate node between User and Word.
-class SemanticUnit(BaseModel):
-    name: str 
     username: str
-    model_config = ConfigDict(extra='allow')
 
 class Edge(BaseModel):
     edge_name: str
@@ -79,11 +74,11 @@ class Edge(BaseModel):
     double_edge: Optional[bool] = False 
 
 class DataCreateRequest(BaseModel):
-    semantic_units: list[SemanticUnit] = []
+    words: list[Word] = []
     edges: list[Edge] = [] 
     tags: list[str] = []
 
 class DataRemoveRequest(BaseModel):
-    semantic_units: list[SemanticUnit] = []
+    words: list[Word] = []
     edges: list[Edge] = [] 
     tags: list[str] = []
