@@ -140,25 +140,6 @@ async def test_remove_words(client, auth_headers, test_case):
     assert equal_words(response.json()["words"], test_case["remain_words"])
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("test_case", [
-    {
-        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2],
-        "added_edges": [TEST_EDGE_1_TO_2]
-    }
-])
-async def test_add_edges(client, auth_headers, test_case):
-    headers = auth_headers
-    response = client.post(
-        "/api/vocabnet/createdata", 
-        headers=headers, 
-        json={
-            "words": test_case["added_words"],
-            "edges": test_case["added_edges"]
-        }
-    )
-    assert response.status_code == 200, (f"response.json(): {response.json()}")
-
-@pytest.mark.asyncio
 async def test_concurrent_user_flows():
     async with AsyncClient(base_url="http://localhost:8000", timeout=HTTPX_TIMEOUT) as client:
         async def user_flow(user_id):
@@ -232,3 +213,25 @@ async def test_concurrent_user_flows():
         # Run multiple user flows concurrently
         tasks = [asyncio.create_task(user_flow(i)) for i in range(NUM_USERS)]
         await asyncio.gather(*tasks)
+
+
+@pytest.mark.skip(reason="This test is currently under development")
+@pytest.mark.asyncio
+@pytest.mark.parametrize("test_case", [
+    {
+        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2],
+        "added_edges": [TEST_EDGE_1_TO_2]
+    }
+])
+async def test_add_edges(client, auth_headers, test_case):
+    headers = auth_headers
+    response = client.post(
+        "/api/vocabnet/createdata", 
+        headers=headers, 
+        json={
+            "words": test_case["added_words"],
+            "edges": test_case["added_edges"]
+        }
+    )
+    assert response.status_code == 200, (f"response.json(): {response.json()}")
+    

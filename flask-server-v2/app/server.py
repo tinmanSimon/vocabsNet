@@ -71,12 +71,12 @@ async def createdata(request: DataCreateRequest, user: UserInfo = Depends(get_cu
     await app.state.graph_service.add_words(request.words, user)
     return {"user" : user, "message": "Data created successfully"}
 
-# @app.post("/api/vocabnet/removedata")
-# async def removedata(request: DataRemoveRequest, user: UserInfo = Depends(get_current_user)):
-#     if not user:
-#         raise HTTPException(status_code=401, detail="Token not found")
-#     await remove_words(request.words, user)
-#     return {"user" : user, "message": "Data removed successfully"}
+@app.post("/api/vocabnet/removedata")
+async def removedata(request: DataRemoveRequest, user: UserInfo = Depends(get_current_user)):
+    if not user:
+        raise HTTPException(status_code=401, detail="Token not found")
+    await app.state.graph_service.remove_words(request.words, user)
+    return {"user" : user, "message": "Data removed successfully"}
     
 @app.get("/api/vocabnet/getdata")
 async def getdata(user: UserInfo = Depends(get_current_user)):
