@@ -2,7 +2,6 @@ from app.graph import Graph
 from app.graph_cache import GraphCacheManager
 from app.vocab_logger import logger
 from core.vocab_types import Word, Edge, UserInfo, MAX_NAME_LENGTH
-from app.user_lock import UserLockManager
 from motor.motor_asyncio import AsyncIOMotorClient
 from functools import wraps
 from pymongo.errors import PyMongoError
@@ -25,7 +24,6 @@ class GraphService:
     def __init__(self, database, cache_manager: GraphCacheManager):
         self._cache_manager = cache_manager
         self._db = database
-        self._lock_manager = UserLockManager()
 
     def handle_mongo_errors(func):
         @wraps(func)
@@ -88,14 +86,11 @@ class GraphService:
 
     @handle_general_errors
     async def get_graph(self, username: str) -> Graph:
-        lock = await self._lock_manager.get_lock(username)
-        async with lock.reader_lock:
-            return await self._get_graph(username)
+        return await self._get_graph(username)
 
     @handle_general_errors
     async def get_data(self, user: UserInfo):
         username = user.username
-        lock = await self._lock_manager.get_lock(username)
         graph = await self._get_graph(username)
         return graph.get_all_data()
 
@@ -119,14 +114,12 @@ class GraphService:
         username = user.username
         self._validate_words(words_data, user)
 
-        lock = await self._lock_manager.get_lock(username)
-        async with lock.writer_lock:
-            # Update DB
-            await self._save_words_to_db(username, words_data)
+        # Update DB
+        await self._save_words_to_db(username, words_data)
 
-            # Update graph
-            graph = await self._get_graph(username)
-            graph.add_words(words_data)
+        # Update graph
+        graph = await self._get_graph(username)
+        graph.add_words(words_data)
 
     
     
