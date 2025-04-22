@@ -70,7 +70,18 @@ class GraphService:
             documents.append(document)
         
         if documents:
-            result = await self._db.words.insert_many(documents)
+            await self._db.words.insert_many(documents)
+        return True 
+
+    @handle_mongo_errors
+    async def _remove_words_to_db(self, username: str, words_data: list[Word]) -> bool:
+        conditions = [
+            {"username": word.username, "word_data.name": word.name}
+            for word in words_data
+        ]
+        
+        if conditions:
+            await self._db.words.delete_many({"$or": conditions})
         return True 
 
     @handle_mongo_errors
@@ -113,13 +124,17 @@ class GraphService:
     async def add_words(self, words_data: list[Word], user: UserInfo):
         username = user.username
         self._validate_words(words_data, user)
-
-        # Update DB
         await self._save_words_to_db(username, words_data)
-
-        # Update graph
         graph = await self._get_graph(username)
         graph.add_words(words_data)
+
+    # Remove data will mark the cached graph as dirty and rebuild on next read
+    @handle_general_errors
+    async def remove_words(self, words_data: list[Word], user: UserInfo):
+        username = user.username
+        self._validate_words(words_data, user)
+        await self._remove_words_to_db(username, words_data)
+        await self._cache_manager.mark_dirty(username)
 
     
     
