@@ -290,3 +290,28 @@ async def test_add_edges(client, auth_headers, test_case):
     assert equal_words(data["words"], test_case["added_words"])
     assert equal_edges(data["edges"], test_case["added_edges"])
     
+@pytest.mark.asyncio
+async def test_add_duplicate_edges(client, auth_headers):
+    headers = auth_headers
+    response = client.post(
+        "/api/vocabnet/createdata", 
+        headers=headers, 
+        json={"words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2]}
+    )
+    assert response.status_code == 200, (f"response.json(): {response.json()}")
+
+    response = client.post(
+        "/api/vocabnet/createdata", 
+        headers=headers, 
+        json={"edges": [TEST_EDGE_1_TO_2]}
+    )
+    assert response.status_code == 200, (f"response.json(): {response.json()}")
+
+    response = client.post(
+        "/api/vocabnet/createdata", 
+        headers=headers, 
+        json={"edges": [TEST_EDGE_1_TO_2]}
+    )
+    assert response.status_code == 400, (f"response.json(): {response.json()}")
+
+    
