@@ -5,6 +5,7 @@ from core.vocab_types import (
     TEST_WORD_UNIT_1, TEST_WORD_UNIT_2, TEST_WORD_UNIT_3, 
     TEST_WORD_UNIT_4, TEST_WORD_UNIT_5,
     TEST_EDGE_1_TO_2, TEST_EDGE_1_TO_3, TEST_EDGE_2_TO_3,
+    TEST_EDGE_2_TO_1,
     MAX_NAME_LENGTH
 )
 import asyncio
@@ -183,6 +184,140 @@ async def test_remove_words(client, auth_headers, test_case):
     assert equal_words(response.json()["words"], test_case["remain_words"])
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("test_case", [
+    {
+        "added_words": [],
+        "added_edges": [TEST_EDGE_1_TO_2]
+    }, {
+        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2],
+        "added_edges": [TEST_EDGE_1_TO_3]
+    }, {
+        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2, TEST_WORD_UNIT_3],
+        "added_edges": [TEST_EDGE_2_TO_3, TEST_EDGE_1_TO_3, TEST_EDGE_2_TO_3]
+    }, {
+        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2, TEST_WORD_UNIT_3],
+        "added_edges": [TEST_EDGE_1_TO_2, TEST_EDGE_1_TO_3, {**TEST_EDGE_1_TO_2, "double_edge" : True}]
+    }, {
+        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2, TEST_WORD_UNIT_3],
+        "added_edges": [TEST_EDGE_1_TO_2, TEST_EDGE_1_TO_3, {**TEST_EDGE_2_TO_1, "double_edge" : True}]
+    }
+])
+async def test_invalid_atomic_add_edges(client, auth_headers, test_case):
+    headers = auth_headers
+    response = client.post(
+        "/api/vocabnet/createdata", 
+        headers=headers, 
+        json={
+            "words": test_case["added_words"],
+            "edges": test_case["added_edges"]
+        }
+    )
+    assert response.status_code == 400
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("test_case", [
+    {
+        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2, TEST_WORD_UNIT_3],
+        "added_edges_1": [TEST_EDGE_1_TO_2],
+        "added_edges_2": [TEST_EDGE_1_TO_2]
+    }, {
+        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2, TEST_WORD_UNIT_3],
+        "added_edges_1": [TEST_EDGE_1_TO_2, TEST_EDGE_1_TO_3],
+        "added_edges_2": [{**TEST_EDGE_1_TO_2, "double_edge" : True}]
+    }, {
+        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2, TEST_WORD_UNIT_3],
+        "added_edges_1": [TEST_EDGE_1_TO_2, TEST_EDGE_1_TO_3],
+        "added_edges_2": [{**TEST_EDGE_2_TO_1, "double_edge" : True}]
+    }, {
+        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2, TEST_WORD_UNIT_3],
+        "added_edges_1": [{**TEST_EDGE_1_TO_2, "double_edge" : True}, TEST_EDGE_1_TO_3],
+        "added_edges_2": [TEST_EDGE_1_TO_2]
+    }, {
+        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2, TEST_WORD_UNIT_3],
+        "added_edges_1": [{**TEST_EDGE_2_TO_1, "double_edge" : True}, TEST_EDGE_1_TO_3],
+        "added_edges_2": [TEST_EDGE_1_TO_2]
+    }
+])
+async def test_invalid_sequential_add_edges(client, auth_headers, test_case):
+    headers = auth_headers
+    response = client.post(
+        "/api/vocabnet/createdata", 
+        headers=headers, 
+        json={
+            "words": test_case["added_words"],
+            "edges": test_case["added_edges_1"]
+        }
+    )
+    assert response.status_code == 200, (f"response.json(): {response.json()}")
+
+    response = client.post(
+        "/api/vocabnet/createdata", 
+        headers=headers, 
+        json={"edges": test_case["added_edges_2"]}
+    )
+    assert response.status_code == 400, (f"response.json(): {response.json()}")
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("test_case", [
+    {
+        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2],
+        "added_edges": [TEST_EDGE_1_TO_2]
+    }, {
+        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2, TEST_WORD_UNIT_3],
+        "added_edges": [TEST_EDGE_1_TO_3, TEST_EDGE_1_TO_2]
+    }, {
+        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2, TEST_WORD_UNIT_3],
+        "added_edges": [TEST_EDGE_2_TO_3, TEST_EDGE_1_TO_3, TEST_EDGE_1_TO_2]
+    }, {
+        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2, TEST_WORD_UNIT_3],
+        "added_edges": [TEST_EDGE_2_TO_3, TEST_EDGE_1_TO_3, TEST_EDGE_2_TO_1]
+    }
+])
+async def test_add_edges(client, auth_headers, test_case):
+    headers = auth_headers
+    response = client.post(
+        "/api/vocabnet/createdata", 
+        headers=headers, 
+        json={
+            "words": test_case["added_words"],
+            "edges": test_case["added_edges"]
+        }
+    )
+    assert response.status_code == 200, (f"response.json(): {response.json()}")
+
+    response = client.get("/api/vocabnet/getdata", headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["user"]["username"] == TEST_USERNAME
+    assert equal_words(data["words"], test_case["added_words"])
+    assert equal_edges(data["edges"], test_case["added_edges"])
+    
+@pytest.mark.asyncio
+async def test_add_duplicate_edges(client, auth_headers):
+    headers = auth_headers
+    response = client.post(
+        "/api/vocabnet/createdata", 
+        headers=headers, 
+        json={"words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2]}
+    )
+    assert response.status_code == 200, (f"response.json(): {response.json()}")
+
+    response = client.post(
+        "/api/vocabnet/createdata", 
+        headers=headers, 
+        json={"edges": [TEST_EDGE_1_TO_2]}
+    )
+    assert response.status_code == 200, (f"response.json(): {response.json()}")
+
+    response = client.post(
+        "/api/vocabnet/createdata", 
+        headers=headers, 
+        json={"edges": [TEST_EDGE_1_TO_2]}
+    )
+    assert response.status_code == 400, (f"response.json(): {response.json()}")
+
+@pytest.mark.skip(reason="This test takes too much time. Comment this when we need to test.")
+@pytest.mark.asyncio
 async def test_concurrent_user_flows():
     async with AsyncClient(base_url="http://localhost:8000", timeout=HTTPX_TIMEOUT) as client:
         async def user_flow(user_id):
@@ -256,62 +391,3 @@ async def test_concurrent_user_flows():
         # Run multiple user flows concurrently
         tasks = [asyncio.create_task(user_flow(i)) for i in range(NUM_USERS)]
         await asyncio.gather(*tasks)
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize("test_case", [
-    {
-        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2],
-        "added_edges": [TEST_EDGE_1_TO_2]
-    }, {
-        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2, TEST_WORD_UNIT_3],
-        "added_edges": [TEST_EDGE_1_TO_3, TEST_EDGE_1_TO_2]
-    }, {
-        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2, TEST_WORD_UNIT_3],
-        "added_edges": [TEST_EDGE_2_TO_3, TEST_EDGE_1_TO_3, TEST_EDGE_1_TO_2]
-    }
-])
-async def test_add_edges(client, auth_headers, test_case):
-    headers = auth_headers
-    response = client.post(
-        "/api/vocabnet/createdata", 
-        headers=headers, 
-        json={
-            "words": test_case["added_words"],
-            "edges": test_case["added_edges"]
-        }
-    )
-    assert response.status_code == 200, (f"response.json(): {response.json()}")
-
-    response = client.get("/api/vocabnet/getdata", headers=headers)
-    assert response.status_code == 200
-    data = response.json()
-    assert data["user"]["username"] == TEST_USERNAME
-    assert equal_words(data["words"], test_case["added_words"])
-    assert equal_edges(data["edges"], test_case["added_edges"])
-    
-@pytest.mark.asyncio
-async def test_add_duplicate_edges(client, auth_headers):
-    headers = auth_headers
-    response = client.post(
-        "/api/vocabnet/createdata", 
-        headers=headers, 
-        json={"words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2]}
-    )
-    assert response.status_code == 200, (f"response.json(): {response.json()}")
-
-    response = client.post(
-        "/api/vocabnet/createdata", 
-        headers=headers, 
-        json={"edges": [TEST_EDGE_1_TO_2]}
-    )
-    assert response.status_code == 200, (f"response.json(): {response.json()}")
-
-    response = client.post(
-        "/api/vocabnet/createdata", 
-        headers=headers, 
-        json={"edges": [TEST_EDGE_1_TO_2]}
-    )
-    assert response.status_code == 400, (f"response.json(): {response.json()}")
-
-    

@@ -22,7 +22,27 @@ class Graph:
         return word_name in self.words
 
     def edge_exist(self, edge: Edge):
-        return (edge.edge_name, edge.from_name, edge.to_name) in self.edges
+        outgoing = (edge.edge_name, edge.from_name, edge.to_name)
+        if not edge.double_edge:
+            return outgoing in self.edges
+        incoming = (edge.edge_name, edge.to_name, edge.from_name)
+        if incoming in self.edges:
+            return self.edges[incoming].double_edge
+        if outgoing in self.edges:
+            return self.edges[outgoing].double_edge
+        return False
+
+    def edge_conflicts(self, edge: Edge):
+        outgoing = (edge.edge_name, edge.from_name, edge.to_name)
+        incoming = (edge.edge_name, edge.to_name, edge.from_name)
+        if edge.double_edge == True:
+            return outgoing in self.edges or incoming in self.edges
+        else:
+            if outgoing in self.edges:
+                return True
+            if incoming in self.edges:
+                return self.edges[incoming].double_edge == True 
+            return False
 
     def add_edges(self, edges: list[Edge]):
         for edge in edges:
