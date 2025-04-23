@@ -69,8 +69,10 @@ class GraphService:
         for word_data in words_data:
             document = {
                 "username": username,
-                "word_data": word_data.model_dump(),  
-                "created_at": datetime.now(timezone.utc)
+                "word_data": {
+                    **word_data.model_dump(),
+                    "created_at": datetime.now(timezone.utc)
+                }
             }
             documents.append(document)
         
@@ -95,8 +97,10 @@ class GraphService:
         for edge_data in edges_data:
             document = {
                 "username": username,
-                "edge_data": edge_data.model_dump(),  
-                "created_at": datetime.now(timezone.utc)
+                "edge_data": {
+                    **edge_data.model_dump(),  
+                    "created_at": datetime.now(timezone.utc)
+                }
             }
             documents.append(document)
         
@@ -112,7 +116,9 @@ class GraphService:
         words = [Word(**doc["word_data"]) for doc in docs]
         graph.add_words(words)
         
-        # TODO: add edges logic
+        docs = await self._db.edges.find({"username": username}).to_list()
+        edges = [Edge(**doc["edge_data"]) for doc in docs]
+        graph.add_edges(edges)
         return graph
 
     @handle_general_errors
