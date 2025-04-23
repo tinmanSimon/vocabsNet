@@ -48,6 +48,13 @@ TEST_EDGE_1_TO_2 = {
     "username": TEST_USERNAME
 }
 
+TEST_EDGE_2_TO_1 = {
+    "edge_name": "edge_1_2" ,
+    "from_name": "stoicism" ,
+    "to_name": "philosophy" ,
+    "username": TEST_USERNAME
+}
+
 TEST_EDGE_1_TO_3 = {
     "edge_name": "edge_1_3" ,
     "from_name": "philosophy" ,
