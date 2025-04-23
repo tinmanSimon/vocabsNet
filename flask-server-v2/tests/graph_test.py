@@ -92,6 +92,23 @@ async def test_add_words(client, auth_headers, test_data):
     assert equal_words(response.json()["words"], test_data)
 
 @pytest.mark.asyncio
+async def test_add_duplicate_words(client, auth_headers):
+    headers = auth_headers
+    response = client.post(
+        "/api/vocabnet/createdata", 
+        headers=headers, 
+        json={"words": [TEST_WORD_UNIT_1]}
+    )
+    assert response.status_code == 200
+
+    response = client.post(
+        "/api/vocabnet/createdata", 
+        headers=headers, 
+        json={"words": [TEST_WORD_UNIT_1]}
+    )
+    assert response.status_code == 400
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize("test_case", [
     {
         "added_words": [TEST_WORD_UNIT_1],
