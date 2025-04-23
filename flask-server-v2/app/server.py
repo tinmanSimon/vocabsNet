@@ -3,13 +3,12 @@ from app.auth_service import AuthService
 from app.vocab_logger import logger
 from app.graph_cache import GraphCacheManager
 from app.graph_service import GraphService
-from core.credentials import MONGO_URI, DB_NAME, DEBUG_DB_NAME
+from core.credentials import CLEAR_DATA_KEY
 from core.vocab_types import (
     Token, UserInfo, RegisterResponse, Word, Edge, 
-    DataCreateRequest, DataRemoveRequest
+    DataCreateRequest, DataRemoveRequest, ClearTestRequest
 )
 from contextlib import asynccontextmanager
-import motor.motor_asyncio
 from fastapi.security import OAuth2PasswordBearer
 
 
@@ -19,14 +18,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/vocabnet/user/login")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    mongo_client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URI)
-    app.state.mongo_client = mongo_client
-    CHOSEN_DB = DEBUG_DB_NAME if DEBUG_MODE else DB_NAME
-    database = mongo_client[CHOSEN_DB]
-
-    app.state.auth_service = AuthService(database)  
-    app.state.graph_cache = GraphCacheManager()
-    app.state.graph_service = await GraphService.create(database, app.state.graph_cache)
+    app.state.graph_service = await GraphService.create()
+    app.state.auth_service = AuthService(app.state.graph_service.get_database())  
     yield
 
 app = FastAPI(lifespan=lifespan)
@@ -68,7 +61,10 @@ async def login(user_data: UserInfo):
 async def createdata(request: DataCreateRequest, user: UserInfo = Depends(get_current_user)):
     if not user:
         raise HTTPException(status_code=401, detail="Token not found")
-    await app.state.graph_service.add_words(request.words, user)
+    if request.words:
+        await app.state.graph_service.add_words(request.words, user)
+    if request.edges:
+        await app.state.graph_service.add_edges(request.edges, user)
     return {"user" : user, "message": "Data created successfully"}
 
 @app.post("/api/vocabnet/removedata")
@@ -85,7 +81,17 @@ async def getdata(user: UserInfo = Depends(get_current_user)):
     user_data = await app.state.graph_service.get_data(user)
     if not isinstance(user_data, dict):
         raise HTTPException(status_code=500, detail="Invalid user data")
-    return {"user" : user, "words" : user_data.get("words", [])}
+    return {
+        "user" : user, 
+        "words" : user_data.get("words", []),
+        "edges" : user_data.get("edges", [])
+    }
+
+@app.post("/api/vocabnet/cleartestdata")
+async def clear_test_data(request: ClearTestRequest):
+    if request.key == CLEAR_DATA_KEY:
+        await app.state.graph_service.clear_test_data()
+        return {"message": "Test data cleared successfully"}
     
 
 if __name__ == "__main__":

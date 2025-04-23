@@ -4,7 +4,7 @@ from core.vocab_types import (
     TEST_USERNAME, TEST_USERNAME2, TEST_PWD, 
     TEST_WORD_UNIT_1, TEST_WORD_UNIT_2, TEST_WORD_UNIT_3, 
     TEST_WORD_UNIT_4, TEST_WORD_UNIT_5,
-    TEST_EDGE_1_TO_2,
+    TEST_EDGE_1_TO_2, TEST_EDGE_1_TO_3, TEST_EDGE_2_TO_3,
     MAX_NAME_LENGTH
 )
 import asyncio
@@ -16,13 +16,39 @@ RANDOM_DELAY = 2.0
 
 def equal_words(words_1, words_2):
     if len(words_1) != len(words_2): return False
-    ignore_fields = ["timestamp", "created_at"]
+    ignore_fields = ["timestamp", "created_at", "incoming", "outgoing"]
     filtered_1 = [{k: v for k, v in word.items() if k not in ignore_fields} 
                  for word in words_1]
     filtered_2 = [{k: v for k, v in word.items() if k not in ignore_fields} 
                  for word in words_2]
     sorted_1 = sorted(filtered_1, key=lambda word: (word["name"], word["username"]))
     sorted_2 = sorted(filtered_2, key=lambda word: (word["name"], word["username"]))
+    for s1, s2 in zip(sorted_1, sorted_2):
+        if s1 != s2:
+            return False
+    return True
+
+def equal_edges(edges_1, edges_2):
+    if len(edges_1) != len(edges_2): return False
+    ignore_fields = ["timestamp", "created_at"]
+    filtered_1 = [{k: v for k, v in edge.items() if k not in ignore_fields} 
+                 for edge in edges_1]
+    filtered_2 = [{k: v for k, v in edge.items() if k not in ignore_fields} 
+                 for edge in edges_2]
+
+    # Kinda hacky but the point is to default double_edge to be false.
+    # Should revise the logic when I have more time.
+    for edge in filtered_2:
+        if "double_edge" not in edge:
+            edge["double_edge"] = False
+
+    sorted_1 = sorted(filtered_1, key=lambda edge: (
+        edge["edge_name"], edge["from_name"], edge["to_name"]
+    ))
+    sorted_2 = sorted(filtered_2, key=lambda edge: (
+        edge["edge_name"], edge["from_name"], edge["to_name"]
+    ))
+
     for s1, s2 in zip(sorted_1, sorted_2):
         if s1 != s2:
             return False
@@ -215,12 +241,17 @@ async def test_concurrent_user_flows():
         await asyncio.gather(*tasks)
 
 
-@pytest.mark.skip(reason="This test is currently under development")
 @pytest.mark.asyncio
 @pytest.mark.parametrize("test_case", [
     {
         "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2],
         "added_edges": [TEST_EDGE_1_TO_2]
+    }, {
+        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2, TEST_WORD_UNIT_3],
+        "added_edges": [TEST_EDGE_1_TO_3, TEST_EDGE_1_TO_2]
+    }, {
+        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2, TEST_WORD_UNIT_3],
+        "added_edges": [TEST_EDGE_2_TO_3, TEST_EDGE_1_TO_3, TEST_EDGE_1_TO_2]
     }
 ])
 async def test_add_edges(client, auth_headers, test_case):
@@ -234,4 +265,11 @@ async def test_add_edges(client, auth_headers, test_case):
         }
     )
     assert response.status_code == 200, (f"response.json(): {response.json()}")
+
+    response = client.get("/api/vocabnet/getdata", headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["user"]["username"] == TEST_USERNAME
+    assert equal_words(data["words"], test_case["added_words"])
+    assert equal_edges(data["edges"], test_case["added_edges"])
     
