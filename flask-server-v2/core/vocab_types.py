@@ -42,9 +42,23 @@ TEST_WORD_UNIT_5 = {
 
 
 TEST_EDGE_1_TO_2 = {
-    "edge_name": "edge_1" ,
+    "edge_name": "edge_1_2" ,
     "from_name": "philosophy" ,
     "to_name": "stoicism" ,
+    "username": TEST_USERNAME
+}
+
+TEST_EDGE_1_TO_3 = {
+    "edge_name": "edge_1_3" ,
+    "from_name": "philosophy" ,
+    "to_name": "nihilism" ,
+    "username": TEST_USERNAME
+}
+
+TEST_EDGE_2_TO_3 = {
+    "edge_name": "edge_2_3" ,
+    "from_name": "stoicism" ,
+    "to_name": "nihilism" ,
     "username": TEST_USERNAME
 }
 
@@ -60,11 +74,6 @@ class UserInfo(BaseModel):
 class RegisterResponse(BaseModel):
     username: str 
     register_success: bool
-    
-class Word(BaseModel):
-    model_config = ConfigDict(extra='allow')
-    name: str 
-    username: str
 
 class Edge(BaseModel):
     edge_name: str
@@ -72,6 +81,13 @@ class Edge(BaseModel):
     to_name: str
     username: str
     double_edge: Optional[bool] = False 
+
+class Word(BaseModel):
+    model_config = ConfigDict(extra='allow')
+    name: str 
+    username: str
+    outgoing: Optional[list[Edge]] = []
+    incoming: Optional[list[Edge]] = []
 
 class DataCreateRequest(BaseModel):
     words: list[Word] = []
@@ -82,3 +98,6 @@ class DataRemoveRequest(BaseModel):
     words: list[Word] = []
     edges: list[Edge] = [] 
     tags: list[str] = []
+
+class ClearTestRequest(BaseModel):
+    key: str
