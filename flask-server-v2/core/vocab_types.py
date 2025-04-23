@@ -83,6 +83,7 @@ class RegisterResponse(BaseModel):
     register_success: bool
 
 class Edge(BaseModel):
+    model_config = ConfigDict(extra='allow')
     edge_name: str
     from_name: str 
     to_name: str
