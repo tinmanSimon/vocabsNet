@@ -168,11 +168,30 @@ class GraphService:
                 f"Edge exist status: {graph.edge_exist(edge)}, "
                 f"but should exist status: {edge_should_exist}."
             ) 
+        if graph.edge_conflicts(edge):
+            raise ValueError(
+                f"Edge '{edge.edge_name}' from '{edge.from_name}' "
+                f"to '{edge.to_name}' conflicts with existing edges"
+            ) 
+
+    def _check_edge_conflicts(self, edges: list[Edge]):
+        records = set()
+        for edge in edges:
+            outgoing = (edge.edge_name, edge.from_name, edge.to_name)
+            if outgoing in records:
+                return True 
+            records.add(outgoing)
+
+            if edge.double_edge == True:
+                incoming = (edge.edge_name, edge.to_name, edge.from_name)
+                if incoming in records: 
+                    return True 
+                records.add(incoming)
+        return False
 
     async def _validate_edges(self, edges: list[Edge], user: UserInfo, edge_should_exist: bool):
-        unique_edges = {(e.edge_name, e.from_name, e.to_name): e for e in edges}.values()
-        if len(unique_edges) != len(edges):
-            raise ValueError(f"Edges have duplicate values")
+        if self._check_edge_conflicts(edges):
+            raise ValueError(f"Edges have conflict values")
         for edge in edges:
             await self._validate_edge(edge, user, edge_should_exist)
     
