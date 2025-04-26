@@ -60,7 +60,9 @@ class Validator:
                 f"Edge exist status: {graph.edge_exist(edge)}, "
                 f"but should exist status: {edge_should_exist}."
             ) 
-        if graph.edge_conflicts(edge):
+
+        # We only care about edge conflicts when adding edges.
+        if (not edge_should_exist) and graph.edge_conflicts(edge):
             raise ValueError(
                 f"Edge '{edge.edge_name}' from '{edge.from_name}' "
                 f"to '{edge.to_name}' conflicts with existing edges"

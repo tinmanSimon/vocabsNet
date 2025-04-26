@@ -2,7 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from app.server import app  
 from app.vocab_logger import logger
-from core.vocab_types import TEST_USERNAME, TEST_PWD
+from tests.test_data import TEST_USERNAME, TEST_PWD
 from core.credentials import CLEAR_DATA_KEY
 
 @pytest.fixture(scope="session", autouse=True)
