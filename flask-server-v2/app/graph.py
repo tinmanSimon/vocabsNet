@@ -23,13 +23,18 @@ class Graph:
 
     def edge_exist(self, edge: Edge):
         outgoing = (edge.edge_name, edge.from_name, edge.to_name)
+        
+        # Case 1: For non-double edges, only check outgoing direction
         if not edge.double_edge:
-            return outgoing in self.edges
+            return outgoing in self.edges and not self.edges[outgoing].double_edge
+        
+        # Case 2: For double edges, check both directions
+        if outgoing in self.edges:
+            return self.edges[outgoing].double_edge
         incoming = (edge.edge_name, edge.to_name, edge.from_name)
         if incoming in self.edges:
             return self.edges[incoming].double_edge
-        if outgoing in self.edges:
-            return self.edges[outgoing].double_edge
+        
         return False
 
     def edge_conflicts(self, edge: Edge):
