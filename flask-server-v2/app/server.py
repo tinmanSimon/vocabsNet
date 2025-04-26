@@ -11,8 +11,6 @@ from core.vocab_types import (
 from contextlib import asynccontextmanager
 from fastapi.security import OAuth2PasswordBearer
 
-
-DEBUG_MODE = True
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/vocabnet/user/login")
 
 
