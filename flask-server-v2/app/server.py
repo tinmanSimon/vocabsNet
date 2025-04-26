@@ -61,10 +61,8 @@ async def login(user_data: UserInfo):
 async def createdata(request: DataCreateRequest, user: UserInfo = Depends(get_current_user)):
     if not user:
         raise HTTPException(status_code=401, detail="Token not found")
-    if request.words:
-        await app.state.graph_service.add_words(request.words, user)
-    if request.edges:
-        await app.state.graph_service.add_edges(request.edges, user)
+    await app.state.graph_service.add_words(request.words, user)
+    await app.state.graph_service.add_edges(request.edges, user)
     return {"user" : user, "message": "Data created successfully"}
 
 @app.post("/api/vocabnet/removedata")
