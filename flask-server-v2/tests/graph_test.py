@@ -1,13 +1,7 @@
 import pytest
 from app.vocab_logger import logger
-from core.vocab_types import (
-    TEST_USERNAME, TEST_USERNAME2, TEST_PWD, 
-    TEST_WORD_UNIT_1, TEST_WORD_UNIT_2, TEST_WORD_UNIT_3, 
-    TEST_WORD_UNIT_4, TEST_WORD_UNIT_5,
-    TEST_EDGE_1_TO_2, TEST_EDGE_1_TO_3, TEST_EDGE_2_TO_3,
-    TEST_EDGE_2_TO_1,
-    MAX_NAME_LENGTH
-)
+from core.vocab_types import MAX_NAME_LENGTH
+from tests.test_data import *
 import asyncio
 from httpx import AsyncClient
 import random
@@ -315,6 +309,158 @@ async def test_add_duplicate_edges(client, auth_headers):
         json={"edges": [TEST_EDGE_1_TO_2]}
     )
     assert response.status_code == 400, (f"response.json(): {response.json()}")
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("test_case", [
+    {
+        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2],
+        "added_edges": [TEST_EDGE_1_TO_2],
+        "remove_words": [],
+        "remove_edges": [],
+        "remain_edges": [TEST_EDGE_1_TO_2]
+    }, {
+        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2],
+        "added_edges": [TEST_EDGE_1_TO_2],
+        "remove_words": [],
+        "remove_edges": [TEST_EDGE_1_TO_2],
+        "remain_edges": []
+    } , {
+        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2],
+        "added_edges": [TEST_EDGE_1_TO_2],
+        "remove_words": [TEST_WORD_UNIT_1],
+        "remove_edges": [],
+        "remain_edges": []
+    }, {
+        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2],
+        "added_edges": [TEST_EDGE_1_TO_2],
+        "remove_words": [TEST_WORD_UNIT_1],
+        "remove_edges": [TEST_EDGE_1_TO_2],
+        "remain_edges": []
+    }, {
+        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2, TEST_WORD_UNIT_3],
+        "added_edges": [TEST_EDGE_1_TO_2, TEST_EDGE_1_TO_3, TEST_EDGE_2_TO_3],
+        "remove_words": [],
+        "remove_edges": [TEST_EDGE_1_TO_3],
+        "remain_edges": [TEST_EDGE_1_TO_2, TEST_EDGE_2_TO_3]
+    }, {
+        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2, TEST_WORD_UNIT_3],
+        "added_edges": [TEST_EDGE_1_TO_2, TEST_EDGE_1_TO_3, TEST_EDGE_2_TO_3],
+        "remove_words": [TEST_WORD_UNIT_2],
+        "remove_edges": [],
+        "remain_edges": [TEST_EDGE_1_TO_3]
+    }, {
+        "added_words": [
+            TEST_WORD_UNIT_1, 
+            TEST_WORD_UNIT_2, 
+            TEST_WORD_UNIT_3, 
+            TEST_WORD_UNIT_4, 
+            TEST_WORD_UNIT_5
+        ],
+        "added_edges": [
+            TEST_EDGE_2_TO_3, 
+            TEST_EDGE_1_TO_3, 
+            TEST_EDGE_1_TO_2, 
+            TEST_EDGE_3_TO_4, 
+            TEST_EDGE_5_TO_3,
+            TEST_DB_EDGE_4_TO_5
+        ],
+        "remove_words": [TEST_WORD_UNIT_3],
+        "remove_edges": [],
+        "remain_edges": [TEST_EDGE_1_TO_2, TEST_DB_EDGE_4_TO_5]
+    }
+])
+async def test_remove_edges(client, auth_headers, test_case):
+    headers = auth_headers
+    response = client.post(
+        "/api/vocabnet/createdata", 
+        headers=headers, 
+        json={
+            "words" : test_case["added_words"],
+            "edges" : test_case["added_edges"]
+        }
+    )
+    assert response.status_code == 200
+
+    response = client.post(
+        "/api/vocabnet/removedata", 
+        headers=headers, 
+        json={
+            "words" : test_case["remove_words"],
+            "edges" : test_case["remove_edges"]
+        }
+    )
+    assert response.status_code == 200
+
+    response = client.get("/api/vocabnet/getdata", headers=headers)
+    assert response.status_code == 200
+    assert response.json()["user"]["username"] == TEST_USERNAME
+    assert equal_edges(response.json()["edges"], test_case["remain_edges"])
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("test_case", [
+    {
+        "added_words": [],
+        "added_edges": [],
+        "remove_words": [TEST_WORD_UNIT_1],
+        "remove_edges": []
+    }, {
+        "added_words": [],
+        "added_edges": [],
+        "remove_words": [],
+        "remove_edges": [TEST_EDGE_1_TO_3]
+    }, {
+        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2],
+        "added_edges": [TEST_EDGE_1_TO_2],
+        "remove_words": [TEST_WORD_UNIT_3],
+        "remove_edges": []
+    }, {
+        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2],
+        "added_edges": [TEST_EDGE_1_TO_2],
+        "remove_words": [],
+        "remove_edges": [TEST_EDGE_1_TO_3]
+    }, {
+        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2, TEST_WORD_UNIT_3],
+        "added_edges": [TEST_EDGE_1_TO_2, TEST_EDGE_1_TO_3],
+        "remove_words": [],
+        "remove_edges": [TEST_EDGE_1_TO_2, {**TEST_EDGE_2_TO_1, "double_edge" : True}]
+    }, {
+        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2],
+        "added_edges": [],
+        "remove_words": [],
+        "remove_edges": [TEST_EDGE_1_TO_2]
+    }, {
+        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2],
+        "added_edges": [TEST_EDGE_1_TO_2],
+        "remove_words": [],
+        "remove_edges": [{**TEST_EDGE_1_TO_2, "double_edge" : True}]
+    }, {
+        "added_words": [TEST_WORD_UNIT_1, TEST_WORD_UNIT_2],
+        "added_edges": [{**TEST_EDGE_1_TO_2, "double_edge" : True}],
+        "remove_words": [],
+        "remove_edges": [TEST_EDGE_1_TO_2]
+    }
+])
+async def test_invalid_remove_data(client, auth_headers, test_case):
+    headers = auth_headers
+    response = client.post(
+        "/api/vocabnet/createdata", 
+        headers=headers, 
+        json={
+            "words": test_case["added_words"],
+            "edges": test_case["added_edges"]
+        }
+    )
+    assert response.status_code == 200
+
+    response = client.post(
+        "/api/vocabnet/removedata", 
+        headers=headers, 
+        json={
+            "words" : test_case["remove_words"],
+            "edges" : test_case["remove_edges"]
+        }
+    )
+    assert response.status_code == 400
 
 @pytest.mark.skip(reason="This test takes too much time. Comment this when we need to test.")
 @pytest.mark.asyncio

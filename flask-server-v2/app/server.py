@@ -57,6 +57,8 @@ async def login(user_data: UserInfo):
         headers={"WWW-Authenticate": "Bearer"},
     )
 
+# creating data is sequential, because we might have new edges that are built on the
+# new words, so we need to update the Graph before validating edges.
 @app.post("/api/vocabnet/createdata")
 async def createdata(request: DataCreateRequest, user: UserInfo = Depends(get_current_user)):
     if not user:
@@ -65,11 +67,13 @@ async def createdata(request: DataCreateRequest, user: UserInfo = Depends(get_cu
     await app.state.graph_service.add_edges(request.edges, user)
     return {"user" : user, "message": "Data created successfully"}
 
+# To remove data, all the info should be readily available in the graph.
+# So we validate all data at once, and remove the necessary data all at once.
 @app.post("/api/vocabnet/removedata")
 async def removedata(request: DataRemoveRequest, user: UserInfo = Depends(get_current_user)):
     if not user:
         raise HTTPException(status_code=401, detail="Token not found")
-    await app.state.graph_service.remove_words(request.words, user)
+    await app.state.graph_service.remove_data(request, user)
     return {"user" : user, "message": "Data removed successfully"}
     
 @app.get("/api/vocabnet/getdata")

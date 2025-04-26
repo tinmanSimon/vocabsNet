@@ -2,7 +2,7 @@ from app.graph import Graph
 from app.graph_cache import GraphCacheManager
 from app.vocab_logger import logger
 from app.validator import Validator
-from core.vocab_types import Word, Edge, UserInfo, DataCreateRequest
+from core.vocab_types import Word, Edge, UserInfo, DataRemoveRequest
 from core.credentials import MONGO_URI, DB_NAME, DEBUG_DB_NAME, CLEAR_DATA_KEY, DEBUG_MODE
 import motor.motor_asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -114,6 +114,31 @@ class GraphService:
         return True 
 
     @handle_mongo_errors
+    async def _remove_edges_to_db(
+        self, 
+        username: str, 
+        words_data: list[Word], 
+        edges_data: list[Edge]
+    ) -> bool:
+        conditions = []
+        for word in words_data:
+            conditions.append({"username": username, "edge_data.from_name": word.name})
+            conditions.append({"username": username, "edge_data.to_name": word.name})
+
+        for edge in edges_data:
+            conditions.append({
+                "username": username, 
+                "edge_data.edge_name": edge.edge_name,
+                "edge_data.from_name": edge.from_name,
+                "edge_data.to_name": edge.to_name,
+                "edge_data.double_edge": edge.double_edge
+            })
+        
+        if conditions:
+            await self._db.edges.delete_many({"$or": conditions})
+        return True 
+
+    @handle_mongo_errors
     async def _load_data_from_db(self, username: str) -> list:
         words, graph = [], Graph()
 
@@ -152,18 +177,30 @@ class GraphService:
 
     # Remove data will mark the cached graph as dirty and rebuild on next read
     @handle_general_errors
-    async def remove_words(self, words_data: list[Word], user: UserInfo):
-        if words_data is None: return
+    async def remove_data(self, request: DataRemoveRequest, user: UserInfo):
         username = user.username
         graph = await self._get_graph(username)
-        await self._validator.validate_words(
-            words_data, 
-            user, 
-            word_should_exist=True,
-            graph=graph
-        )
+
+        words_data = request.words 
+        edges_data = request.edges
+        if words_data:
+            await self._validator.validate_words(
+                words_data, 
+                user, 
+                word_should_exist=True,
+                graph=graph
+            )
+        if edges_data:
+            await self._validator.validate_edges(
+                edges_data, 
+                user, 
+                edge_should_exist=True,
+                graph=graph
+            )
+
         await self._remove_words_to_db(username, words_data)
-        await self._cache_manager.mark_dirty(username)
+        await self._remove_edges_to_db(username, words_data, edges_data)
+        await self._cache_manager.invalidate(username)
 
     @handle_general_errors
     async def add_edges(self, edges_data: list[Edge], user: UserInfo):
