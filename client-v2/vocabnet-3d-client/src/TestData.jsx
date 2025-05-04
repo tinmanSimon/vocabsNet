@@ -1,59 +1,48 @@
-const testData = {
-    nodes: [{
-        name : "a",
-        username : "simon",
-        position : [0, 0, 0]
-    },{
-        name : "b",
-        username : "simon",
-        position : [10, 0, 0]
-    },{
-        name : "c",
-        username : "simon",
-        position : [0, 10, 0]
-    },{
-        name : "d",
-        username : "simon",
-        position : [0, 0, 10]
-    },{
-        name : "e",
-        username : "simon",
-        position : [10, 10, 10]
-    }],
+function generateTestData(n, m) {
+    const words = []
+    const edges = []
+    const edgeNames = ['rel_0', 'rel_1', 'rel_2', 'rel_3', 'rel_4', 'rel_5', 'rel_6', 'rel_7', 'rel_8', 'rel_9']
+    const usedPairs = new Set()
 
-    edges: [
-        {
-            edge_name : "relates",
-            from_name : "a",
-            to_name : "b",
-            username : "simon",
-            double_edge : false
-        }, {
-            edge_name : "relates",
-            from_name : "b",
-            to_name : "d",
-            username : "simon",
-            double_edge : false
-        }, {
-            edge_name : "relates",
-            from_name : "c",
-            to_name : "b",
-            username : "simon",
-            double_edge : false
-        }, {
-            edge_name : "relates",
-            from_name : "d",
-            to_name : "e",
-            username : "simon",
-            double_edge : true
-        }, {
-            edge_name : "relates",
-            from_name : "c",
-            to_name : "e",
-            username : "simon",
-            double_edge : false
-        }
-    ]
+    // Generate n unique words
+    for (let i = 0; i < n; i++) {
+        words.push({
+            name: `word_${i}`,
+            username: "simon"
+        })
+    }
+
+    const names = words.map(w => w.name)
+
+    // Generate 2n unique edges
+    while (edges.length < m) {
+        const fromIndex = Math.floor(Math.random() * n)
+        let toIndex = Math.floor(Math.random() * n)
+
+        // Make sure from ≠ to
+        if (fromIndex === toIndex) continue
+
+        const from = names[fromIndex]
+        const to = names[toIndex]
+
+        const pairKey = `${from}->${to}`
+        const reverseKey = `${to}->${from}`
+
+        // Skip if exact or reverse edge already exists
+        if (usedPairs.has(pairKey) || usedPairs.has(reverseKey)) continue
+
+        usedPairs.add(pairKey)
+
+        edges.push({
+            edge_name: edgeNames[Math.floor(Math.random() * edgeNames.length)],
+            from_name: from,
+            to_name: to,
+            username: "simon",
+            double_edge: false
+        })
+    }
+
+    return { nodes: words, edges }
 }
 
-export default testData
+export default generateTestData

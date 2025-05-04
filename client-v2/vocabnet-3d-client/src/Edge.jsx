@@ -6,13 +6,13 @@ const EdgeWithTraversalPoint = ({
   source, 
   target, 
   color = '#E5F3FD', 
-  tubeRadius = 0.05,
+  tubeRadius = 0.2,
   sourceGap = 0.5,
   targetGap = 0.5,
-  bendAmount = 0.5,
+  bendAmount = 5,
   bendSpeed = 0.3,
-  resolution = 16,
-  traversalPointRadius = 0.12,
+  resolution = 2,
+  traversalPointRadius = 0.5,
   traversalSpeed = 0.2,
   traversalColor = 'grey',
   doubleEdge = false
@@ -26,9 +26,7 @@ const EdgeWithTraversalPoint = ({
   const pointsRef = useRef([])
   const curveRef = useRef()
 
-  if (doubleEdge) {
-    traversalColor = '#008B8B'
-  }
+  if (doubleEdge) traversalColor = '#008B8B'
   
   // Setup function - runs once
   useEffect(() => {

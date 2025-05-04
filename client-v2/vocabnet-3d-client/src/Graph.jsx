@@ -1,34 +1,52 @@
-import { useRef, useEffect } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useMemo } from 'react'
 import Word from './Word'
 import Edge from './Edge'
-import testData from './TestData'
-
+import generateTestData from './TestData'
+import { spreadWords } from './utils/spreadWords'
 
 function Graph() {
-    const nodesRef = useRef(testData.nodes)
-    const edgesRef = useRef(testData.edges)
+    const testData = generateTestData(100, 150)
+
+    const computedNodes = useMemo(() => {
+        return spreadWords(testData.nodes, testData.edges, {
+            nodeDistance: 50,
+            edgeDistance: 30,
+            iterations: 300,
+            boxSize: 200
+        })
+    }, [testData.nodes, testData.edges])
+
+    const nodeMap = useMemo(() => {
+        const map = {}
+        for (const node of computedNodes) {
+            map[node.name] = node.position
+        }
+        return map
+    }, [computedNodes])
 
     return (
         <>
-        {edgesRef.current.map((edge, idx) => {
-            const source = nodesRef.current.find(n => n.name === edge.from_name)
-            const target = nodesRef.current.find(n => n.name === edge.to_name)
-            if (!source || !target) return null
+            {testData.edges.map((edge, idx) => {
+                const sourcePos = nodeMap[edge.from_name]
+                const targetPos = nodeMap[edge.to_name]
+                if (!sourcePos || !targetPos) return null
 
-            return (
-            <Edge
-                key={idx}
-                source={source.position}
-                target={target.position}
-                doubleEdge={edge.double_edge}
-
-            />
-            )
-        })}
-        {nodesRef.current.map(node => (
-            <Word key={node.name} position={node.position} name={node.name} />
-        ))}
+                return (
+                    <Edge
+                        key={idx}
+                        source={sourcePos}
+                        target={targetPos}
+                        doubleEdge={edge.double_edge}
+                    />
+                )
+            })}
+            {computedNodes.map(node => (
+                <Word
+                    key={node.name}
+                    position={node.position}
+                    name={node.name}
+                />
+            ))}
         </>
     )
 }
