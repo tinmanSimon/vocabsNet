@@ -1,13 +1,18 @@
 import { useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { Text } from '@react-three/drei'
 
-function Node({position, name = "Word" }) {
+function Word({ position, name = "Word" }) {
   const ref = useRef()
+  const { camera } = useThree()
 
   useFrame(() => {
     if (ref.current) {
+      // Update position
       ref.current.position.set(...position)
+
+      // Make the text face the camera (billboard effect)
+      ref.current.quaternion.copy(camera.quaternion)
     }
   })
 
@@ -24,4 +29,4 @@ function Node({position, name = "Word" }) {
   )
 }
 
-export default Node
+export default Word
