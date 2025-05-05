@@ -4,37 +4,103 @@ import './AddDataModal.css'
 export default function AddDataModal({ open, onClose, onAdd }) {
   if (!open) return null
 
-  const [words, setWords] = useState('')
-  const [edges, setEdges] = useState('')
+  const [words, setWords] = useState([])
+  const [edges, setEdges] = useState([])
+
+  /* --- helpers to mutate arrays immutably --- */
+  const updateWord = (i, val) =>
+    setWords(w => w.map((v, idx) => (idx === i ? val : v)))
+
+  const updateEdge = (i, field, val) =>
+    setEdges(e =>
+      e.map((edge, idx) =>
+        idx === i ? { ...edge, [field]: val } : edge
+      )
+    )
+
+  /* --- add row buttons --- */
+  const addWordRow = () => setWords(w => [...w, ''])
+  const addEdgeRow = () =>
+    setEdges(e => [
+      ...e,
+      { edge_name: '', from_name: '', to_name: '', double_edge: false }
+    ])
 
   const handleSubmit = e => {
     e.preventDefault()
-    onAdd({ words, edges })
+    onAdd({
+      words: words.filter(w => w.trim() !== ''),
+      edges: edges
+        .filter(ed => ed.edge_name && ed.from_name && ed.to_name)
+        .map(ed => ({
+          ...ed,
+          double_edge: !!ed.double_edge
+        }))
+    })
     onClose()
   }
 
   return (
     <div className="adm-backdrop" onClick={onClose}>
-      <form className="adm-modal" onClick={e => e.stopPropagation()} onSubmit={handleSubmit}>
-        <h3>Add Data</h3>
+      <form
+        className="adm-modal"
+        onClick={e => e.stopPropagation()}
+        onSubmit={handleSubmit}
+      >
+        <div className="adm-toolbar">
+          <button type="button" onClick={addWordRow}>Add Word</button>
+          <button type="button" onClick={addEdgeRow}>Add Edge</button>
+        </div>
 
-        <label>Words (comma‑separated)</label>
-        <textarea
-          value={words}
-          onChange={e => setWords(e.target.value)}
-          placeholder="word1, word2, word3"
-        />
+        {/* word inputs */}
+        {words.map((w, i) => (
+          <div key={`w-${i}`} className="adm-row">
+            <label>Word {i + 1}</label>
+            <input
+              value={w}
+              onChange={e => updateWord(i, e.target.value)}
+              placeholder="word"
+            />
+          </div>
+        ))}
 
-        <label>Edges (JSON or CSV)</label>
-        <textarea
-          value={edges}
-          onChange={e => setEdges(e.target.value)}
-          placeholder='e.g. [{"from":"word1","to":"word2"}]'
-        />
+        {/* edge inputs */}
+        {edges.map((ed, i) => (
+            <div key={`e-${i}`} className="adm-edge">
+                <label>Edge {i + 1}</label>
+
+                <input
+                className="edge-field"
+                value={ed.edge_name}
+                placeholder="Edge Name"
+                onChange={e => updateEdge(i, 'edge_name', e.target.value)}
+                />
+                <input
+                className="edge-field"
+                value={ed.from_name}
+                placeholder="From Node"
+                onChange={e => updateEdge(i, 'from_name', e.target.value)}
+                />
+                <input
+                className="edge-field"
+                value={ed.to_name}
+                placeholder="To Node"
+                onChange={e => updateEdge(i, 'to_name', e.target.value)}
+                />
+                <label className="adm-check">
+                <input
+                    type="checkbox"
+                    checked={ed.double_edge}
+                    onChange={e => updateEdge(i, 'double_edge', e.target.checked)}
+                />
+                Double Edge
+                </label>
+            </div>
+        ))}
 
         <div className="adm-actions">
-          <button type="submit">Add Data</button>
-          <button type="button" onClick={onClose}>Cancel</button>
+          <button type="submit" className="btn-add">Add Data</button>
+          <button type="button" className="btn-cancel" onClick={onClose}>Cancel</button>
         </div>
       </form>
     </div>

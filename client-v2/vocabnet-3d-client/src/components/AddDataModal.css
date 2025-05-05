@@ -1,12 +1,66 @@
+/* ── unchanged backdrop ─────────────────────────── */
 .adm-backdrop {
-    position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex;
-    align-items:center; justify-content:center; z-index:2000;
-  }
-  .adm-modal {
-    background:#fff; padding:24px 28px; border-radius:8px; width:320px;
-    display:flex; flex-direction:column; gap:12px;
-  }
-  .adm-modal textarea { width:100%; height:80px; }
-  .adm-actions { display:flex; justify-content:flex-end; gap:8px; }
-  .adm-actions button { padding:6px 12px; }
-  
+  position:fixed; inset:0; background:rgba(0,0,0,.6);
+  display:flex; align-items:center; justify-content:center;
+  z-index:2000;
+}
+
+/* ─── Modal box: width/height ≤ 70 % viewport, scrollable ────── */
+.adm-modal {
+  background:#fff; padding:24px 28px; border-radius:8px;
+  width:min(600px, 70vw);        /* <=70 % of viewport width   */
+  min-height:20vh;
+  max-height:70vh;               /* <=70 % of viewport height  */
+  overflow:auto;                 /* both directions if needed  */
+  display:flex; flex-direction:column; gap:12px;
+  background-color: lightblue;
+}
+
+/* ─── Toolbar: centered buttons ──────────────────────────────── */
+.adm-toolbar {
+  display:flex; gap:8px; justify-content:center;
+}
+.adm-toolbar button { padding:6px 12px; background-color: #d0e0f0;}
+
+.adm-row {
+  display:flex; align-items:center; gap:8px; min-width:min(550px, 70vw);
+}
+.adm-row input { flex:1 0 0; min-width:0; }
+
+.adm-edge {
+  display:flex; align-items:center; gap:8px; min-width:550px; flex-wrap:nowrap;
+}
+
+.adm-edge label { flex:0 0 90px; }      /* same fixed 90 px label */
+
+.adm-edge .edge-field {
+  flex:1 1 0;            /* three equal columns share remaining width */
+  min-width:0;           /* allow shrinking but keep on one line      */
+}
+
+.adm-check { display:flex; align-items:center; gap:4px; white-space:nowrap; }
+
+.adm-row label,
+.adm-edge label { flex:0 0 90px; text-align:left; }
+
+
+/* ── footer buttons (unchanged) ─────────────────── */
+.adm-actions { 
+  margin-top: auto;                   /* pushes footer to bottom */
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);   /* 3 equal columns */
+  width: 100%;
+  gap: 0; 
+ }
+ .btn-add { 
+  grid-column: 1; 
+  justify-self: center; 
+  padding: 6px 14px; 
+  background-color: #f0f0f0;
+ }
+ .btn-cancel { 
+  grid-column: 3; 
+  justify-self: center; 
+  padding: 6px 14px; 
+  background-color: #f0f0f0;
+}
