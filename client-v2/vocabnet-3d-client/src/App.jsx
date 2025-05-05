@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef} from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import Graph from './Graph'
@@ -11,6 +11,7 @@ function App() {
   const [showLogin, setShowLogin] = useState(!getToken())
   const [loginError, setLoginError] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const graphRef = useRef(null);
 
   useEffect(() => {
     if (!getToken()) return
@@ -45,9 +46,9 @@ function App() {
   }
 
   const handleDataRequest = data => {
-    // receive words/edges from modal
     console.log('Data request payload', data)
-    // TODO: send to backend or merge into graph
+    graphRef.current?.applyPayload(data); 
+    // TODO: send to backend 
   }
 
 
@@ -60,7 +61,7 @@ function App() {
           <Canvas camera={{ position: [0, 0, 50], fov: 60 }} style={{ background: 'lightblue' }}>
             <ambientLight />
             <pointLight position={[10, 10, 10]} />
-            {isAuthenticated && <Graph />}
+            {isAuthenticated && <Graph ref={graphRef}/>}
             <OrbitControls />
           </Canvas>
         </>

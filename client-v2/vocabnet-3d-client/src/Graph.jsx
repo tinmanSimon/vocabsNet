@@ -1,57 +1,96 @@
-import { useMemo } from 'react'
-import Word from './Word'
-import Edge from './Edge'
-import generateTestData from './TestData'
-import { spreadWords } from './utils/spreadWords'
+// Graph.jsx
+import { useState, useRef, forwardRef, useImperativeHandle } from 'react';
+import { useFrame } from '@react-three/fiber';
+import Word from './Word';
 
-function Graph() {
-    const testData = {
-        nodes: [],
-        edges: []
-    }
+// ← this is the file you uploaded
+import Edge from './Edge';
 
-    const computedNodes = useMemo(() => {
-        return spreadWords(testData.nodes, testData.edges, {
-            nodeDistance: 50,
-            edgeDistance: 30,
-            iterations: 300,
-            boxSize: 200
-        })
-    }, [testData.nodes, testData.edges])
+import { randomVecNear } from './utils/randomVecNear';
 
-    const nodeMap = useMemo(() => {
-        const map = {}
-        for (const node of computedNodes) {
-            map[node.name] = node.position
+/* ------------------------------------------------- *
+ * Graph
+ *  - manages node / edge arrays
+ *  - exposes .applyPayload(payload) to parent (App)
+ *  - lets Word handle its own fade; keeps removed
+ *    nodes alive until fade‑out finishes
+ * ------------------------------------------------- */
+const Graph = forwardRef((_, ref) => {
+  /* live data */
+  const [nodes, setNodes] = useState([]);   // [{ name, position }]
+  const [edges, setEdges] = useState([]);   // [{ from_name, to_name, double_edge? }]
+
+  /* ----------------  public API  ---------------- */
+  useImperativeHandle(ref, () => ({
+    applyPayload({ words = [], edges: edgeArr = [], mode }) {
+      if (mode === 'add-data') {
+        /** ---------- add words ---------- */
+        if (words.length) {
+          setNodes(prev => {
+            const next = [...prev];
+            words.forEach(w => {
+              if (!next.find(n => n.name === w.name)) {
+                next.push({
+                  name: w.name,
+                  position: w.position ?? randomVecNear(null)
+                });
+              }
+            });
+            return next;
+          });
         }
-        return map
-    }, [computedNodes])
+        
+        /** ---------- add edges ---------- */
+        if (edgeArr.length) {
+          setEdges(prev => {
+            const next = [...prev];
+            edgeArr.forEach(e => {
+              if (!next.find(x =>
+                   x.from_name === e.from_name &&
+                   x.to_name   === e.to_name)) {
+                next.push(e);
+              }
+            });
+            return next;
+          });
+        }
 
-    return (
-        <>
-            {testData.edges.map((edge, idx) => {
-                const sourcePos = nodeMap[edge.from_name]
-                const targetPos = nodeMap[edge.to_name]
-                if (!sourcePos || !targetPos) return null
+      } else if (mode === 'remove-data') {
+        // TODO
+      }
+    }
+  }));
 
-                return (
-                    <Edge
-                        key={idx}
-                        source={sourcePos}
-                        target={targetPos}
-                        doubleEdge={edge.double_edge}
-                    />
-                )
-            })}
-            {computedNodes.map(node => (
-                <Word
-                    key={node.name}
-                    position={node.position}
-                    name={node.name}
-                />
-            ))}
-        </>
-    )
-}
+  /* lookup positions for edges */
+  const posMap = Object.fromEntries(nodes.map(n => [n.name, n.position]));
 
-export default Graph
+  return (
+    <>
+      {/* --- EDGES --- */}
+      {edges.map(e => {
+        const a = posMap[e.from_name];
+        const b = posMap[e.to_name];
+        if (!a || !b) return null; 
+        return (
+          <Edge
+            key={`${e.edge_name}-${e.from_name}-${e.to_name}-${e.double_edge ? '0' : '1'}`}
+            source={a}
+            target={b}
+            doubleEdge={e.double_edge}
+          />
+        );
+      })}
+
+      {/* --- WORDS --- */}
+      {nodes.map(n => (
+        <Word
+          key={n.name}
+          name={n.name}
+          position={n.position}
+        />
+      ))}
+    </>
+  );
+});
+
+export default Graph;
