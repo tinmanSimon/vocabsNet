@@ -52,7 +52,7 @@
   width: 100%;
   gap: 0; 
  }
- .btn-add { 
+ .btn-submit { 
   grid-column: 1; 
   justify-self: center; 
   padding: 6px 14px; 

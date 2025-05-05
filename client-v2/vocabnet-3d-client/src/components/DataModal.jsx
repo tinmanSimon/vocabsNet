@@ -1,11 +1,14 @@
 import { useState } from 'react'
-import './AddDataModal.css'
+import './DataModal.css'
 
-export default function AddDataModal({ open, onClose, onAdd }) {
+export default function DataModal({ open, mode = "add-data", onClose, onSubmit }) {
   if (!open) return null
 
   const [words, setWords] = useState([])
   const [edges, setEdges] = useState([])
+
+  const isAdd = mode === "add-data"
+  const actionLabel = isAdd ? 'Add Data' : 'Remove Data'
 
   /* --- helpers to mutate arrays immutably --- */
   const updateWord = (i, val) =>
@@ -28,14 +31,15 @@ export default function AddDataModal({ open, onClose, onAdd }) {
 
   const handleSubmit = e => {
     e.preventDefault()
-    onAdd({
+    onSubmit({
       words: words.filter(w => w.trim() !== ''),
       edges: edges
         .filter(ed => ed.edge_name && ed.from_name && ed.to_name)
         .map(ed => ({
           ...ed,
           double_edge: !!ed.double_edge
-        }))
+        })),
+      mode: mode
     })
     onClose()
   }
@@ -99,7 +103,7 @@ export default function AddDataModal({ open, onClose, onAdd }) {
         ))}
 
         <div className="adm-actions">
-          <button type="submit" className="btn-add">Add Data</button>
+          <button type="submit" className="btn-submit">{actionLabel}</button>
           <button type="button" className="btn-cancel" onClick={onClose}>Cancel</button>
         </div>
       </form>

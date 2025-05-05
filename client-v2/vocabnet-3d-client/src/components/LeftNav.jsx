@@ -1,13 +1,22 @@
 import { useRef, useState } from 'react'
 import './LeftNav.css'
-import AddDataModal from './AddDataModal'
+import DataModal from './DataModal'
 
-export default function LeftNav({ onAddData }) {
+export default function LeftNav({ onDataRequest }) {
   const [open, setOpen] = useState(false)
-  const [showAdd, setShowAdd] = useState(false)
+  const [launchedMenuItem, setLaunchedMenuItem] = useState("")
   const [pos, setPos] = useState(() => {
     return { x: 32, y: 32 }
   })
+
+  const MODALS = {
+    "add-data": <DataModal open mode="add-data" onSubmit={onDataRequest} onClose={() => setLaunchedMenuItem('')} />,
+    "remove-data": <DataModal open mode="remove-data" onSubmit={onDataRequest} onClose={() => setLaunchedMenuItem('')} />,
+  }
+  
+  function renderLaunchedModal() {
+    return MODALS[launchedMenuItem] || null
+  }
 
   const dragRef = useRef(null)
   const startDrag = e => {
@@ -34,8 +43,8 @@ export default function LeftNav({ onAddData }) {
 
   /* ----- menu items ----- */
   const items = [
-    { label: 'Add Data',    onClick: () => setShowAdd(true) },
-    { label: 'Remove Data', onClick: () => console.log('remove') },
+    { label: 'Add Data',    onClick: () => setLaunchedMenuItem("add-data") },
+    { label: 'Remove Data', onClick: () => setLaunchedMenuItem("remove-data") },
     { label: 'Settings',    onClick: () => console.log('settings') },
     { label: 'Search',    onClick: () => console.log('search') },
     { label: 'Collapse',    onClick: () => setOpen(false) }
@@ -69,7 +78,6 @@ export default function LeftNav({ onAddData }) {
           {items.map((it, i) => (
             <li
               key={it.label}
-              onMouseDown={e => e.stopPropagation()}
               onClick={it.onClick}
               style={{ transitionDelay: `${i * 80}ms` }}
             >
@@ -78,13 +86,7 @@ export default function LeftNav({ onAddData }) {
           ))}
         </ul>
       )}
-      <AddDataModal
-        open={showAdd}
-        onClose={() => setShowAdd(false)}
-        onAdd={payload => {
-          onAddData && onAddData(payload)     // bubble up to App
-        }}
-      />
+      {renderLaunchedModal()}
     </div>
   )
 }
