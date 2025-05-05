@@ -32,7 +32,9 @@ export default function DataModal({ open, mode = "add-data", onClose, onSubmit }
   const handleSubmit = e => {
     e.preventDefault()
     onSubmit({
-      words: words.filter(w => w.trim() !== ''),
+      words: words.filter(w => w.trim() !== '').map(w => ({
+        name: w
+      })),
       edges: edges
         .filter(ed => ed.edge_name && ed.from_name && ed.to_name)
         .map(ed => ({
