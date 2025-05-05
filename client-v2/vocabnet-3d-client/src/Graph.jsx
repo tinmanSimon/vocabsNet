@@ -5,7 +5,10 @@ import generateTestData from './TestData'
 import { spreadWords } from './utils/spreadWords'
 
 function Graph() {
-    const testData = generateTestData(100, 150)
+    const testData = {
+        nodes: [],
+        edges: []
+    }
 
     const computedNodes = useMemo(() => {
         return spreadWords(testData.nodes, testData.edges, {
