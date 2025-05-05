@@ -44,18 +44,19 @@ function App() {
     }
   }
 
-  const handleAddData = data => {
+  const handleDataRequest = data => {
     // receive words/edges from modal
-    console.log('🚀 Add‑Data payload', data)
+    console.log('Data request payload', data)
     // TODO: send to backend or merge into graph
   }
+
 
   return (
     <div style={{ width: '100vw', height: '100vh' }}>
       {showLogin && <LoginModal onLogin={handleLogin} error={loginError} />}
       {!showLogin && (
         <>
-          <LeftNav onAddData={handleAddData} />
+          <LeftNav onDataRequest={handleDataRequest} />
           <Canvas camera={{ position: [0, 0, 50], fov: 60 }} style={{ background: 'lightblue' }}>
             <ambientLight />
             <pointLight position={[10, 10, 10]} />
