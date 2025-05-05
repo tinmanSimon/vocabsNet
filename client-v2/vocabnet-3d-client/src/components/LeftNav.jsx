@@ -1,8 +1,10 @@
 import { useRef, useState } from 'react'
 import './LeftNav.css'
+import AddDataModal from './AddDataModal'
 
-export default function LeftNav() {
+export default function LeftNav({ onAddData }) {
   const [open, setOpen] = useState(false)
+  const [showAdd, setShowAdd] = useState(false)
   const [pos, setPos] = useState(() => {
     return { x: 32, y: 32 }
   })
@@ -32,7 +34,7 @@ export default function LeftNav() {
 
   /* ----- menu items ----- */
   const items = [
-    { label: 'Add Data',    onClick: () => console.log('add') },
+    { label: 'Add Data',    onClick: () => setShowAdd(true) },
     { label: 'Remove Data', onClick: () => console.log('remove') },
     { label: 'Settings',    onClick: () => console.log('settings') },
     { label: 'Search',    onClick: () => console.log('search') },
@@ -76,6 +78,13 @@ export default function LeftNav() {
           ))}
         </ul>
       )}
+      <AddDataModal
+        open={showAdd}
+        onClose={() => setShowAdd(false)}
+        onAdd={payload => {
+          onAddData && onAddData(payload)     // bubble up to App
+        }}
+      />
     </div>
   )
 }

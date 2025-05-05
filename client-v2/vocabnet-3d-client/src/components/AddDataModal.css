@@ -1,0 +1,12 @@
+.adm-backdrop {
+    position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex;
+    align-items:center; justify-content:center; z-index:2000;
+  }
+  .adm-modal {
+    background:#fff; padding:24px 28px; border-radius:8px; width:320px;
+    display:flex; flex-direction:column; gap:12px;
+  }
+  .adm-modal textarea { width:100%; height:80px; }
+  .adm-actions { display:flex; justify-content:flex-end; gap:8px; }
+  .adm-actions button { padding:6px 12px; }
+  
