@@ -57,7 +57,16 @@
     cursor: pointer;
     white-space: nowrap;
   }
-  .ln-menu li:last-child { border-bottom: none; }
+  .ln-menu li:last-child { 
+    border-bottom: none;
+    background: #f0f0f0;           /* darker background */
+    font-weight: bold;             /* bolder text */
+    color: #333; 
+  }
+
+  .ln-menu li:last-child:hover {
+    background: #d0d0d0;           /* even darker on hover */
+  }
   
   /* item hover styling */
   .ln-menu li:hover { background: #e7f0ff; }
@@ -67,4 +76,5 @@
     opacity: 1;
     transform: translateY(0);
   }
+  
   
