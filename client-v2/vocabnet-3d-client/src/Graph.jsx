@@ -1,12 +1,12 @@
 // Graph.jsx
 import { useState, useRef, forwardRef, useImperativeHandle } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import Word from './Word';
 
 // ← this is the file you uploaded
 import Edge from './Edge';
 
-import { randomVecNear } from './utils/randomVecNear';
+import { randomVecInView } from './utils/randomVecInView';
 
 /* ------------------------------------------------- *
  * Graph
@@ -20,6 +20,8 @@ const Graph = forwardRef((_, ref) => {
   const [nodes, setNodes] = useState([]);   // [{ name, position }]
   const [edges, setEdges] = useState([]);   // [{ from_name, to_name, double_edge? }]
 
+  const { camera } = useThree();
+
   /* ----------------  public API  ---------------- */
   useImperativeHandle(ref, () => ({
     applyPayload({ words = [], edges: edgeArr = [], mode }) {
@@ -32,7 +34,7 @@ const Graph = forwardRef((_, ref) => {
               if (!next.find(n => n.name === w.name)) {
                 next.push({
                   name: w.name,
-                  position: w.position ?? randomVecNear(null)
+                  position: randomVecInView(camera)
                 });
               }
             });
