@@ -1,80 +1,40 @@
-/* ------------- container ------------ */
-.ln-container {
-    position: fixed;
-    z-index: 1000;
-    user-select: none;
-    cursor: grab;
-    /* start as 40×40 square */
-    width: 40px;
-    height: 40px;
-    transition: width 0.55s ease, height 0.55s ease;
-  }
-  /* expanded size auto‑grows to fit menu */
-  .ln-container.open {
-    width: 160px;
-    height: 192px;        /* 4 items × 48px each */
+/* ------ container box morphs ------ */
+.ln-box {
+    position:fixed; z-index:1000; user-select:none;
+    transition: width .4s ease, height .4s ease, border-radius .4s ease;
+    border-radius:8px;            /* fully rounded when closed */
+    box-shadow:0 2px 6px rgba(0,0,0,.25);
+    overflow:hidden;              /* clips content during animation */
+    background:#fff;              /* visible while growing */
   }
   
-  /* ------------- icon / toggle ------------ */
-  .ln-toggle {
-    position: absolute;
-    inset: 0;
-    background: #1e4e8c;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    font-size: 22px;
-    transition: transform 0.55s ease, border-radius 0.55s ease;
-  }
-  .ln-container:not(.open) .ln-toggle::before { content: '☰'; }
-  .ln-container.open .ln-toggle {       /* flatten to bar behind list */
-    transform: scaleY(0.05) translateY(-80%);
-    border-radius: 6px 6px 0 0;
+  /* when open, keep bottom corners rounded only */
+  .ln-box.open { border-radius:8px; }
+  
+  /* ------ handle bar (icon or header) ------ */
+  .ln-handle {
+    height:40px; line-height:40px;
+    background:#1e4e8c; color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    cursor:grab; font-size:22px; font-weight:bold;
+    user-select:none;
   }
   
-  /* ------------- menu list ------------ */
-  .ln-menu {
-    position: absolute;
-    top: 0;
-    left: 0;
-    margin: 0;
-    padding: 48px 0 0;          /* leave space for “icon” topper */
-    list-style: none;
-    width: 100%;
-    height: 100%;
-  }
-  .ln-menu li {
-    height: 48px;
-    line-height: 48px;
-    padding: 0 16px;
-    opacity: 0;
-    transform: translateY(-8px);
-    transition: opacity 0.45s ease, transform 0.45s ease;
-    background: #ffffff;
-    border-bottom: 1px solid #e6e6e6;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-  .ln-menu li:last-child { 
-    border-bottom: none;
-    background: #f0f0f0;           /* darker background */
-    font-weight: bold;             /* bolder text */
-    color: #333; 
-  }
-
-  .ln-menu li:last-child:hover {
-    background: #d0d0d0;           /* even darker on hover */
-  }
+  /* icon size when closed */
+  .ln-box:not(.open) .ln-handle { font-size:22px; }
   
-  /* item hover styling */
-  .ln-menu li:hover { background: #e7f0ff; }
+  /* header label when open */
+  .ln-box.open   .ln-handle { font-size:16px; }
   
-  /* animate items only when open */
-  .ln-container.open .ln-menu li {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  /* ------ menu list ------ */
+  .ln-menu       { list-style:none; margin:0; padding:0; }
   
+  .ln-menu li    { height:48px; line-height:48px; padding:0 16px; cursor:pointer;
+                   opacity:0; transform:translateY(-8px);
+                   transition:opacity .45s ease, transform .45s ease; }
+  .ln-box.open .ln-menu li { opacity:1; transform:translateY(0); }
+  .ln-menu li:hover              { background:#e7f0ff; }
+  
+  .ln-menu li:last-child       { font-weight:bold; background:#f0f0f0; }
+  .ln-menu li:last-child:hover { background:#d0d0d0; }
   
