@@ -1,0 +1,70 @@
+/* ------------- container ------------ */
+.ln-container {
+    position: fixed;
+    z-index: 1000;
+    user-select: none;
+    cursor: grab;
+    /* start as 40×40 square */
+    width: 40px;
+    height: 40px;
+    transition: width 0.55s ease, height 0.55s ease;
+  }
+  /* expanded size auto‑grows to fit menu */
+  .ln-container.open {
+    width: 160px;
+    height: 192px;        /* 4 items × 48px each */
+  }
+  
+  /* ------------- icon / toggle ------------ */
+  .ln-toggle {
+    position: absolute;
+    inset: 0;
+    background: #1e4e8c;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 22px;
+    transition: transform 0.55s ease, border-radius 0.55s ease;
+  }
+  .ln-container:not(.open) .ln-toggle::before { content: '☰'; }
+  .ln-container.open .ln-toggle {       /* flatten to bar behind list */
+    transform: scaleY(0.05) translateY(-80%);
+    border-radius: 6px 6px 0 0;
+  }
+  
+  /* ------------- menu list ------------ */
+  .ln-menu {
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 48px 0 0;          /* leave space for “icon” topper */
+    list-style: none;
+    width: 100%;
+    height: 100%;
+  }
+  .ln-menu li {
+    height: 48px;
+    line-height: 48px;
+    padding: 0 16px;
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.45s ease, transform 0.45s ease;
+    background: #ffffff;
+    border-bottom: 1px solid #e6e6e6;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .ln-menu li:last-child { border-bottom: none; }
+  
+  /* item hover styling */
+  .ln-menu li:hover { background: #e7f0ff; }
+  
+  /* animate items only when open */
+  .ln-container.open .ln-menu li {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  

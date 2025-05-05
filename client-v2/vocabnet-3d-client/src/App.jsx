@@ -5,6 +5,7 @@ import Graph from './Graph'
 import LoginModal from './components/LoginModal'
 import { login, getData } from './api/api'
 import { getToken } from './utils/request'
+import LeftNav from './components/LeftNav'
 
 function App() {
   const [showLogin, setShowLogin] = useState(!getToken())
@@ -46,14 +47,17 @@ function App() {
   return (
     <div style={{ width: '100vw', height: '100vh' }}>
       {showLogin && <LoginModal onLogin={handleLogin} error={loginError} />}
-      {!showLogin && 
-        <Canvas camera={{ position: [0, 0, 50], fov: 60 }} style={{ background: 'lightblue' }}>
-          <ambientLight />
-          <pointLight position={[10, 10, 10]} />
-          {isAuthenticated && <Graph />}
-          <OrbitControls />
-        </Canvas>
-      }
+      {!showLogin && (
+        <>
+          <LeftNav />
+          <Canvas camera={{ position: [0, 0, 50], fov: 60 }} style={{ background: 'lightblue' }}>
+            <ambientLight />
+            <pointLight position={[10, 10, 10]} />
+            {isAuthenticated && <Graph />}
+            <OrbitControls />
+          </Canvas>
+        </>
+      )}
     </div>
   )
 }
