@@ -3,66 +3,79 @@ import './LeftNav.css'
 
 export default function LeftNav() {
   const [open, setOpen] = useState(false)
-  const [pos, setPos]   = useState(() => {
-    const saved = sessionStorage.getItem('_leftnav_pos')
-    return saved ? JSON.parse(saved) : { x: 16, y: 16 }
+  const [pos, setPos] = useState(() => {
+    return { x: 32, y: 32 }
   })
 
-  /** ---------- Drag logic -------------- */
-  const startRef = useRef(null)
-
-  const onMouseDown = e => {
-    startRef.current = { x: e.clientX, y: e.clientY, pos }
+  const dragRef = useRef(null)
+  const startDrag = e => {
+    dragRef.current = { x: e.clientX, y: e.clientY, origin: pos }
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
   }
-
   const onMove = e => {
-    const { x, y, pos: p } = startRef.current
-    setPos({ x: p.x + e.clientX - x, y: p.y + e.clientY - y })
+    const { x, y, origin } = dragRef.current
+    setPos({ x: origin.x + e.clientX - x, y: origin.y + e.clientY - y })
   }
-
   const onUp = e => {
     window.removeEventListener('mousemove', onMove)
     window.removeEventListener('mouseup', onUp)
 
-    const moved =
-      Math.hypot(
-        e.clientX - startRef.current.x,
-        e.clientY - startRef.current.y
+    if (!open) {
+      const moved = Math.hypot(
+        e.clientX - dragRef.current.x,
+        e.clientY - dragRef.current.y
       ) > 3
-
-    sessionStorage.setItem('_leftnav_pos', JSON.stringify(pos))
-    if (!moved) setOpen(o => !o)     // treat as click only if not dragged
+      if (!moved) setOpen(true)
+    }
   }
 
-  /** ---------- Menu items -------------- */
+  /* ----- menu items ----- */
   const items = [
     { label: 'Add Data',    onClick: () => console.log('add') },
     { label: 'Remove Data', onClick: () => console.log('remove') },
     { label: 'Settings',    onClick: () => console.log('settings') },
-    { label: 'Collapse',    onClick: () => setOpen(false) }   // last item
+    { label: 'Search',    onClick: () => console.log('search') },
+    { label: 'Collapse',    onClick: () => setOpen(false) }
   ]
+
+  /* compute expanded height: header 40 px + items*48 px */
+  const expandedH = 40 + items.length * 48
 
   return (
     <div
-      className={`ln-container ${open ? 'open' : ''}`}
-      style={{ left: pos.x, top: pos.y }}
-      onMouseDown={onMouseDown}
+      className={`ln-box ${open ? 'open' : ''}`}
+      style={{
+        left: pos.x,
+        top: pos.y,
+        width: open ? 160 : 40,
+        height: open ? expandedH : 40
+      }}
     >
-      <div className="ln-toggle">{/* just a wrapper for animation */}</div>
+      {/* single drag / click handle */}
+      <div
+        className="ln-handle"
+        onMouseDown={startDrag}
+      >
+        {!open && '☰'}
+        {open && 'Menu'}
+      </div>
 
-      <ul className="ln-menu">
-        {items.map((it, i) => (
-          <li
-            key={it.label}
-            style={{ transitionDelay: `${open ? i * 80 : 0}ms` }}
-            onClick={it.onClick}
-          >
-            {it.label}
-          </li>
-        ))}
-      </ul>
+      {/* list appears only when open */}
+      {open && (
+        <ul className="ln-menu">
+          {items.map((it, i) => (
+            <li
+              key={it.label}
+              onMouseDown={e => e.stopPropagation()}
+              onClick={it.onClick}
+              style={{ transitionDelay: `${i * 80}ms` }}
+            >
+              {it.label}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }
