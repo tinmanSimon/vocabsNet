@@ -1,3 +1,5 @@
+import spreadWords from "./utils/spreadWords"
+
 function generateTestData(n, m) {
     const words = []
     const edges = []
@@ -7,6 +9,7 @@ function generateTestData(n, m) {
     // Generate n unique words
     for (let i = 0; i < n; i++) {
         words.push({
+            key: `word_${i}`,
             name: `word_${i}`,
             username: "simon"
         })
@@ -34,6 +37,7 @@ function generateTestData(n, m) {
         usedPairs.add(pairKey)
 
         edges.push({
+            key: `${edges.length}`,
             edge_name: edgeNames[Math.floor(Math.random() * edgeNames.length)],
             from_name: from,
             to_name: to,
@@ -42,7 +46,7 @@ function generateTestData(n, m) {
         })
     }
 
-    return { nodes: words, edges }
+    return { words: spreadWords(words, edges), edges: edges }
 }
 
 export default generateTestData

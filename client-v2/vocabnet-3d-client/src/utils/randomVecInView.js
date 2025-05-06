@@ -8,7 +8,7 @@ import * as THREE from 'three';
  *   • nearD    – smallest distance from camera (default 15)
  *   • farD     – largest distance from camera  (default 60)
  */
-export function randomVecInView(camera, nearD = 15, farD = 60) {
+export function randomVecInView(camera, nearD = 30, farD = 90) {
   if (!camera.isPerspectiveCamera) {
     throw new Error('randomVecInView currently supports only PerspectiveCamera');
   }

@@ -7,6 +7,7 @@ import Word from './Word';
 import Edge from './Edge';
 
 import { randomVecInView } from './utils/randomVecInView';
+import generateTestData from './TestData';
 
 /* ------------------------------------------------- *
  * Graph

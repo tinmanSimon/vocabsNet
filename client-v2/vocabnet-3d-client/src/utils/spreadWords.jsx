@@ -11,7 +11,7 @@ function closestPointOnSegment(A, B, P) {
     ]
 }
 
-export function spreadWords(nodes, edges, options = {}) {
+export default function spreadWords(nodes, edges, options = {}) {
     const minNodeDistance = options.nodeDistance || 15
     const minNodeEdgeDistance = options.edgeDistance || 10
     const iterations = options.iterations || 30
