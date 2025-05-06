@@ -3,7 +3,7 @@ import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import Graph from './Graph'
 import LoginModal from './components/LoginModal'
-import { login, getData, createData } from './api/api'
+import { login, getData, createData, removeData } from './api/api'
 import { CREATE_DATA_SUCCEED, CREATE_DATA_PARTIAL, CREATE_DATA_FAILED } from './api/api'
 import { getToken } from './utils/request'
 import LeftNav from './components/LeftNav'
@@ -75,6 +75,9 @@ function App() {
     if (data.mode === "add-data") {
       const createdData = await createData(data)
       graphRef.current?.applyPayload(createdData); 
+    } else if (data.mode === "remove-data") {
+      const removedData = await removeData(data)
+      graphRef.current?.applyPayload(removedData); 
     }
   }
 

@@ -31,3 +31,15 @@ export async function createData(data) {
     return {}
   }
 }
+
+export async function removeData(data) {
+  try {
+    await request('POST', '/removedata', data)
+    console.log("Data removal succeeded");
+    return data
+  } catch (err) {
+    const msg = err.message || ''
+    console.error("Data removal failed entirely");
+    return {}
+  }
+}
