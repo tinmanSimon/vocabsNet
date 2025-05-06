@@ -102,6 +102,7 @@ const Graph = forwardRef((_, ref) => {
             key={edgeKey(e)}
             source={a}
             target={b}
+            name={e.edge_name}
             doubleEdge={e.double_edge}
             removing={e.isRemoving}
             onFadeDone={() => handleEdgeFadeDone(edgeKey(e))}
