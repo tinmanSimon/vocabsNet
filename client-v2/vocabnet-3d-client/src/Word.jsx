@@ -10,7 +10,7 @@ import * as THREE from 'three';
  *  position    – target [x,y,z]
  *  speed       – opacity change per second (default 2  ⇒ 0.5 s fade)
  */
-export default function Word({ name, position, speed = 0.5 }) {
+export default function Word({ name, position, speed = 0.5, removing = false, onFadeDone = () => {}}) {
   const ref = useRef();
   const { camera } = useThree();
 
@@ -34,12 +34,14 @@ export default function Word({ name, position, speed = 0.5 }) {
     ref.current.quaternion.copy(camera.quaternion);
 
     /* opacity tween */
-    const target = 1;
+    const target = removing ? 0 : 1;
     const mat = ref.current.material;
     const diff = target - mat.opacity;
     const step = Math.sign(diff) * speed * delta;
     if (Math.abs(step) > Math.abs(diff)) mat.opacity = target;
     else mat.opacity += step;
+
+    if (removing && mat.opacity <= 0.01) onFadeDone();
   });
 
   return (

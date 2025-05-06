@@ -17,10 +17,16 @@ import { randomVecInView } from './utils/randomVecInView';
  * ------------------------------------------------- */
 const Graph = forwardRef((_, ref) => {
   /* live data */
-  const [nodes, setNodes] = useState([]);   // [{ name, position }]
-  const [edges, setEdges] = useState([]);   // [{ from_name, to_name, double_edge? }]
+  const [nodes, setNodes] = useState([]);   // [{ name, position, isRemoving }]
+  const [edges, setEdges] = useState([]);   // [{ from_name, to_name, double_edge, isRemoving }]
 
   const { camera } = useThree();
+
+  const edgeKey = e => `${e.edge_name}-${e.from_name}-${e.to_name}-${e.double_edge ? 1 : 0}`
+  const handleWordFadeDone = name =>
+    setNodes(prev => prev.filter(n => n.name !== name))
+  const handleEdgeFadeDone = key =>
+    setEdges(prev => prev.filter(e => edgeKey(e) !== key))
 
   /* ----------------  public API  ---------------- */
   useImperativeHandle(ref, () => ({
@@ -34,7 +40,8 @@ const Graph = forwardRef((_, ref) => {
               if (!next.find(n => n.name === w.name)) {
                 next.push({
                   name: w.name,
-                  position: randomVecInView(camera)
+                  position: randomVecInView(camera),
+                  isRemoving: false
                 });
               }
             });
@@ -50,7 +57,7 @@ const Graph = forwardRef((_, ref) => {
               if (!next.find(x =>
                    x.from_name === e.from_name &&
                    x.to_name   === e.to_name)) {
-                next.push(e);
+                next.push({...e, isRemoving: false});
               }
             });
             return next;
@@ -58,7 +65,23 @@ const Graph = forwardRef((_, ref) => {
         }
 
       } else if (mode === 'remove-data') {
-        // TODO
+        if (words.length) {
+            setNodes(prev =>
+                prev.map(n =>
+                    words.some(w => w.name === n.name) ? { ...n, isRemoving: true } : n
+                )
+            )
+        }
+        if (edgeArr.length || words.length) {
+            setEdges(prev =>
+                prev.map(e =>
+                    edgeArr.some(x => edgeKey(x) === edgeKey(e)) ||
+                    words.some(w => w.name === e.from_name || w.name === e.to_name)
+                    ? { ...e, isRemoving: true }
+                    : e
+                )
+            )
+        }
       }
     }
   }));
@@ -75,10 +98,12 @@ const Graph = forwardRef((_, ref) => {
         if (!a || !b) return null; 
         return (
           <Edge
-            key={`${e.edge_name}-${e.from_name}-${e.to_name}-${e.double_edge ? '0' : '1'}`}
+            key={edgeKey(e)}
             source={a}
             target={b}
             doubleEdge={e.double_edge}
+            removing={e.isRemoving}
+            onFadeDone={() => handleEdgeFadeDone(edgeKey(e))}
           />
         );
       })}
@@ -89,6 +114,8 @@ const Graph = forwardRef((_, ref) => {
           key={n.name}
           name={n.name}
           position={n.position}
+          removing={n.isRemoving}
+          onFadeDone={() => handleWordFadeDone(n.name)}
         />
       ))}
     </>
