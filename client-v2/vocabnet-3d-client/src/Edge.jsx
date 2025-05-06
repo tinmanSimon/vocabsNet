@@ -1,10 +1,13 @@
 import React, { useRef, useEffect } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useThree, useFrame } from '@react-three/fiber'
 import { Vector3, CatmullRomCurve3, TubeGeometry } from 'three'
+import { Text } from '@react-three/drei'
+
 
 const EdgeWithTraversalPoint = ({ 
   source, 
   target, 
+  name,
   color = '#E5F3FD', 
   tubeRadius = 0.2,
   sourceGap = 0.5,
@@ -28,8 +31,10 @@ const EdgeWithTraversalPoint = ({
   const traversalPointRef2 = useRef()
   const pointsRef = useRef([])
   const curveRef = useRef()
-
+  const textRef = useRef()
+  
   if (doubleEdge) traversalColor = '#008B8B'
+  const { camera } = useThree();
   
   // Setup function - runs once
   useEffect(() => {
@@ -151,6 +156,17 @@ const EdgeWithTraversalPoint = ({
       traversalPointRef.current.position.copy(position)
     }
 
+    if (curveRef.current && textRef.current) {
+      const mid = curveRef.current.getPointAt(0.5)
+      const cameraPos = state.camera.position
+
+      const directionToCamera = new Vector3().subVectors(cameraPos, mid).normalize()
+      const offsetPosition = mid.clone().add(directionToCamera.multiplyScalar(10))
+
+      textRef.current.position.copy(offsetPosition)
+      textRef.current.lookAt(cameraPos)
+    }
+
     // Opacity change for fade in fade out
     const targetOpacity = removing ? 0 : 1
     const mat = meshRef.current.material
@@ -162,6 +178,9 @@ const EdgeWithTraversalPoint = ({
     traversalPointRef.current.material.opacity = mat.opacity
     if (doubleEdge && traversalPointRef2.current)
       traversalPointRef2.current.material.opacity = mat.opacity
+    if (textRef.current && textRef.current.material) {
+      textRef.current.material.opacity = mat.opacity
+    }
     
     if (removing && mat.opacity <= 0.01) onFadeDone()
   })
@@ -196,6 +215,17 @@ const EdgeWithTraversalPoint = ({
           <meshBasicMaterial color={traversalColor} transparent opacity={0}/>
         </mesh>
       )}
+
+      <Text
+        ref={textRef}
+        fontSize={1.5}
+        color="black"
+        anchorX="center"
+        anchorY="middle"
+        depthOffset={-1}
+      >
+        {name}
+      </Text>
     </>
   )
 }

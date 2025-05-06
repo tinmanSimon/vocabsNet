@@ -29,7 +29,6 @@ function App() {
       edges: data.edges || [],
       mode: "add-data"
     })
-    console.log("gotData data: ", data)
   }
 
   useEffect(() => {
@@ -71,7 +70,6 @@ function App() {
   }
 
   const handleDataRequest = async data => {
-    console.log('Data request payload', data)
     if (data.mode === "add-data") {
       const createdData = await createData(data)
       graphRef.current?.applyPayload(createdData); 

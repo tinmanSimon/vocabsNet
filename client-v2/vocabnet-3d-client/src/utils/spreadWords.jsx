@@ -1,3 +1,7 @@
+function dot(a, b) {
+    return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]
+}
+
 function closestPointOnSegment(A, B, P) {
     const AB = [B[0] - A[0], B[1] - A[1], B[2] - A[2]]
     const AP = [P[0] - A[0], P[1] - A[1], P[2] - A[2]]
@@ -11,9 +15,53 @@ function closestPointOnSegment(A, B, P) {
     ]
 }
 
+function segmentToSegmentDistance(A1, A2, B1, B2) {
+    const u = [A2[0] - A1[0], A2[1] - A1[1], A2[2] - A1[2]]
+    const v = [B2[0] - B1[0], B2[1] - B1[1], B2[2] - B1[2]]
+    const w0 = [A1[0] - B1[0], A1[1] - B1[1], A1[2] - B1[2]]
+
+    const a = dot(u, u)
+    const b = dot(u, v)
+    const c = dot(v, v)
+    const d = dot(u, w0)
+    const e = dot(v, w0)
+
+    const denom = a * c - b * b
+    let sc = 0, tc = 0
+
+    if (denom !== 0) {
+        sc = (b * e - c * d) / denom
+        tc = (a * e - b * d) / denom
+    }
+
+    sc = Math.max(0, Math.min(1, sc))
+    tc = Math.max(0, Math.min(1, tc))
+
+    const closestA = [
+        A1[0] + sc * u[0],
+        A1[1] + sc * u[1],
+        A1[2] + sc * u[2],
+    ]
+    const closestB = [
+        B1[0] + tc * v[0],
+        B1[1] + tc * v[1],
+        B1[2] + tc * v[2],
+    ]
+
+    const dx = closestA[0] - closestB[0]
+    const dy = closestA[1] - closestB[1]
+    const dz = closestA[2] - closestB[2]
+
+    return {
+        distance: Math.sqrt(dx * dx + dy * dy + dz * dz),
+        vector: [dx, dy, dz]
+    }
+}
+
 export default function spreadWords(nodes, edges, options = {}) {
     const minNodeDistance = options.nodeDistance || 15
     const minNodeEdgeDistance = options.edgeDistance || 10
+    const minEdgeEdgeDistance = options.edgeEdgeDistance || 10
     const iterations = options.iterations || 30
     const boxSize = options.boxSize || 200
 
@@ -87,6 +135,44 @@ export default function spreadWords(nodes, edges, options = {}) {
                     velocity[node.name][0] += nx * push
                     velocity[node.name][1] += ny * push
                     velocity[node.name][2] += nz * push
+                }
+            }
+        }
+
+        // Edge-edge repulsion
+        for (let i = 0; i < edges.length; i++) {
+            for (let j = i + 1; j < edges.length; j++) {
+                const e1 = edges[i]
+                const e2 = edges[j]
+        
+                // Skip if edges share any nodes
+                if (e1.from_name === e2.from_name || e1.from_name === e2.to_name ||
+                    e1.to_name === e2.from_name || e1.to_name === e2.to_name) continue
+        
+                const p1a = positions[e1.from_name]
+                const p1b = positions[e1.to_name]
+                const p2a = positions[e2.from_name]
+                const p2b = positions[e2.to_name]
+        
+                const { distance, vector } = segmentToSegmentDistance(p1a, p1b, p2a, p2b)
+        
+                if (distance < minEdgeEdgeDistance) {
+                    const push = (minEdgeEdgeDistance - distance) * 0.25
+                    const nx = vector[0] / (distance + 0.01)
+                    const ny = vector[1] / (distance + 0.01)
+                    const nz = vector[2] / (distance + 0.01)
+        
+                    // Apply force to both ends of each edge
+                    for (const name of [e1.from_name, e1.to_name]) {
+                        velocity[name][0] += nx * push
+                        velocity[name][1] += ny * push
+                        velocity[name][2] += nz * push
+                    }
+                    for (const name of [e2.from_name, e2.to_name]) {
+                        velocity[name][0] -= nx * push
+                        velocity[name][1] -= ny * push
+                        velocity[name][2] -= nz * push
+                    }
                 }
             }
         }
