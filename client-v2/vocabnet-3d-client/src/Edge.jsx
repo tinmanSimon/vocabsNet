@@ -16,7 +16,9 @@ const EdgeWithTraversalPoint = ({
   traversalSpeed = 0.2,
   traversalColor = 'grey',
   fadeSpeed = 0.5,
-  doubleEdge = false
+  doubleEdge = false,
+  removing = false,
+  onFadeDone = () => {}
 }) => {
   const timeRef = useRef(0)
   const traversalTimeRef = useRef(0)
@@ -150,9 +152,18 @@ const EdgeWithTraversalPoint = ({
     }
 
     // Opacity change for fade in fade out
-    meshRef.current.material.opacity = Math.min(meshRef.current.material.opacity + delta * fadeSpeed, 1)
-    traversalPointRef.current.material.opacity = meshRef.current.material.opacity
-    if (doubleEdge) traversalPointRef2.current.material.opacity = meshRef.current.material.opacity
+    const targetOpacity = removing ? 0 : 1
+    const mat = meshRef.current.material
+    const diff = targetOpacity - mat.opacity
+    const step = Math.sign(diff) * fadeSpeed * delta
+    if (Math.abs(step) > Math.abs(diff)) mat.opacity = targetOpacity
+    else mat.opacity += step
+    
+    traversalPointRef.current.material.opacity = mat.opacity
+    if (doubleEdge && traversalPointRef2.current)
+      traversalPointRef2.current.material.opacity = mat.opacity
+    
+    if (removing && mat.opacity <= 0.01) onFadeDone()
   })
   
   return (
