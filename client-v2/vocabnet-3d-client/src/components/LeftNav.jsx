@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import './LeftNav.css'
 import DataModal from './DataModal'
 
-export default function LeftNav({ onDataRequest }) {
+export default function LeftNav({ onDataRequest, username }) {
   const [open, setOpen] = useState(false)
   const [launchedMenuItem, setLaunchedMenuItem] = useState("")
   const [pos, setPos] = useState(() => {
@@ -10,8 +10,8 @@ export default function LeftNav({ onDataRequest }) {
   })
 
   const MODALS = {
-    "add-data": <DataModal open mode="add-data" onSubmit={onDataRequest} onClose={() => setLaunchedMenuItem('')} />,
-    "remove-data": <DataModal open mode="remove-data" onSubmit={onDataRequest} onClose={() => setLaunchedMenuItem('')} />,
+    "add-data": <DataModal username={username} open mode="add-data" onSubmit={onDataRequest} onClose={() => setLaunchedMenuItem('')} />,
+    "remove-data": <DataModal username={username} open mode="remove-data" onSubmit={onDataRequest} onClose={() => setLaunchedMenuItem('')} />,
   }
   
   function renderLaunchedModal() {
