@@ -15,6 +15,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [username, setUsername] = useState(null)
   const [showBanner, setShowBanner] = useState(false)
+  const [initialPayload, setInitialPayload] = useState(null)
   const graphRef = useRef(null);
 
   const gotData = (data) => {
@@ -23,6 +24,11 @@ function App() {
     setShowBanner(true)
     setIsAuthenticated(true)
 
+    setInitialPayload({
+      words: data.words || [],
+      edges: data.edges || [],
+      mode: "add-data"
+    })
     console.log("gotData data: ", data)
   }
 
@@ -39,6 +45,13 @@ function App() {
         }
       })
   }, [])
+
+  useEffect(() => {
+    if (!showBanner && isAuthenticated && graphRef.current && initialPayload) {
+      graphRef.current.applyPayload(initialPayload)
+      setInitialPayload(null) // prevent future re-invocations
+    }
+  }, [showBanner, isAuthenticated, graphRef.current])
 
   const handleLogin = async (username, password) => {
     try {
