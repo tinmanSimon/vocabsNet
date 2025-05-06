@@ -15,6 +15,7 @@ const EdgeWithTraversalPoint = ({
   traversalPointRadius = 0.5,
   traversalSpeed = 0.2,
   traversalColor = 'grey',
+  fadeSpeed = 0.5,
   doubleEdge = false
 }) => {
   const timeRef = useRef(0)
@@ -147,6 +148,11 @@ const EdgeWithTraversalPoint = ({
       const position = curveRef.current.getPointAt(traversalTimeRef.current)
       traversalPointRef.current.position.copy(position)
     }
+
+    // Opacity change for fade in fade out
+    meshRef.current.material.opacity = Math.min(meshRef.current.material.opacity + delta * fadeSpeed, 1)
+    traversalPointRef.current.material.opacity = meshRef.current.material.opacity
+    if (doubleEdge) traversalPointRef2.current.material.opacity = meshRef.current.material.opacity
   })
   
   return (
@@ -163,20 +169,20 @@ const EdgeWithTraversalPoint = ({
             2, tubeRadius, 6, false
           )} 
         />
-        <meshBasicMaterial color={color} />
+        <meshBasicMaterial color={color} transparent opacity={0}/>
       </mesh>
       
       {/* Traversal point */}
       <mesh ref={traversalPointRef}>
         <sphereGeometry args={[traversalPointRadius, 8, 8]} />
-        <meshBasicMaterial color={traversalColor} />
+        <meshBasicMaterial color={traversalColor} transparent opacity={0}/>
       </mesh>
       
       {/* Second traversal point (for double edge) */}
       {doubleEdge && (
         <mesh ref={traversalPointRef2}>
           <sphereGeometry args={[traversalPointRadius, 8, 8]} />
-          <meshBasicMaterial color={traversalColor} />
+          <meshBasicMaterial color={traversalColor} transparent opacity={0}/>
         </mesh>
       )}
     </>
