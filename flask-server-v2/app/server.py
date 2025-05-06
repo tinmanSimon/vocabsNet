@@ -69,7 +69,8 @@ async def createdata(request: DataCreateRequest, user: UserInfo = Depends(get_cu
     try:
         await app.state.graph_service.add_edges(request.edges, user)
     except HTTPException as e:
-        new_detail = f"[add_words succeeded] {e.detail}"
+        addword_msg = "[add_words succeeded] " if request.words else ""
+        new_detail = f"{addword_msg}{e.detail}"
         raise HTTPException(status_code=e.status_code, detail=new_detail)
     
     return {"user" : user, "message": "Data created successfully"}
