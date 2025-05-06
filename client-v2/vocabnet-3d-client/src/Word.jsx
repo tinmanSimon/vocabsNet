@@ -8,12 +8,13 @@ import * as THREE from 'three';
  * Props
  *  name        – label string
  *  position    – target [x,y,z]
- *  speed       – opacity change per second (default 2  ⇒ 0.5 s fade)
+ *  opacity_speed       – opacity change per second (default 2  ⇒ 0.5 s fade)
  */
-export default function Word({ name, position, speed = 0.5, removing = false, onFadeDone = () => {}}) {
+export default function Word({ name, position, opacity_speed = 0.5, removing = false, onFadeDone = () => {}}) {
   const ref = useRef();
   const { camera } = useThree();
   const currentPosition = useRef(new THREE.Vector3(...position));
+  const animation_speed = 0.2
 
   /* --- ensure we're using a transparent material --- */
   useEffect(() => {
@@ -39,7 +40,7 @@ export default function Word({ name, position, speed = 0.5, removing = false, on
     ) {
       currentVec.copy(targetVec); // snap to target
     } else {
-      const lerpFactor = Math.max(0.01, 1 - Math.exp(-speed * delta))
+      const lerpFactor = Math.max(0.01, 1 - Math.exp(-animation_speed * delta))
       currentVec.lerp(targetVec, lerpFactor) 
     }
     ref.current.position.copy(currentVec);
@@ -48,7 +49,7 @@ export default function Word({ name, position, speed = 0.5, removing = false, on
     const target = removing ? 0 : 1;
     const mat = ref.current.material;
     const diff = target - mat.opacity;
-    const step = Math.sign(diff) * speed * delta;
+    const step = Math.sign(diff) * opacity_speed * delta;
     if (Math.abs(step) > Math.abs(diff)) mat.opacity = target;
     else mat.opacity += step;
 
