@@ -8,6 +8,8 @@ export default function DataModal({ open, mode = "add-data", onClose, onSubmit }
   const [edges, setEdges] = useState([])
 
   const isAdd = mode === "add-data"
+  const wordLabel = isAdd ? 'Add Word' : 'Remove Word'
+  const edgeLabel = isAdd ? 'Add Edge' : 'Remove Edge'
   const actionLabel = isAdd ? 'Add Data' : 'Remove Data'
 
   /* --- helpers to mutate arrays immutably --- */
@@ -54,8 +56,8 @@ export default function DataModal({ open, mode = "add-data", onClose, onSubmit }
         onSubmit={handleSubmit}
       >
         <div className="adm-toolbar">
-          <button type="button" onClick={addWordRow}>Add Word</button>
-          <button type="button" onClick={addEdgeRow}>Add Edge</button>
+          <button type="button" onClick={addWordRow}>{wordLabel}</button>
+          <button type="button" onClick={addEdgeRow}>{edgeLabel}</button>
         </div>
 
         {/* word inputs */}
