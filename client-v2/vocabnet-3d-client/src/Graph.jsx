@@ -7,6 +7,7 @@ import Word from './Word';
 import Edge from './Edge';
 
 import { randomVecInView } from './utils/randomVecInView';
+import spreadWords from './utils/spreadWords'
 import generateTestData from './TestData';
 
 /* ------------------------------------------------- *
@@ -33,39 +34,46 @@ const Graph = forwardRef((_, ref) => {
   useImperativeHandle(ref, () => ({
     applyPayload({ words = [], edges: edgeArr = [], mode }) {
       if (mode === 'add-data') {
-        /** ---------- add words ---------- */
-        if (words.length) {
-          setNodes(prev => {
-            const next = [...prev];
+        setNodes(prevNodes => {
+          setEdges(prevEdges => {
+            // Merge words
+            const existingMap = Object.fromEntries(prevNodes.map(n => [n.name, n]))
+            const combinedWords = [...prevNodes]
+      
             words.forEach(w => {
-              if (!next.find(n => n.name === w.name)) {
-                next.push({
+              if (!existingMap[w.name]) {
+                combinedWords.push({
                   name: w.name,
                   position: randomVecInView(camera),
                   isRemoving: false
-                });
+                })
               }
-            });
-            return next;
-          });
-        }
-        
-        /** ---------- add edges ---------- */
-        if (edgeArr.length) {
-          setEdges(prev => {
-            const next = [...prev];
-            edgeArr.forEach(e => {
-              if (!next.find(x =>
-                   x.from_name === e.from_name &&
-                   x.to_name   === e.to_name)) {
-                next.push({...e, isRemoving: false});
-              }
-            });
-            return next;
-          });
-        }
-
-      } else if (mode === 'remove-data') {
+            })
+      
+            // Merge edges
+            const existingEdgeKeys = new Set(prevEdges.map(edgeKey))
+            const newEdges = edgeArr.filter(e => !existingEdgeKeys.has(edgeKey(e)))
+            const combinedEdges = [...prevEdges, ...newEdges.map(e => ({ ...e, isRemoving: false }))]
+      
+            // Apply force layout
+            const relaidWords = spreadWords(combinedWords, combinedEdges, {
+              nodeDistance: 50,
+              edgeDistance: 30,
+              edgeEdgeDistance: 30,
+              iterations: 50,
+              boxSize: 200
+            })
+      
+            // Set new positions
+            setNodes(relaidWords)
+            setEdges(combinedEdges)
+      
+            return prevEdges // required return for `setEdges`
+          })
+      
+          return prevNodes // required return for `setNodes`
+        })
+      }       else if (mode === 'remove-data') {
         if (words.length) {
             setNodes(prev =>
                 prev.map(n =>

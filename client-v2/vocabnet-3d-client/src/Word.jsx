@@ -13,6 +13,7 @@ import * as THREE from 'three';
 export default function Word({ name, position, speed = 0.5, removing = false, onFadeDone = () => {}}) {
   const ref = useRef();
   const { camera } = useThree();
+  const currentPosition = useRef(new THREE.Vector3(...position));
 
   /* --- ensure we're using a transparent material --- */
   useEffect(() => {
@@ -22,16 +23,26 @@ export default function Word({ name, position, speed = 0.5, removing = false, on
     }
   }, []);
 
-  /* --- update position every render (instant jump), billboard each frame --- */
-  useEffect(() => {
-    if (ref.current) ref.current.position.set(...position);
-  }, [position]);
-
   useFrame((_, delta) => {
     if (!ref.current) return;
 
     /* billboard */
     ref.current.quaternion.copy(camera.quaternion);
+
+    /* --- position animation --- */
+    const targetVec = new THREE.Vector3(...position);
+    const currentVec = currentPosition.current;
+    if (
+      Math.abs(targetVec.x - currentVec.x) < 0.1 &&
+      Math.abs(targetVec.y - currentVec.y) < 0.1 &&
+      Math.abs(targetVec.z - currentVec.z) < 0.1
+    ) {
+      currentVec.copy(targetVec); // snap to target
+    } else {
+      const lerpFactor = Math.max(0.01, 1 - Math.exp(-speed * delta))
+      currentVec.lerp(targetVec, lerpFactor) 
+    }
+    ref.current.position.copy(currentVec);
 
     /* opacity tween */
     const target = removing ? 0 : 1;
