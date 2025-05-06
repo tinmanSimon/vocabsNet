@@ -3,7 +3,7 @@ from app.auth_service import AuthService
 from app.vocab_logger import logger
 from app.graph_cache import GraphCacheManager
 from app.graph_service import GraphService
-from core.credentials import CLEAR_DATA_KEY
+from core.credentials import CLEAR_DATA_KEY, DEBUG_MODE
 from core.vocab_types import (
     Token, UserInfo, RegisterResponse, Word, Edge, 
     DataCreateRequest, DataRemoveRequest, ClearTestRequest
@@ -61,8 +61,17 @@ async def login(user_data: UserInfo):
 async def createdata(request: DataCreateRequest, user: UserInfo = Depends(get_current_user)):
     if not user:
         raise HTTPException(status_code=401, detail="Token not found")
+    
+    # If this fails, the exception will be raised and handled by FASTAPI 
     await app.state.graph_service.add_words(request.words, user)
-    await app.state.graph_service.add_edges(request.edges, user)
+
+    # At this point add_words succeeded, add info in the exception and pass it on
+    try:
+        await app.state.graph_service.add_edges(request.edges, user)
+    except HTTPException as e:
+        new_detail = f"[add_words succeeded] {e.detail}"
+        raise HTTPException(status_code=e.status_code, detail=new_detail)
+    
     return {"user" : user, "message": "Data created successfully"}
 
 # To remove data, all the info should be readily available in the graph.
