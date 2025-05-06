@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import './DataModal.css'
 
-export default function DataModal({ open, mode = "add-data", onClose, onSubmit }) {
+export default function DataModal({ open, username, mode, onClose, onSubmit }) {
   if (!open) return null
 
   const [words, setWords] = useState([])
@@ -35,12 +35,14 @@ export default function DataModal({ open, mode = "add-data", onClose, onSubmit }
     e.preventDefault()
     onSubmit({
       words: words.filter(w => w.trim() !== '').map(w => ({
-        name: w
+        name: w,
+        username: username
       })),
       edges: edges
         .filter(ed => ed.edge_name && ed.from_name && ed.to_name)
         .map(ed => ({
           ...ed,
+          username: username,
           double_edge: !!ed.double_edge
         })),
       mode: mode
