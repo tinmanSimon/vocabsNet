@@ -1,192 +1,175 @@
-function dot(a, b) {
-    return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]
+// spreadWords.jsx  —  strictly‑minimal‑movement layout
+//
+// Assumptions
+//   nodes : [{ name, position?: [x,y,z] }, …]
+//   edges : [{ from, to } | { from_name, to_name }, …]
+//
+// Options (defaults)
+//   nodeDistance      : 15   – centre‑to‑centre
+//   edgeDistance      : 10   – node to any point on an edge
+//   edgeEdgeDistance  : 10   – shortest distance between 2 segments
+//   iterations        : 50
+//   boxSize           : 200  – starting cube for un‑positioned nodes
+//   cellSize          : nodeDistance * 1.1  (for spatial hash)
+
+function sq(x) { return x * x }
+function dot(a, b) { return a[0]*b[0] + a[1]*b[1] + a[2]*b[2] }
+
+// --- helpers ---------------------------------------------------------------
+
+// shortest point on AB to P  →  [qx, qy, qz]
+function closestPointOnSegment(px, py, pz, ax, ay, az, bx, by, bz) {
+  const ab = [bx-ax, by-ay, bz-az]
+  const t  = Math.max(0, Math.min(1,
+              ((px-ax)*ab[0] + (py-ay)*ab[1] + (pz-az)*ab[2]) /
+              (sq(ab[0]) + sq(ab[1]) + sq(ab[2]) || 1)))
+  return [ax + ab[0]*t, ay + ab[1]*t, az + ab[2]*t]
 }
 
-function closestPointOnSegment(A, B, P) {
-    const AB = [B[0] - A[0], B[1] - A[1], B[2] - A[2]]
-    const AP = [P[0] - A[0], P[1] - A[1], P[2] - A[2]]
-    const abDotAb = AB[0]**2 + AB[1]**2 + AB[2]**2
-    const apDotAb = AP[0]*AB[0] + AP[1]*AB[1] + AP[2]*AB[2]
-    const t = Math.max(0, Math.min(1, apDotAb / abDotAb))
-    return [
-        A[0] + AB[0] * t,
-        A[1] + AB[1] * t,
-        A[2] + AB[2] * t,
-    ]
+// segment–segment distance ‑ returns squared distance **and** the 2 closest pts
+function segSegDist2(a1,a2,b1,b2) {
+  const u = [a2[0]-a1[0], a2[1]-a1[1], a2[2]-a1[2]]
+  const v = [b2[0]-b1[0], b2[1]-b1[1], b2[2]-b1[2]]
+  const w0= [a1[0]-b1[0], a1[1]-b1[1], a1[2]-b1[2]]
+  const a = dot(u,u), b = dot(u,v), c = dot(v,v), d = dot(u,w0), e = dot(v,w0)
+  const D = a*c - b*b || 1
+  let sc = (b*e - c*d) / D, tc = (a*e - b*d) / D
+  sc = Math.max(0, Math.min(1, sc))
+  tc = Math.max(0, Math.min(1, tc))
+  const P = [a1[0]+sc*u[0], a1[1]+sc*u[1], a1[2]+sc*u[2]]
+  const Q = [b1[0]+tc*v[0], b1[1]+tc*v[1], b1[2]+tc*v[2]]
+  return [sq(P[0]-Q[0])+sq(P[1]-Q[1])+sq(P[2]-Q[2]), P, Q]
 }
 
-function segmentToSegmentDistance(A1, A2, B1, B2) {
-    const u = [A2[0] - A1[0], A2[1] - A1[1], A2[2] - A1[2]]
-    const v = [B2[0] - B1[0], B2[1] - B1[1], B2[2] - B1[2]]
-    const w0 = [A1[0] - B1[0], A1[1] - B1[1], A1[2] - B1[2]]
+// spatial hash key
+const key = (x, y, z, s) =>
+  `${Math.floor(x/s)},${Math.floor(y/s)},${Math.floor(z/s)}`
 
-    const a = dot(u, u)
-    const b = dot(u, v)
-    const c = dot(v, v)
-    const d = dot(u, w0)
-    const e = dot(v, w0)
+// ---------------------------------------------------------------------------
 
-    const denom = a * c - b * b
-    let sc = 0, tc = 0
+export default function spreadWords(nodes, edges, opt = {}) {
+  const minNN   = opt.nodeDistance      ?? 15
+  const minNE   = opt.edgeDistance      ?? 10
+  const minEE   = opt.edgeEdgeDistance  ?? 10
+  const iters   = opt.iterations        ?? 50
+  const box     = opt.boxSize           ?? 200
+  const cell    = opt.cellSize          ?? minNN * 1.1
 
-    if (denom !== 0) {
-        sc = (b * e - c * d) / denom
-        tc = (a * e - b * d) / denom
+  const pos = {}, vel = {}, frozen = {}
+
+  // --- 1) initialise positions --------------------------------------------
+  for (const n of nodes) {
+    if (Array.isArray(n.position) && n.position.length === 3) {
+      pos[n.name]   = [...n.position]
+      frozen[n.name]= true
+    } else {
+      pos[n.name]   = [
+        (Math.random()-.5)*box,
+        (Math.random()-.5)*box,
+        (Math.random()-.5)*box,
+      ]
+      frozen[n.name]= false
+    }
+    vel[n.name] = [0,0,0]
+  }
+
+  // --- 2) unfreeze overlapping frozen nodes --------------------------------
+  for (let i=0;i<nodes.length;i++)
+    for (let j=i+1;j<nodes.length;j++) {
+      const a = nodes[i].name, b = nodes[j].name
+      if (!(frozen[a]&&frozen[b])) continue
+      const dx=pos[a][0]-pos[b][0], dy=pos[a][1]-pos[b][1], dz=pos[a][2]-pos[b][2]
+      if (Math.hypot(dx,dy,dz) < minNN) { frozen[a]=frozen[b]=false }
     }
 
-    sc = Math.max(0, Math.min(1, sc))
-    tc = Math.max(0, Math.min(1, tc))
+  // --- 3) main relaxation ---------------------------------------------------
+  for (let step=0; step<iters; step++) {
 
-    const closestA = [
-        A1[0] + sc * u[0],
-        A1[1] + sc * u[1],
-        A1[2] + sc * u[2],
-    ]
-    const closestB = [
-        B1[0] + tc * v[0],
-        B1[1] + tc * v[1],
-        B1[2] + tc * v[2],
-    ]
-
-    const dx = closestA[0] - closestB[0]
-    const dy = closestA[1] - closestB[1]
-    const dz = closestA[2] - closestB[2]
-
-    return {
-        distance: Math.sqrt(dx * dx + dy * dy + dz * dz),
-        vector: [dx, dy, dz]
-    }
-}
-
-export default function spreadWords(nodes, edges, existing_nodes, options = {}) {
-    const minNodeDistance = options.nodeDistance || 15
-    const minNodeEdgeDistance = options.edgeDistance || 10
-    const minEdgeEdgeDistance = options.edgeEdgeDistance || 10
-    const iterations = options.iterations || 30
-    const boxSize = options.boxSize || 200
-
-    const positions = {}
-    const velocity = {}
-
-    for (const node of nodes) {
-        positions[node.name] = [
-            (Math.random() - 0.5) * boxSize,
-            (Math.random() - 0.5) * boxSize,
-            (Math.random() - 0.5) * boxSize,
-        ]
-        velocity[node.name] = [0, 0, 0]
+    // 3a) reset velocities + build spatial hash for quick neighbour look‑up
+    const buckets = new Map()
+    for (const n of nodes) {
+      if (!frozen[n.name]) vel[n.name] = [0,0,0]
+      const [x,y,z] = pos[n.name]
+      const k = key(x,y,z,cell)
+      ;(buckets.get(k)||buckets.set(k,[]).get(k)).push(n.name)
     }
 
-    const edgeMap = {}
-    for (const edge of edges) {
-        edgeMap[`${edge.from_name}_${edge.to_name}`] = true
-        edgeMap[`${edge.to_name}_${edge.from_name}`] = true
+    // helper to iterate neighbours in ±1 cell cube
+    const near = ([x,y,z]) => {
+      const res=[]
+      const X=Math.floor(x/cell), Y=Math.floor(y/cell), Z=Math.floor(z/cell)
+      for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++)for(let k=-1;k<=1;k++){
+        const b=buckets.get(`${X+i},${Y+j},${Z+k}`); if(b) res.push(...b)
+      }
+      return res
     }
 
-    for (let iter = 0; iter < iterations; iter++) {
-        for (const node of nodes) {
-            velocity[node.name] = [0, 0, 0]
-        }
-
-        // Node-node repulsion
-        for (let i = 0; i < nodes.length; i++) {
-            for (let j = i + 1; j < nodes.length; j++) {
-                const a = nodes[i], b = nodes[j]
-                if (edgeMap[`${a.name}_${b.name}`]) continue
-
-                const posA = positions[a.name]
-                const posB = positions[b.name]
-                const dx = posA[0] - posB[0]
-                const dy = posA[1] - posB[1]
-                const dz = posA[2] - posB[2]
-                const distSq = dx * dx + dy * dy + dz * dz
-                const dist = Math.sqrt(distSq) + 0.01
-
-                if (dist < minNodeDistance) {
-                    const push = (minNodeDistance - dist) * 0.5
-                    const nx = dx / dist, ny = dy / dist, nz = dz / dist
-                    velocity[a.name][0] += nx * push
-                    velocity[a.name][1] += ny * push
-                    velocity[a.name][2] += nz * push
-                    velocity[b.name][0] -= nx * push
-                    velocity[b.name][1] -= ny * push
-                    velocity[b.name][2] -= nz * push
-                }
-            }
-        }
-
-        // Node-edge repulsion
-        for (const node of nodes) {
-            const pos = positions[node.name]
-            for (const edge of edges) {
-                if (edge.from_name === node.name || edge.to_name === node.name) continue
-
-                const from = positions[edge.from_name]
-                const to = positions[edge.to_name]
-                const closest = closestPointOnSegment(from, to, pos)
-                const dx = pos[0] - closest[0]
-                const dy = pos[1] - closest[1]
-                const dz = pos[2] - closest[2]
-                const dist = Math.sqrt(dx * dx + dy * dy + dz * dz) + 0.01
-
-                if (dist < minNodeEdgeDistance) {
-                    const push = minNodeEdgeDistance - dist
-                    const nx = dx / dist, ny = dy / dist, nz = dz / dist
-                    velocity[node.name][0] += nx * push
-                    velocity[node.name][1] += ny * push
-                    velocity[node.name][2] += nz * push
-                }
-            }
-        }
-
-        // Edge-edge repulsion
-        for (let i = 0; i < edges.length; i++) {
-            for (let j = i + 1; j < edges.length; j++) {
-                const e1 = edges[i]
-                const e2 = edges[j]
-        
-                // Skip if edges share any nodes
-                if (e1.from_name === e2.from_name || e1.from_name === e2.to_name ||
-                    e1.to_name === e2.from_name || e1.to_name === e2.to_name) continue
-        
-                const p1a = positions[e1.from_name]
-                const p1b = positions[e1.to_name]
-                const p2a = positions[e2.from_name]
-                const p2b = positions[e2.to_name]
-        
-                const { distance, vector } = segmentToSegmentDistance(p1a, p1b, p2a, p2b)
-        
-                if (distance < minEdgeEdgeDistance) {
-                    const push = (minEdgeEdgeDistance - distance) * 0.25
-                    const nx = vector[0] / (distance + 0.01)
-                    const ny = vector[1] / (distance + 0.01)
-                    const nz = vector[2] / (distance + 0.01)
-        
-                    // Apply force to both ends of each edge
-                    for (const name of [e1.from_name, e1.to_name]) {
-                        velocity[name][0] += nx * push
-                        velocity[name][1] += ny * push
-                        velocity[name][2] += nz * push
-                    }
-                    for (const name of [e2.from_name, e2.to_name]) {
-                        velocity[name][0] -= nx * push
-                        velocity[name][1] -= ny * push
-                        velocity[name][2] -= nz * push
-                    }
-                }
-            }
-        }
-
-        for (const node of nodes) {
-            positions[node.name][0] += velocity[node.name][0]
-            positions[node.name][1] += velocity[node.name][1]
-            positions[node.name][2] += velocity[node.name][2]
-        }
+    // 3b) node‑node
+    for (const n of nodes) {
+      const a = n.name, pa = pos[a], neigh = near(pa)
+      for (const b of neigh) {
+        if (a >= b) continue                    // avoid dup pairs
+        const pb = pos[b]
+        const dx=pa[0]-pb[0], dy=pa[1]-pb[1], dz=pa[2]-pb[2]
+        const dist = Math.hypot(dx,dy,dz)
+        if (dist >= minNN || dist===0) continue
+        const push = (minNN - dist) * 0.5
+        const nx=dx/dist, ny=dy/dist, nz=dz/dist
+        if (!frozen[a]) { vel[a][0]+=nx*push; vel[a][1]+=ny*push; vel[a][2]+=nz*push }
+        if (!frozen[b]) { vel[b][0]-=nx*push; vel[b][1]-=ny*push; vel[b][2]-=nz*push }
+      }
     }
 
-    // Return Word objects with position
-    return nodes.map(node => ({
-        ...node,
-        position: positions[node.name]
-    }))
+    // 3c) node‑edge
+    for (const n of nodes) {
+      if (frozen[n.name]) continue
+      const [px,py,pz]=pos[n.name]
+      for (const e of edges) {
+        const f   = e.from ?? e.from_name,  t = e.to ?? e.to_name
+        if (f===n.name || t===n.name) continue
+        const [ax,ay,az]=pos[f], [bx,by,bz]=pos[t]
+        const [qx,qy,qz]=closestPointOnSegment(px,py,pz,ax,ay,az,bx,by,bz)
+        const dx=px-qx, dy=py-qy, dz=pz-qz, dist=Math.hypot(dx,dy,dz)
+        if (dist>=minNE || dist===0) continue
+        const push = (minNE - dist)
+        vel[n.name][0]+=dx/dist*push
+        vel[n.name][1]+=dy/dist*push
+        vel[n.name][2]+=dz/dist*push
+      }
+    }
+
+    // 3d) edge‑edge  (keep it simple but deterministic)
+    for (let i=0;i<edges.length;i++)
+      for (let j=i+1;j<edges.length;j++) {
+        const e1=edges[i], e2=edges[j]
+        const f1=e1.from??e1.from_name, t1=e1.to??e1.to_name
+        const f2=e2.from??e2.from_name, t2=e2.to??e2.to_name
+        const A1=pos[f1], A2=pos[t1], B1=pos[f2], B2=pos[t2]
+        const [d2, P, Q] = segSegDist2(A1,A2,B1,B2)
+        if (d2 >= sq(minEE) || d2===0) continue
+        const dist = Math.sqrt(d2)
+        const push = (minEE - dist) * 0.25
+        const nx = (P[0]-Q[0])/dist, ny=(P[1]-Q[1])/dist, nz=(P[2]-Q[2])/dist
+        for (const node of [f1,t1])
+          if (!frozen[node]) { vel[node][0]+=nx*push; vel[node][1]+=ny*push; vel[node][2]+=nz*push }
+        for (const node of [f2,t2])
+          if (!frozen[node]) { vel[node][0]-=nx*push; vel[node][1]-=ny*push; vel[node][2]-=nz*push }
+      }
+
+    // 3e) integrate  (light friction to damp oscillations)
+    let maxMove = 0
+    for (const n of nodes) {
+      if (frozen[n.name]) continue
+      const v = vel[n.name]
+      v[0]*=0.6; v[1]*=0.6; v[2]*=0.6            // friction
+      pos[n.name][0]+=v[0]; pos[n.name][1]+=v[1]; pos[n.name][2]+=v[2]
+      maxMove = Math.max(maxMove, Math.hypot(...v))
+    }
+
+    // early exit – all movements below 0.1 units ⇒ layout stable
+    if (maxMove < 0.1) break
+  }
+
+  // --- 4) return new list ---------------------------------------------------
+  return nodes.map(n => ({ ...n, position: pos[n.name] }))
 }
