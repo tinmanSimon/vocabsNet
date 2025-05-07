@@ -4,7 +4,14 @@ import { Text } from '@react-three/drei';
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-const Word = forwardRef(function Word({ name, position, opacity_speed = 0.5, removing = false, onFadeDone = () => {} }, ref) {
+const Word = forwardRef(function Word({ 
+  name, 
+  position, 
+  opacity_speed = 0.5, 
+  removing = false, 
+  onFadeDone = () => {} ,
+  onClick = () => {}
+}, ref) {
   const localRef = useRef()
   const { camera } = useThree()
   const currentPosition = useRef(new THREE.Vector3(...position))
@@ -59,6 +66,12 @@ const Word = forwardRef(function Word({ name, position, opacity_speed = 0.5, rem
       color="#36454F"
       anchorX="center"
       anchorY="middle"
+      onPointerDown={(e) => {
+        e.stopPropagation() 
+        onClick(name)
+      }}
+      onPointerOver={() => { document.body.style.cursor = 'pointer' }}
+      onPointerOut={()  => { document.body.style.cursor = 'auto'    }}
     >
       {name}
     </Text>
