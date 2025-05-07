@@ -68,24 +68,16 @@ const Graph = forwardRef(({ orbitControlsRef }, ref) => {
             ]
 
             /* -------- layout -------- */
-            const laidOut = spreadWords(mergedWords, mergedEdges, nodes, {
-              nodeDistance:        50,
+            const laidOut = spreadWords(mergedWords, mergedEdges, {
+              nodeDistance:        40,
               edgeDistance:        30,
               edgeEdgeDistance:    30,
-              iterations:          50,
-              boxSize:             200,
+              iterations:          30,
+              boxSize:             500,
             })
 
             setNodes(laidOut)
             setEdges(mergedEdges)
-
-            if (lastNewWord) {
-              const focusNode = laidOut.find(n => n.name === lastNewWord.name)
-              setFocusedItemName(focusNode.name)
-            } else if (newEdges) {
-              const focusNode = laidOut.find(n => n.name === newEdges[newEdges.length - 1].from_name)
-              setFocusedItemName(focusNode.name)
-            }
             return prevEdges // satisfy React set‑state signature
           })
           return prevNodes
