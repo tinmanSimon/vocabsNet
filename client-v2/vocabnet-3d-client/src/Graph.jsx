@@ -1,5 +1,12 @@
 // Graph.jsx
-import { useState, useRef, forwardRef, useImperativeHandle } from 'react'
+import { 
+  useState, 
+  useRef, 
+  forwardRef, 
+  useImperativeHandle, 
+  useCallback,
+  useEffect
+} from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import Word from './Word'
@@ -22,7 +29,8 @@ const Graph = forwardRef(({ orbitControlsRef }, ref) => {
   const { camera } = useThree()
   const camTargetRef   = useRef(null) // THREE.Vector3 | null
   const camLookAtRef   = useRef(null) // THREE.Vector3 | null
-  const camLerpSpeed   = 3.0          // higher = faster
+  const camLerpSpeed   = 50        // higher = faster
+  const totalDistRef = useRef(0) 
 
   const wordRefs = useRef(new Map())
   const lookAtTarget = useRef(new THREE.Vector3(0, 0, 0))
@@ -107,37 +115,73 @@ const Graph = forwardRef(({ orbitControlsRef }, ref) => {
       }
     },
   }))
+  
+  /* ---------- click‑handler handed down to <Word> ---------- */
+  const handleWordClick = useCallback(
+    (name) => {
+      // skip if we’re already focusing the same word
+      if (name === focusedItemName) return
+      const refObj = wordRefs.current.get(name)
+      if (!refObj || !refObj.getTargetPosition) return
+      const itemPos = refObj.getTargetPosition()
+      const dir     = camera.position.clone().sub(itemPos).normalize()
+      const camTarget = itemPos.clone().add(dir.multiplyScalar(50))
+      const camLookAt = itemPos
+      camTargetRef.current   = camTarget
+      camLookAtRef.current   = camLookAt
+      totalDistRef.current   = camTarget.distanceTo(camera.position)
+      setFocusedItemName(name)
+    }, [focusedItemName])
 
   /* ---------------- camera animation ---------------- */
   useFrame((_, delta) => {
-    if (focusedItemName) {
-      const refObj = wordRefs.current.get(focusedItemName)
-      if (!refObj || !refObj.getCurrentPosition) return
-  
-      const itemPos = refObj.getCurrentPosition()
-  
-      // Direction: from item to current camera position
-      const dir = camera.position.clone().sub(itemPos).normalize()
-      const offset = dir.multiplyScalar(50)
-      const curTargetPos = itemPos.clone().add(offset)
-  
-      const step = 1 - Math.exp(-3 * delta)
-      camera.position.lerp(curTargetPos, step)
-      camera.lookAt(itemPos)
-
-      const finalItemPos = refObj.getTargetPosition()
-      const finalTargetPos = finalItemPos.clone().add(offset)
-
-      if (camera.position.distanceTo(finalTargetPos) < 0.2 && orbitControlsRef?.current) {
-        camera.position.copy(finalTargetPos)
-        camera.lookAt(itemPos)
-        orbitControlsRef.current.target.copy(itemPos)
+    if (camTargetRef.current && camLookAtRef.current && orbitControlsRef?.current) {
+      const currentDist = camera.position.distanceTo(camTargetRef.current)
+      const totalDist = totalDistRef.current || 1
+      const duration = 2.0
+      const travelProgress= delta * 1.0 / duration
+      const remainProgress = currentDist / totalDist 
+      let step = travelProgress / remainProgress
+      if (remainProgress < 0.2) step = Math.max(0.01, (5 - duration) * delta)
+      
+      /* 1️⃣ move camera */
+      camera.position.lerp(camTargetRef.current, step)
+      
+      /* 2️⃣ move orbitControls’ target in sync */
+      orbitControlsRef.current.target.lerp(camLookAtRef.current, step)
+      orbitControlsRef.current.update()
+      
+      /* 3️⃣ finish up */
+      if (camera.position.distanceToSquared(camTargetRef.current) < 0.01) {
+        camera.position.copy(camTargetRef.current)
+        orbitControlsRef.current.target.copy(camLookAtRef.current)
         orbitControlsRef.current.update()
-  
+        
+        camTargetRef.current = camLookAtRef.current = null
         setFocusedItemName(null)
       }
     }
   })
+  
+  /* -------- abort animation the instant the user drags / scrolls -------- */
+  useEffect(() => {
+    const controls = orbitControlsRef?.current
+    if (!controls || !camTargetRef.current) return
+
+    let timeout = setTimeout(() => {
+      controls.addEventListener('start', stopAnim)
+    }, 100) // Delay listener attachment by 100ms
+
+    const stopAnim = () => {
+      camTargetRef.current = camLookAtRef.current = null
+      setFocusedItemName(null)
+    }
+
+    return () => {
+      clearTimeout(timeout)
+      controls.removeEventListener('start', stopAnim)
+    }
+  }, [orbitControlsRef, focusedItemName])
   
   
 
@@ -177,6 +221,7 @@ const Graph = forwardRef(({ orbitControlsRef }, ref) => {
           else wordRefs.current.delete(n.name)
         }}
         onFadeDone={() => handleWordFadeDone(n.name)}
+        onClick={handleWordClick}
       />
     ))}
     </>
