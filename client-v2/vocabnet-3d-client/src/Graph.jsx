@@ -19,7 +19,7 @@ import { AxesHelper } from 'three'
 /* ------------------------------------------------- *
  * Graph
  * ------------------------------------------------- */
-const Graph = forwardRef(({ orbitControlsRef }, ref) => {
+const Graph = forwardRef(({ orbitControlsRef, onWordClick, pauseInteraction }, ref) => {
   /* ---------------- state ---------------- */
   const [nodes, setNodes] = useState([]) // [{ name, position, isRemoving }]
   const [edges, setEdges] = useState([]) // [{ from_name, to_name, ... }]
@@ -45,6 +45,10 @@ const Graph = forwardRef(({ orbitControlsRef }, ref) => {
 
   const wordRefs = useRef(new Map())
   const lookAtTarget = useRef(new THREE.Vector3(0, 0, 0))
+  const pauseInteractionRef = useRef(pauseInteraction)
+  useEffect(() => {
+    pauseInteractionRef.current = pauseInteraction
+  }, [pauseInteraction])
 
   /* ---------------- utilities ---------------- */
   const edgeKey = e =>
@@ -142,6 +146,8 @@ const Graph = forwardRef(({ orbitControlsRef }, ref) => {
       camLookAtRef.current   = camLookAt
       totalDistRef.current   = camTarget.distanceTo(camera.position)
       setFocusedItemName(name)
+      /* ── notify parent so it can open WordModal ── */
+      onWordClick?.(name)
     }, [focusedItemName])
 
   /* ---------------- camera animation ---------------- */
@@ -172,6 +178,7 @@ const Graph = forwardRef(({ orbitControlsRef }, ref) => {
         setFocusedItemName(null)
       }
     } else if (orbitControlsRef?.current) {
+      if (pauseInteractionRef.current) return
       const moveSpeed = 100 * delta
       const dir = new THREE.Vector3()
 
@@ -218,6 +225,7 @@ const Graph = forwardRef(({ orbitControlsRef }, ref) => {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
+      if (pauseInteractionRef.current) return
       if (['w', 'a', 's', 'd'].includes(e.key.toLowerCase())) {
         keysPressed.current[e.key.toLowerCase()] = true
       }
@@ -227,6 +235,7 @@ const Graph = forwardRef(({ orbitControlsRef }, ref) => {
     }
   
     const handleKeyUp = (e) => {
+      if (pauseInteractionRef.current) return
       if (['w', 'a', 's', 'd'].includes(e.key.toLowerCase())) {
         keysPressed.current[e.key.toLowerCase()] = false
       }

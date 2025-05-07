@@ -3,11 +3,12 @@ import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import Graph from './Graph'
 import LoginModal from './components/LoginModal'
-import { login, getData, createData, removeData } from './api/api'
+import { login, getData, createData, removeData, updateNote } from './api/api'
 import { CREATE_DATA_SUCCEED, CREATE_DATA_PARTIAL, CREATE_DATA_FAILED } from './api/api'
 import { getToken } from './utils/request'
 import LeftNav from './components/LeftNav'
 import WelcomeBanner from "./components/WelcomeBanner"
+import WordModal from './components/WordModal'
 
 function App() {
   const [showLogin, setShowLogin] = useState(!getToken())
@@ -16,8 +17,11 @@ function App() {
   const [username, setUsername] = useState(null)
   const [showBanner, setShowBanner] = useState(false)
   const [initialPayload, setInitialPayload] = useState(null)
+  const [noteModal, setNoteModal] = useState({ open:false, name:'', note:'' })
+  const [noteDict, setNoteDict] = useState({})
   const graphRef = useRef(null);
   const controlsRef = useRef()
+  const noteDictRef = useRef(noteDict)
 
   const gotData = (data) => {
     const uname = data.user.username
@@ -30,7 +34,18 @@ function App() {
       edges: data.edges || [],
       mode: "add-data"
     })
+
+    // build centralized note dictionary
+    const dict = {}
+    for (const w of data.words || []) {
+      dict[w.name] = w.note || ''
+    }
+    setNoteDict(dict)
   }
+
+  useEffect(() => {
+    noteDictRef.current = noteDict
+  }, [noteDict])
 
   useEffect(() => {
     if (!getToken()) return
@@ -80,6 +95,26 @@ function App() {
     }
   }
 
+  /* ─── Word click from Graph → show modal ─── */
+  const handleWordClick = (name) => {
+    const existingNote = noteDictRef.current[name] || ''
+    setNoteModal({ open:true, name, note: existingNote })
+  }
+
+  /* ─── persist note change ─── */
+  const handleNoteUpdate = async (newNote) => {
+    try {
+      const updatedNote = await updateNote({ word: noteModal.name, note: newNote })
+      setNoteDict(prev => {
+        const newDict = { ...prev, [noteModal.name]: updatedNote }
+        noteDictRef.current = newDict // ✅ update immediately
+        return newDict
+      })
+    } finally {
+      setNoteModal({ open:false, name:'', note:'' })
+    }
+  }
+
 
   return (
       <div style={{ width: '100vw', height: '100vh' }}>
@@ -96,9 +131,24 @@ function App() {
                 onDone={() => setShowBanner(false)}
                 />
               )}
-              {isAuthenticated && !showBanner && <Graph ref={graphRef} orbitControlsRef={controlsRef}/>}
+              {isAuthenticated && !showBanner && 
+                <Graph 
+                  ref={graphRef} 
+                  orbitControlsRef={controlsRef}
+                  onWordClick={handleWordClick}
+                  pauseInteraction={noteModal.open }
+                />
+              }
               <OrbitControls ref={controlsRef}/>
             </Canvas>
+
+            <WordModal
+              open={noteModal.open}
+              initialNote={noteModal.note}
+              onClose={() => setNoteModal({ open:false, name:'', note:'' })}
+              onUpdate={handleNoteUpdate}
+              debounceMs={600} 
+            />
           </>
         )}
       </div>
