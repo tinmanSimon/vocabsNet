@@ -247,7 +247,7 @@ const Graph = forwardRef(({ orbitControlsRef }, ref) => {
 
   return (
     <>
-    <primitive object={new AxesHelper(100)} /> 
+    {/* {<primitive object={new AxesHelper(100)} /> } */}
       {/* EDGES */}
       {edges.map(e => {
         const a = posMap[e.from_name]
