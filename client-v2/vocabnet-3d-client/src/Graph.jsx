@@ -31,6 +31,17 @@ const Graph = forwardRef(({ orbitControlsRef }, ref) => {
   const camLookAtRef   = useRef(null) // THREE.Vector3 | null
   const camLerpSpeed   = 50        // higher = faster
   const totalDistRef = useRef(0) 
+  const keysPressed = useRef({
+    w: false,
+    a: false,
+    s: false,
+    d: false,
+  })
+
+  const stopAnim = () => {
+    camTargetRef.current = camLookAtRef.current = null
+    setFocusedItemName(null)
+  }
 
   const wordRefs = useRef(new Map())
   const lookAtTarget = useRef(new THREE.Vector3(0, 0, 0))
@@ -160,6 +171,33 @@ const Graph = forwardRef(({ orbitControlsRef }, ref) => {
         camTargetRef.current = camLookAtRef.current = null
         setFocusedItemName(null)
       }
+    } else if (orbitControlsRef?.current) {
+      const moveSpeed = 100 * delta
+      const dir = new THREE.Vector3()
+
+      if (keysPressed.current.w) dir.z += 1
+      if (keysPressed.current.s) dir.z -= 1
+      if (keysPressed.current.a) dir.x -= 1
+      if (keysPressed.current.d) dir.x += 1
+
+      if (dir.lengthSq() > 0) {
+        dir.normalize()
+
+        // get forward direction from camera -> target
+        const forward = orbitControlsRef.current.target.clone().sub(camera.position).normalize()
+
+        const right = new THREE.Vector3()
+        right.crossVectors(forward, camera.up).normalize()
+
+        const moveVec = new THREE.Vector3()
+          .addScaledVector(forward, dir.z)
+          .addScaledVector(right, dir.x)
+          .multiplyScalar(moveSpeed)
+
+        camera.position.add(moveVec)
+        orbitControlsRef.current.target.add(moveVec)
+        orbitControlsRef.current.update()
+      }
     }
   })
   
@@ -172,16 +210,35 @@ const Graph = forwardRef(({ orbitControlsRef }, ref) => {
       controls.addEventListener('start', stopAnim)
     }, 100) // Delay listener attachment by 100ms
 
-    const stopAnim = () => {
-      camTargetRef.current = camLookAtRef.current = null
-      setFocusedItemName(null)
-    }
-
     return () => {
       clearTimeout(timeout)
       controls.removeEventListener('start', stopAnim)
     }
   }, [orbitControlsRef, focusedItemName])
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (['w', 'a', 's', 'd'].includes(e.key.toLowerCase())) {
+        keysPressed.current[e.key.toLowerCase()] = true
+      }
+      if (camTargetRef.current || camLookAtRef.current) {
+        stopAnim()
+      }
+    }
+  
+    const handleKeyUp = (e) => {
+      if (['w', 'a', 's', 'd'].includes(e.key.toLowerCase())) {
+        keysPressed.current[e.key.toLowerCase()] = false
+      }
+    }
+  
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+    }
+  }, [])
   
   
 
@@ -190,7 +247,7 @@ const Graph = forwardRef(({ orbitControlsRef }, ref) => {
 
   return (
     <>
-    {/* <primitive object={new AxesHelper(100)} /> */}
+    <primitive object={new AxesHelper(100)} /> 
       {/* EDGES */}
       {edges.map(e => {
         const a = posMap[e.from_name]
