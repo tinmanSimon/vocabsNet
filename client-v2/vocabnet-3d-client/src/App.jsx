@@ -17,6 +17,7 @@ function App() {
   const [showBanner, setShowBanner] = useState(false)
   const [initialPayload, setInitialPayload] = useState(null)
   const graphRef = useRef(null);
+  const controlsRef = useRef()
 
   const gotData = (data) => {
     const uname = data.user.username
@@ -95,8 +96,8 @@ function App() {
                 onDone={() => setShowBanner(false)}
                 />
               )}
-              {isAuthenticated && !showBanner && <Graph ref={graphRef}/>}
-              <OrbitControls />
+              {isAuthenticated && !showBanner && <Graph ref={graphRef} orbitControlsRef={controlsRef}/>}
+              <OrbitControls ref={controlsRef}/>
             </Canvas>
           </>
         )}
