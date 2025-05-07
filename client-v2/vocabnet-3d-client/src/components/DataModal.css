@@ -66,10 +66,3 @@
   padding: 6px 14px; 
   background-color: #f0f0f0;
 }
-
-/* ─── WordModal textarea ─────────────────────────── */
-.wm-textarea{
-  width: 90%; min-height:220px; resize:vertical;
-  padding:8px; font-size:14px; line-height:1.4;
-  margin-inline: auto;
-}

@@ -45,7 +45,13 @@ export async function removeData(data) {
 }
 
 export async function updateNote(data) {
-  console.log("updateNote: ", data)
-  return data.note
-  // return await request('POST', '/updatenote', { word, note })
+  try {
+    // await request('POST', '/updatenote', { word, note })
+    console.log("updateNote: ", data)
+    return data
+  } catch (err) {
+    const msg = err.message || ''
+    console.error("Update note failed entirely");
+    return {}
+  }
 }
