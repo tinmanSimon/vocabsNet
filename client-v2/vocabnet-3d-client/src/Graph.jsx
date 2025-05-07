@@ -1,110 +1,165 @@
 // Graph.jsx
-import { useState, useRef, forwardRef, useImperativeHandle } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
-import Word from './Word';
-
-// ← this is the file you uploaded
-import Edge from './Edge';
-
-import { randomVecInView } from './utils/randomVecInView';
+import { useState, useRef, forwardRef, useImperativeHandle } from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
+import * as THREE from 'three'
+import Word from './Word'
+import Edge from './Edge'
+import { randomVecInView } from './utils/randomVecInView'
 import spreadWords from './utils/spreadWords'
-import generateTestData from './TestData';
+import { AxesHelper } from 'three'
+
 
 /* ------------------------------------------------- *
  * Graph
- *  - manages node / edge arrays
- *  - exposes .applyPayload(payload) to parent (App)
- *  - lets Word handle its own fade; keeps removed
- *    nodes alive until fade‑out finishes
  * ------------------------------------------------- */
-const Graph = forwardRef((_, ref) => {
-  /* live data */
-  const [nodes, setNodes] = useState([]);   // [{ name, position, isRemoving }]
-  const [edges, setEdges] = useState([]);   // [{ from_name, to_name, double_edge, isRemoving }]
+const Graph = forwardRef(({ orbitControlsRef }, ref) => {
+  /* ---------------- state ---------------- */
+  const [nodes, setNodes] = useState([]) // [{ name, position, isRemoving }]
+  const [edges, setEdges] = useState([]) // [{ from_name, to_name, ... }]
+  const [focusedItemName, setFocusedItemName] = useState(null)
 
-  const { camera } = useThree();
+  /* ---------------- camera helpers ---------------- */
+  const { camera } = useThree()
+  const camTargetRef   = useRef(null) // THREE.Vector3 | null
+  const camLookAtRef   = useRef(null) // THREE.Vector3 | null
+  const camLerpSpeed   = 3.0          // higher = faster
 
-  const edgeKey = e => `${e.edge_name}-${e.from_name}-${e.to_name}-${e.double_edge ? 1 : 0}`
+  const wordRefs = useRef(new Map())
+  const lookAtTarget = useRef(new THREE.Vector3(0, 0, 0))
+
+  /* ---------------- utilities ---------------- */
+  const edgeKey = e =>
+    `${e.edge_name}-${e.from_name}-${e.to_name}-${e.double_edge ? 1 : 0}`
+
   const handleWordFadeDone = name =>
     setNodes(prev => prev.filter(n => n.name !== name))
   const handleEdgeFadeDone = key =>
     setEdges(prev => prev.filter(e => edgeKey(e) !== key))
 
-  /* ----------------  public API  ---------------- */
+  /* ---------------- public API ---------------- */
   useImperativeHandle(ref, () => ({
     applyPayload({ words = [], edges: edgeArr = [], mode }) {
       if (mode === 'add-data') {
         setNodes(prevNodes => {
           setEdges(prevEdges => {
-            // Merge words
-            const existingMap = Object.fromEntries(prevNodes.map(n => [n.name, n]))
-            const combinedWords = [...prevNodes]
-      
+            /* -------- merge words -------- */
+            const existing = new Map(prevNodes.map(n => [n.name, n]))
+            const mergedWords = [...prevNodes]
+            let lastNewWord = null
+
             words.forEach(w => {
-              if (!existingMap[w.name]) {
-                combinedWords.push({
+              if (!existing.has(w.name)) {
+                const newWord = {
                   name: w.name,
                   position: randomVecInView(camera),
-                  isRemoving: false
-                })
+                  isRemoving: false,
+                }
+                mergedWords.push(newWord)
+                lastNewWord = newWord
               }
             })
-      
-            // Merge edges
-            const existingEdgeKeys = new Set(prevEdges.map(edgeKey))
-            const newEdges = edgeArr.filter(e => !existingEdgeKeys.has(edgeKey(e)))
-            const combinedEdges = [...prevEdges, ...newEdges.map(e => ({ ...e, isRemoving: false }))]
-      
-            // Apply force layout
-            const relaidWords = spreadWords(combinedWords, combinedEdges, {
-              nodeDistance: 50,
-              edgeDistance: 30,
-              edgeEdgeDistance: 30,
-              iterations: 50,
-              boxSize: 200
+
+            /* -------- merge edges -------- */
+            const existingKeys = new Set(prevEdges.map(edgeKey))
+            const newEdges = edgeArr.filter(e => !existingKeys.has(edgeKey(e)))
+            const mergedEdges = [
+              ...prevEdges,
+              ...newEdges.map(e => ({ ...e, isRemoving: false })),
+            ]
+
+            /* -------- layout -------- */
+            const laidOut = spreadWords(mergedWords, mergedEdges, nodes, {
+              nodeDistance:        50,
+              edgeDistance:        30,
+              edgeEdgeDistance:    30,
+              iterations:          50,
+              boxSize:             200,
             })
-      
-            // Set new positions
-            setNodes(relaidWords)
-            setEdges(combinedEdges)
-      
-            return prevEdges // required return for `setEdges`
+
+            setNodes(laidOut)
+            setEdges(mergedEdges)
+
+            if (lastNewWord) {
+              const focusNode = laidOut.find(n => n.name === lastNewWord.name)
+              setFocusedItemName(focusNode.name)
+            } else if (newEdges) {
+              const focusNode = laidOut.find(n => n.name === newEdges[newEdges.length - 1].from_name)
+              setFocusedItemName(focusNode.name)
+            }
+            return prevEdges // satisfy React set‑state signature
           })
-      
-          return prevNodes // required return for `setNodes`
+          return prevNodes
         })
-      }       else if (mode === 'remove-data') {
+
+      } else if (mode === 'remove-data') {
+        /* mark removals for fade‑out */
         if (words.length) {
-            setNodes(prev =>
-                prev.map(n =>
-                    words.some(w => w.name === n.name) ? { ...n, isRemoving: true } : n
-                )
-            )
+          setNodes(prev =>
+            prev.map(n =>
+              words.some(w => w.name === n.name)
+                ? { ...n, isRemoving: true }
+                : n,
+            ),
+          )
         }
         if (edgeArr.length || words.length) {
-            setEdges(prev =>
-                prev.map(e =>
-                    edgeArr.some(x => edgeKey(x) === edgeKey(e)) ||
-                    words.some(w => w.name === e.from_name || w.name === e.to_name)
-                    ? { ...e, isRemoving: true }
-                    : e
-                )
-            )
+          setEdges(prev =>
+            prev.map(e =>
+              edgeArr.some(x => edgeKey(x) === edgeKey(e)) ||
+              words.some(w => w.name === e.from_name || w.name === e.to_name)
+                ? { ...e, isRemoving: true }
+                : e,
+            ),
+          )
         }
       }
-    }
-  }));
+    },
+  }))
 
-  /* lookup positions for edges */
-  const posMap = Object.fromEntries(nodes.map(n => [n.name, n.position]));
+  /* ---------------- camera animation ---------------- */
+  useFrame((_, delta) => {
+    if (focusedItemName) {
+      const refObj = wordRefs.current.get(focusedItemName)
+      if (!refObj || !refObj.getCurrentPosition) return
+  
+      const itemPos = refObj.getCurrentPosition()
+  
+      // Direction: from item to current camera position
+      const dir = camera.position.clone().sub(itemPos).normalize()
+      const offset = dir.multiplyScalar(50)
+      const curTargetPos = itemPos.clone().add(offset)
+  
+      const step = 1 - Math.exp(-3 * delta)
+      camera.position.lerp(curTargetPos, step)
+      camera.lookAt(itemPos)
+
+      const finalItemPos = refObj.getTargetPosition()
+      const finalTargetPos = finalItemPos.clone().add(offset)
+
+      if (camera.position.distanceTo(finalTargetPos) < 0.2 && orbitControlsRef?.current) {
+        camera.position.copy(finalTargetPos)
+        camera.lookAt(itemPos)
+        orbitControlsRef.current.target.copy(itemPos)
+        orbitControlsRef.current.update()
+  
+        setFocusedItemName(null)
+      }
+    }
+  })
+  
+  
+
+  /* ---------------- render ---------------- */
+  const posMap = Object.fromEntries(nodes.map(n => [n.name, n.position]))
 
   return (
     <>
-      {/* --- EDGES --- */}
+    {/* <primitive object={new AxesHelper(100)} /> */}
+      {/* EDGES */}
       {edges.map(e => {
-        const a = posMap[e.from_name];
-        const b = posMap[e.to_name];
-        if (!a || !b) return null; 
+        const a = posMap[e.from_name]
+        const b = posMap[e.to_name]
+        if (!a || !b) return null
         return (
           <Edge
             key={edgeKey(e)}
@@ -115,21 +170,25 @@ const Graph = forwardRef((_, ref) => {
             removing={e.isRemoving}
             onFadeDone={() => handleEdgeFadeDone(edgeKey(e))}
           />
-        );
+        )
       })}
 
-      {/* --- WORDS --- */}
+      {/* WORDS */}
       {nodes.map(n => (
-        <Word
-          key={n.name}
-          name={n.name}
-          position={n.position}
-          removing={n.isRemoving}
-          onFadeDone={() => handleWordFadeDone(n.name)}
-        />
-      ))}
+      <Word
+        key={n.name}
+        name={n.name}
+        position={n.position}
+        removing={n.isRemoving}
+        ref={(el) => {
+          if (el) wordRefs.current.set(n.name, el)
+          else wordRefs.current.delete(n.name)
+        }}
+        onFadeDone={() => handleWordFadeDone(n.name)}
+      />
+    ))}
     </>
-  );
-});
+  )
+})
 
-export default Graph;
+export default Graph

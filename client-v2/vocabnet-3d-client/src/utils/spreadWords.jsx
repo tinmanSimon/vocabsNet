@@ -58,7 +58,7 @@ function segmentToSegmentDistance(A1, A2, B1, B2) {
     }
 }
 
-export default function spreadWords(nodes, edges, options = {}) {
+export default function spreadWords(nodes, edges, existing_nodes, options = {}) {
     const minNodeDistance = options.nodeDistance || 15
     const minNodeEdgeDistance = options.edgeDistance || 10
     const minEdgeEdgeDistance = options.edgeEdgeDistance || 10
