@@ -43,3 +43,9 @@ export async function removeData(data) {
     return {}
   }
 }
+
+export async function updateNote(data) {
+  console.log("updateNote: ", data)
+  return data.note
+  // return await request('POST', '/updatenote', { word, note })
+}
