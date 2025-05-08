@@ -18,10 +18,17 @@ export async function request(method, endpoint, body = null) {
     headers['Authorization'] = `Bearer ${token}`
   }
 
-  const res = await fetch(`${BASE_URL}${endpoint}`, {
+  // For GET requests, convert body to query string
+  let url = `${BASE_URL}${endpoint}`
+  if (method === 'GET' && body && typeof body === 'object') {
+    const query = new URLSearchParams(body).toString()
+    url += `?${query}`
+  }
+
+  const res = await fetch(url, {
     method,
     headers,
-    body: body ? JSON.stringify(body) : undefined
+    body: method === 'GET' ? undefined : JSON.stringify(body)
   })
 
   if (res.status === 401) {
