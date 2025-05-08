@@ -6,7 +6,8 @@ from app.graph_service import GraphService
 from core.credentials import CLEAR_DATA_KEY, DEBUG_MODE
 from core.vocab_types import (
     Token, UserInfo, RegisterResponse, Word, Edge, 
-    DataCreateRequest, DataRemoveRequest, ClearTestRequest
+    DataCreateRequest, DataRemoveRequest, ClearTestRequest,
+    NoteUpdateRequest
 )
 from contextlib import asynccontextmanager
 from fastapi.security import OAuth2PasswordBearer
@@ -96,6 +97,14 @@ async def getdata(user: UserInfo = Depends(get_current_user)):
         "words" : user_data.get("words", []),
         "edges" : user_data.get("edges", [])
     }
+
+@app.post("/api/vocabnet/updatenote")
+async def updateNote(request: NoteUpdateRequest, user: UserInfo = Depends(get_current_user)):
+    if not user:
+        raise HTTPException(status_code=401, detail="Token not found")
+    await app.state.graph_service.update_note(request, user)
+    return {"user" : user, "message": "Note updated successfully"}
+    
 
 @app.post("/api/vocabnet/cleartestdata")
 async def clear_test_data(request: ClearTestRequest):

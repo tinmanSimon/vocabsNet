@@ -32,6 +32,7 @@ class Word(BaseModel):
     model_config = ConfigDict(extra='allow')
     name: str 
     username: str
+    note: Optional[str] = ""
     outgoing: Optional[list[Edge]] = []
     incoming: Optional[list[Edge]] = []
 
@@ -44,6 +45,10 @@ class DataRemoveRequest(BaseModel):
     words: list[Word] = []
     edges: list[Edge] = [] 
     tags: list[str] = []
+
+class NoteUpdateRequest(BaseModel):
+    wordname: str
+    note: str
 
 class ClearTestRequest(BaseModel):
     key: str

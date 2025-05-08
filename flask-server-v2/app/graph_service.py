@@ -2,7 +2,7 @@ from app.graph import Graph
 from app.graph_cache import GraphCacheManager
 from app.vocab_logger import logger
 from app.validator import Validator
-from core.vocab_types import Word, Edge, UserInfo, DataRemoveRequest
+from core.vocab_types import Word, Edge, UserInfo, DataRemoveRequest, NoteUpdateRequest
 from core.credentials import MONGO_URI, DB_NAME, DEBUG_DB_NAME, CLEAR_DATA_KEY, DEBUG_MODE
 import motor.motor_asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -111,6 +111,21 @@ class GraphService:
         
         if documents:
             await self._db.edges.insert_many(documents)
+        return True 
+
+    @handle_mongo_errors
+    async def _save_note_to_db(self, username: str, wordname: str, note: str) -> bool:
+        self._db.words.update_one(
+            {
+                "username": username,
+                "word_data.name": wordname
+            },
+            {
+                "$set": {
+                    "word_data.note": note
+                }
+            }
+        )
         return True 
 
     @handle_mongo_errors
@@ -226,3 +241,16 @@ class GraphService:
             await database[collection_name].drop()
         logger.info(f"Successfully cleared all collections in test database: {DEBUG_DB_NAME}")
         await self._cache_manager.mark_all_dirty()
+
+    @handle_general_errors
+    async def update_note(self, request: NoteUpdateRequest, user: UserInfo):
+        wordname, note = request.wordname, request.note 
+        username = user.username
+        graph = await self._get_graph(username)
+        await self._validator.validate_note(
+            wordname, 
+            note, 
+            graph=graph
+        )
+        await self._save_note_to_db(username, wordname, note)
+        graph.update_note(wordname, note)

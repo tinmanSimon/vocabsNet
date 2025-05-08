@@ -57,3 +57,5 @@ class Graph:
             to_word.incoming.append(edge)
             self.edges[(edge.edge_name, edge.from_name, edge.to_name)] = edge
     
+    def update_note(self, wordname: str, note: str):
+        self.words[wordname].note = note
