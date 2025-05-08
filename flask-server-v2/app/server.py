@@ -6,8 +6,8 @@ from app.graph_service import GraphService
 from core.credentials import CLEAR_DATA_KEY, DEBUG_MODE
 from core.vocab_types import (
     Token, UserInfo, RegisterResponse, Word, Edge, 
-    DataCreateRequest, DataRemoveRequest, ClearTestRequest,
-    NoteUpdateRequest, SearchRequest
+    GetRequest, DataCreateRequest, DataRemoveRequest,
+    ClearTestRequest, NoteUpdateRequest, SearchRequest
 )
 from contextlib import asynccontextmanager
 from fastapi.security import OAuth2PasswordBearer
@@ -86,10 +86,12 @@ async def removedata(request: DataRemoveRequest, user: UserInfo = Depends(get_cu
     return {"user" : user.model_dump(exclude={"hashed_password", "password"}), "message": "Data removed successfully"}
     
 @app.get("/api/vocabnet/getdata")
-async def getdata(user: UserInfo = Depends(get_current_user)):
+async def getdata(graph_size: int = 10, user: UserInfo = Depends(get_current_user)):
     if not user:
         raise HTTPException(status_code=401, detail="Token not found")
-    user_data = await app.state.graph_service.get_data(user)
+
+    print(f"graph_size: {graph_size}")
+    user_data = await app.state.graph_service.get_data(user, graph_size)
     if not isinstance(user_data, dict):
         raise HTTPException(status_code=500, detail="Invalid user data")
     return {
@@ -105,11 +107,11 @@ async def updateNote(request: NoteUpdateRequest, user: UserInfo = Depends(get_cu
     await app.state.graph_service.update_note(request, user)
     return {"user" : user.model_dump(exclude={"hashed_password", "password"}), "message": "Note updated successfully"}
 
-@app.post("/api/vocabnet/search")
-async def search(request: SearchRequest, user: UserInfo = Depends(get_current_user)):
+@app.get("/api/vocabnet/search")
+async def search(wordname: str, graph_size: int = 10, user: UserInfo = Depends(get_current_user)):
     if not user:
         raise HTTPException(status_code=401, detail="Token not found")
-    searchData = await app.state.graph_service.search(request, user)
+    searchData = await app.state.graph_service.search(wordname, user, graph_size)
     return {
         "user" : user.model_dump(exclude={"hashed_password", "password"}), 
         **searchData

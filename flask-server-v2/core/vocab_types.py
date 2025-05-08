@@ -37,6 +37,9 @@ class Word(BaseModel):
     outgoing: Optional[list[Edge]] = []
     incoming: Optional[list[Edge]] = []
 
+class GetRequest(BaseModel):
+    graph_size: Optional[int] = 10
+
 class DataCreateRequest(BaseModel):
     words: list[Word] = []
     edges: list[Edge] = [] 
