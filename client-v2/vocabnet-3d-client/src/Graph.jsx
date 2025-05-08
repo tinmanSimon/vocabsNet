@@ -59,81 +59,98 @@ const Graph = forwardRef(({ orbitControlsRef, onWordClick, pauseInteraction }, r
   const handleEdgeFadeDone = key =>
     setEdges(prev => prev.filter(e => edgeKey(e) !== key))
 
+  const applyPayload = ({ words = [], edges: edgeArr = [], mode }) => {
+    if (mode === 'add-data') {
+      setNodes(prevNodes => {
+        setEdges(prevEdges => {
+          const existing = new Map(prevNodes.map(n => [n.name, n]))
+          const mergedWords = [...prevNodes]
+          let lastNewWord = null
+
+          words.forEach(w => {
+            if (!existing.has(w.name)) {
+              const newWord = {
+                name: w.name,
+                position: randomVecInView(camera),
+                isRemoving: false,
+              }
+              mergedWords.push(newWord)
+              lastNewWord = newWord
+            }
+          })
+
+          const existingKeys = new Set(prevEdges.map(edgeKey))
+          const newEdges = edgeArr.filter(e => !existingKeys.has(edgeKey(e)))
+          const mergedEdges = [
+            ...prevEdges,
+            ...newEdges.map(e => ({ ...e, isRemoving: false })),
+          ]
+
+          const laidOut = spreadWords(mergedWords, mergedEdges, {
+            nodeDistance:        40,
+            edgeDistance:        30,
+            edgeEdgeDistance:    30,
+            iterations:          30,
+            boxSize:             500,
+          })
+
+          setNodes(laidOut)
+          setEdges(mergedEdges)
+          return prevEdges
+        })
+        return prevNodes
+      })
+    } else if (mode === 'remove-data') {
+      if (words.length) {
+        setNodes(prev =>
+          prev.map(n =>
+            words.some(w => w.name === n.name)
+              ? { ...n, isRemoving: true }
+              : n,
+          ),
+        )
+      }
+      if (edgeArr.length || words.length) {
+        setEdges(prev =>
+          prev.map(e =>
+            edgeArr.some(x => edgeKey(x) === edgeKey(e)) ||
+            words.some(w => w.name === e.from_name || w.name === e.to_name)
+              ? { ...e, isRemoving: true }
+              : e,
+          ),
+        )
+      }
+    }
+  }
+
   /* ---------------- public API ---------------- */
   useImperativeHandle(ref, () => ({
-    applyPayload({ words = [], edges: edgeArr = [], mode }) {
-      if (mode === 'add-data') {
-        setNodes(prevNodes => {
-          setEdges(prevEdges => {
-            /* -------- merge words -------- */
-            const existing = new Map(prevNodes.map(n => [n.name, n]))
-            const mergedWords = [...prevNodes]
-            let lastNewWord = null
-
-            words.forEach(w => {
-              if (!existing.has(w.name)) {
-                const newWord = {
-                  name: w.name,
-                  position: randomVecInView(camera),
-                  isRemoving: false,
-                }
-                mergedWords.push(newWord)
-                lastNewWord = newWord
-              }
-            })
-
-            /* -------- merge edges -------- */
-            const existingKeys = new Set(prevEdges.map(edgeKey))
-            const newEdges = edgeArr.filter(e => !existingKeys.has(edgeKey(e)))
-            const mergedEdges = [
-              ...prevEdges,
-              ...newEdges.map(e => ({ ...e, isRemoving: false })),
-            ]
-
-            /* -------- layout -------- */
-            const laidOut = spreadWords(mergedWords, mergedEdges, {
-              nodeDistance:        40,
-              edgeDistance:        30,
-              edgeEdgeDistance:    30,
-              iterations:          30,
-              boxSize:             500,
-            })
-
-            setNodes(laidOut)
-            setEdges(mergedEdges)
-            return prevEdges // satisfy React set‑state signature
-          })
-          return prevNodes
-        })
-
-      } else if (mode === 'remove-data') {
-        /* mark removals for fade‑out */
-        if (words.length) {
-          setNodes(prev =>
-            prev.map(n =>
-              words.some(w => w.name === n.name)
-                ? { ...n, isRemoving: true }
-                : n,
-            ),
-          )
-        }
-        if (edgeArr.length || words.length) {
-          setEdges(prev =>
-            prev.map(e =>
-              edgeArr.some(x => edgeKey(x) === edgeKey(e)) ||
-              words.some(w => w.name === e.from_name || w.name === e.to_name)
-                ? { ...e, isRemoving: true }
-                : e,
-            ),
-          )
-        }
-      }
+    applyPayload,
+    hasWord: (name) => nodes.some(n => n.name === name),
+    focusOnWord: (name, options) => handleWordClick(name, options),
+    replaceWithData: (payload, focusName) => {
+      // fade everything out
+      setNodes(prev => prev.map(n => ({ ...n, isRemoving: true })))
+      setEdges(prev => prev.map(e => ({ ...e, isRemoving: true })))
+      pendingPayloadRef.current = { payload, focusName }
     },
   }))
+
+  /* after all old items faded, load pending set */
+  const pendingPayloadRef = useRef(null)
+  useEffect(() => {
+    if (nodes.length === 0 && edges.length === 0 && pendingPayloadRef.current) {
+      const { payload, focusName } = pendingPayloadRef.current
+      pendingPayloadRef.current = null
+      applyPayload(payload)
+      // wait a tick so new words exist in refs
+      setTimeout(() => focusName && handleWordClick(focusName, {suppressClickCallback: true}), 50)
+    }
+  }, [nodes.length, edges.length])
   
   /* ---------- click‑handler handed down to <Word> ---------- */
   const handleWordClick = useCallback(
-    (name) => {
+    (name, options = {}) => {
       // skip if we’re already focusing the same word
       if (name === focusedItemName) return
       const refObj = wordRefs.current.get(name)
@@ -147,7 +164,9 @@ const Graph = forwardRef(({ orbitControlsRef, onWordClick, pauseInteraction }, r
       totalDistRef.current   = camTarget.distanceTo(camera.position)
       setFocusedItemName(name)
       /* ── notify parent so it can open WordModal ── */
-      onWordClick?.(name)
+      if (!options.suppressClickCallback) {
+        onWordClick?.(name)
+      }
     }, [focusedItemName])
 
   /* ---------------- camera animation ---------------- */

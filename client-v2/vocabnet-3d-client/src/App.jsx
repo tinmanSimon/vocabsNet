@@ -9,6 +9,8 @@ import { getToken } from './utils/request'
 import LeftNav from './components/LeftNav'
 import WelcomeBanner from "./components/WelcomeBanner"
 import WordModal from './components/WordModal'
+import SearchModal from './components/SearchModal'
+import { searchWord }  from './api/api'
 
 function App() {
   const [showLogin, setShowLogin] = useState(!getToken())
@@ -23,6 +25,8 @@ function App() {
     const cached = localStorage.getItem('app-settings')
     return cached ? JSON.parse(cached) : { showNoteOnClick: true }
   })
+  const [searchModalOpen, setSearchModalOpen] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
   const settingsRef = useRef(settings)
   const graphRef = useRef(null);
   const controlsRef = useRef()
@@ -131,6 +135,34 @@ function App() {
     }
   }
 
+  const handleSearch = async (term) => {
+    if (!term?.trim()) return
+    
+    // 1) local search
+    if (graphRef.current?.hasWord(term)) {
+      graphRef.current.focusOnWord(term, {suppressClickCallback: true})
+      return
+    }
+    
+    // 2) server search
+    const data = await searchWord(term.trim())
+    if (data?.words?.length) {
+      graphRef.current?.replaceWithData(
+        { words: data.words, edges: data.edges, mode: 'add-data' },
+        term.trim()
+      )
+
+      setNoteDict(prev => {
+        const dict = {}
+        for (const w of data.words || []) {
+          dict[w.name] = w.note || ''
+        }
+        noteDictRef.current = dict 
+        return dict
+      })
+    }
+  }
+
 
   return (
       <div style={{ width: '100vw', height: '100vh' }}>
@@ -138,10 +170,13 @@ function App() {
         {!showLogin && (
           <>
             <LeftNav 
+              onModalOpen={()=>{setModalOpen(true)}}
+              onModalClose={()=>{setModalOpen(false)}}
               onDataRequest={handleDataRequest} 
               username={username} 
               settings={settings}
               onUpdateSettings={handleUpdateSettings}
+              onSearchRequest={()=>{ setSearchModalOpen(true)}}
             />
             <Canvas camera={{ position: [0, 0, 50], fov: 60 }} style={{ background: 'lightblue' }}>
               <ambientLight />
@@ -157,7 +192,7 @@ function App() {
                   ref={graphRef} 
                   orbitControlsRef={controlsRef}
                   onWordClick={handleWordClick}
-                  pauseInteraction={noteModal.open }
+                  pauseInteraction={noteModal.open || searchModalOpen || modalOpen }
                 />
               }
               <OrbitControls ref={controlsRef}/>
@@ -170,6 +205,11 @@ function App() {
               onUpdate={handleNoteUpdate}
               debounceMs={600} 
               name={noteModal.name}
+            />
+            <SearchModal
+              open={searchModalOpen}
+              onSearch={(term)=>{handleSearch(term)}}
+              onClose={()=>setSearchModalOpen(false)}
             />
           </>
         )}

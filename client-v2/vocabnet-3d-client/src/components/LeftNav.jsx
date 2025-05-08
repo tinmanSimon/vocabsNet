@@ -2,18 +2,32 @@ import { useRef, useState } from 'react'
 import './LeftNav.css'
 import DataModal from './DataModal'
 import SettingModal from './SettingModal'
+import SearchModal  from './SearchModal'
 
-export default function LeftNav({ onDataRequest, username, settings, onUpdateSettings }) {
+export default function LeftNav({ 
+  onModalOpen,
+  onModalClose,
+  onDataRequest, 
+  username, 
+  settings, 
+  onUpdateSettings,
+  onSearchRequest 
+}) {
   const [open, setOpen] = useState(false)
   const [launchedMenuItem, setLaunchedMenuItem] = useState("")
   const [pos, setPos] = useState(() => {
     return { x: 32, y: 32 }
   })
 
+  const modalClose = ()=>{
+    onModalClose()
+    setLaunchedMenuItem('')
+  }
+
   const MODALS = {
-    "add-data": <DataModal username={username} open mode="add-data" onSubmit={onDataRequest} onClose={() => setLaunchedMenuItem('')} />,
-    "remove-data": <DataModal username={username} open mode="remove-data" onSubmit={onDataRequest} onClose={() => setLaunchedMenuItem('')} />,
-    "settings": <SettingModal open settings={settings} onUpdate={onUpdateSettings} onClose={() => setLaunchedMenuItem('')} />,
+    "add-data": <DataModal username={username} open mode="add-data" onSubmit={onDataRequest} onClose={modalClose} />,
+    "remove-data": <DataModal username={username} open mode="remove-data" onSubmit={onDataRequest} onClose={modalClose} />,
+    "settings": <SettingModal open settings={settings} onUpdate={onUpdateSettings} onClose={modalClose} />,
   }
   
   function renderLaunchedModal() {
@@ -45,10 +59,10 @@ export default function LeftNav({ onDataRequest, username, settings, onUpdateSet
 
   /* ----- menu items ----- */
   const items = [
-    { label: 'Add Data',    onClick: () => setLaunchedMenuItem("add-data") },
-    { label: 'Remove Data', onClick: () => setLaunchedMenuItem("remove-data") },
-    { label: 'Settings',    onClick: () => setLaunchedMenuItem("settings") },
-    { label: 'Search',    onClick: () => console.log('search') },
+    { label: 'Add Data',    onClick: () => {onModalOpen();setLaunchedMenuItem("add-data")}},
+    { label: 'Remove Data', onClick: () => {onModalOpen();setLaunchedMenuItem("remove-data")}},
+    { label: 'Settings',    onClick: () => {onModalOpen();setLaunchedMenuItem("settings")}},
+    { label: 'Search',      onClick: () => onSearchRequest() },
     { label: 'Collapse',    onClick: () => setOpen(false) }
   ]
 

@@ -46,6 +46,14 @@
     min-height:120px;
   }
   
+  .wm-input{
+    width:80%;
+    padding:8px;
+    font-size:16px;
+    margin:0 auto;
+    margin-top:8px;
+  }
+
   /* keep buttons fixed distance from bottom */
   .adm-actions{
     margin-top:16px;
