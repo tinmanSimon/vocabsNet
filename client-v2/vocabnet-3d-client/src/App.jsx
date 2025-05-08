@@ -19,9 +19,24 @@ function App() {
   const [initialPayload, setInitialPayload] = useState(null)
   const [noteModal, setNoteModal] = useState({ open:false, name:'', note:'' })
   const [noteDict, setNoteDict] = useState({})
+  const [settings, setSettings] = useState(() => {
+    const cached = localStorage.getItem('app-settings')
+    return cached ? JSON.parse(cached) : { showNoteOnClick: true }
+  })
+  const settingsRef = useRef(settings)
   const graphRef = useRef(null);
   const controlsRef = useRef()
   const noteDictRef = useRef(noteDict)
+
+  useEffect(() => {
+    settingsRef.current = settings
+  }, [settings])
+
+  const handleUpdateSettings = (newSettings) => {
+    setSettings(newSettings)
+    settingsRef.current = newSettings   // ✅ immediate access
+    localStorage.setItem('app-settings', JSON.stringify(newSettings))
+  }
 
   const gotData = (data) => {
     const uname = data.user.username
@@ -97,6 +112,7 @@ function App() {
 
   /* ─── Word click from Graph → show modal ─── */
   const handleWordClick = (name) => {
+    if (!settingsRef.current.showNoteOnClick) return 
     const existingNote = noteDictRef.current[name] || ''
     setNoteModal({ open:true, name, note: existingNote })
   }
@@ -121,7 +137,12 @@ function App() {
         {showLogin && <LoginModal onLogin={handleLogin} error={loginError} />}
         {!showLogin && (
           <>
-            <LeftNav onDataRequest={handleDataRequest} username={username} />
+            <LeftNav 
+              onDataRequest={handleDataRequest} 
+              username={username} 
+              settings={settings}
+              onUpdateSettings={handleUpdateSettings}
+            />
             <Canvas camera={{ position: [0, 0, 50], fov: 60 }} style={{ background: 'lightblue' }}>
               <ambientLight />
               <pointLight position={[10, 10, 10]} />
@@ -148,6 +169,7 @@ function App() {
               onClose={() => setNoteModal({ open:false, name:'', note:'' })}
               onUpdate={handleNoteUpdate}
               debounceMs={600} 
+              name={noteModal.name}
             />
           </>
         )}

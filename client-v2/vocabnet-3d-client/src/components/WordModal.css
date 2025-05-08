@@ -1,42 +1,86 @@
-.wm-box {
-    position: fixed;
-    z-index: 2100;
-    width: min(520px, 70vw);
-    min-height: 260px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 6px 18px rgba(0,0,0,.25);
-    display: flex;
-    flex-direction: column;
+.wm-box{
+    position:fixed;
+    z-index:2100;
+    min-width:320px;
+    min-height:260px;
+    background:#fff;
+    border-radius:8px;
+    box-shadow:0 6px 18px rgba(0,0,0,.25);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    resize:none;
   }
   
-  /* header / drag handle */
-  .wm-header {
-    height: 36px;
-    background: #2c3e50;
-    color: #ecf0f1;
-    display: flex;
-    align-items: center;
-    padding: 0 12px;
-    cursor: move;
-    user-select: none;
-    border-radius: 8px 8px 0 0;
+  /* ── drag handle ── */
+  .wm-header{
+    height:36px;
+    background:#2c3e50;
+    color:#ecf0f1;
+    display:flex;align-items:center;
+    padding:0 12px;
+    user-select:none;
+    cursor:move;
+    border-radius:8px 8px 0 0;
   }
   
-  .wm-textarea {
-    width: 90%;
-    min-height: 220px;
-    resize: vertical;
-    padding: 8px;
-    font-size: 14px;
-    line-height: 1.4;
-    margin-inline: auto;
-    margin: 16px;  /* ✅ adds vertical space before buttons */
- }
- 
- .adm-actions {
-    margin-bottom: 16px;
-}
+  /* ── main flex column ── */
+  .wm-content{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    overflow:auto;
+    padding:12px 0 0;
+  }
   
-  /* footer buttons re‑use .adm-actions /.btn‑submit /.btn‑cancel */
+  /* textarea flexes vertically, stays centered horizontally */
+  .wm-textarea{
+    width:80%;
+    flex:1 1 auto;
+    resize:none;
+    padding:8px;
+    font-size:14px;
+    line-height:1.4;
+    margin:0 auto;
+    margin-top: 8px;
+    min-height:120px;
+  }
+  
+  /* keep buttons fixed distance from bottom */
+  .adm-actions{
+    margin-top:16px;
+    margin-bottom:16px;
+    display:flex;
+    justify-content:center;
+    gap:24px;
+  }
+  
+  /* ── resize handles ── */
+  .wm-resize-handle{
+    position:absolute;
+    background:transparent;
+    z-index:20;
+  }
+  
+  .wm-n,.wm-s{height:6px;left:0;right:0;cursor:ns-resize}
+  .wm-n{top:-3px}.wm-s{bottom:-3px}
+  
+  .wm-e,.wm-w{width:6px;top:0;bottom:0;cursor:ew-resize}
+  .wm-e{right:-3px}.wm-w{left:-3px}
+  
+  .wm-nw, .wm-se {
+    width: 12px;
+    height: 12px;
+    cursor: nwse-resize;
+  }
+  
+  .wm-ne, .wm-sw {
+    width: 12px;
+    height: 12px;
+    cursor: nesw-resize;
+  }
+  .wm-ne{top:-6px;right:-6px}
+  .wm-se{bottom:-6px;right:-6px}
+  .wm-sw{bottom:-6px;left:-6px}
+  .wm-nw{top:-6px;left:-6px}
   

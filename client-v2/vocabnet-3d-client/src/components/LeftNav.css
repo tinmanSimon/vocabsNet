@@ -14,7 +14,7 @@
   /* ------ handle bar (icon or header) ------ */
   .ln-handle {
     height:40px; line-height:40px;
-    background:#1e4e8c; color:#fff;
+    background:#2c3e50; color:#fff;
     display:flex; align-items:center; justify-content:center;
     cursor:grab; font-size:22px; font-weight:bold;
     user-select:none;

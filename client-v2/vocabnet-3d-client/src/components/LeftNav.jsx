@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react'
 import './LeftNav.css'
 import DataModal from './DataModal'
+import SettingModal from './SettingModal'
 
-export default function LeftNav({ onDataRequest, username }) {
+export default function LeftNav({ onDataRequest, username, settings, onUpdateSettings }) {
   const [open, setOpen] = useState(false)
   const [launchedMenuItem, setLaunchedMenuItem] = useState("")
   const [pos, setPos] = useState(() => {
@@ -12,6 +13,7 @@ export default function LeftNav({ onDataRequest, username }) {
   const MODALS = {
     "add-data": <DataModal username={username} open mode="add-data" onSubmit={onDataRequest} onClose={() => setLaunchedMenuItem('')} />,
     "remove-data": <DataModal username={username} open mode="remove-data" onSubmit={onDataRequest} onClose={() => setLaunchedMenuItem('')} />,
+    "settings": <SettingModal open settings={settings} onUpdate={onUpdateSettings} onClose={() => setLaunchedMenuItem('')} />,
   }
   
   function renderLaunchedModal() {
@@ -45,7 +47,7 @@ export default function LeftNav({ onDataRequest, username }) {
   const items = [
     { label: 'Add Data',    onClick: () => setLaunchedMenuItem("add-data") },
     { label: 'Remove Data', onClick: () => setLaunchedMenuItem("remove-data") },
-    { label: 'Settings',    onClick: () => console.log('settings') },
+    { label: 'Settings',    onClick: () => setLaunchedMenuItem("settings") },
     { label: 'Search',    onClick: () => console.log('search') },
     { label: 'Collapse',    onClick: () => setOpen(false) }
   ]
