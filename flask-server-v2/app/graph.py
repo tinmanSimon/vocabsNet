@@ -1,6 +1,7 @@
 from typing import Set, List, Optional
-from core.vocab_types import Word, Edge
-from typing import Dict, Tuple
+from core.vocab_types import Word, Edge, UserInfo
+from typing import Dict, Tuple, List
+from collections import deque
 
 
 class Graph:
@@ -17,6 +18,96 @@ class Graph:
             "words" : list(self.words.values()),
             "edges" : list(self.edges.values())
         }
+
+    def get_data(
+        self,
+        user: UserInfo,
+        fetchSize: int,
+        start_word_name: str = ""
+    ) -> Dict[str, List]:
+        """
+        Return up to `fetchSize` Word objects.  When one connected component
+        is exhausted the search automatically jumps to another until the
+        quota is met or all words are visited.
+        """
+
+        # ────────────────────────────────────────────────────────────────
+        # Fast path
+        # ────────────────────────────────────────────────────────────────
+        if fetchSize >= len(self.words):
+            return self.get_all_data()
+
+        # ────────────────────────────────────────────────────────────────
+        # Choose the initial starting word
+        # ────────────────────────────────────────────────────────────────
+        if start_word_name:
+            if start_word_name not in self.words:
+                return {"words": [], "edges": []}
+            start_point = self.words[start_word_name]
+        elif self.word_exist(user.last_focused_word):
+            start_point = self.words[user.last_focused_word]
+        else:
+            start_point = next(reversed(self.words.values()))
+
+        # ────────────────────────────────────────────────────────────────
+        # BFS across *all* components
+        # ────────────────────────────────────────────────────────────────
+        queue: deque[Word] = deque([start_point])
+        seen: set[str] = set()
+        result_words: list[Word] = []
+        collected_edges: list[Edge] = []
+
+        # A list (or tuple) of the Word objects in insertion order lets us
+        # pick “next unvisited” in O(N) when we finish a component.
+        ordered_words = tuple(reversed(self.words.values()))
+        next_index = 0
+
+        while len(result_words) < fetchSize and len(seen) < len(self.words):
+
+            # ─── If current component is finished, jump to another ───
+            if not queue:
+                while next_index < len(ordered_words) and ordered_words[next_index].name in seen:
+                    next_index += 1
+                if next_index == len(ordered_words):
+                    break                           # every word visited
+                queue.append(ordered_words[next_index])
+                next_index += 1
+
+            current = queue.popleft()
+
+            # Already handled?
+            if current.name in seen:
+                continue
+
+            # Record the word
+            seen.add(current.name)
+            result_words.append(current)
+
+            # Explore neighbours
+            for edge in current.incoming + current.outgoing:
+                collected_edges.append(edge)
+                for nb in (edge.from_name, edge.to_name):
+                    if nb not in seen and nb in self.words:
+                        queue.append(self.words[nb])
+
+            # Stop early if we just met the quota
+            if len(result_words) == fetchSize:
+                break
+
+        # ────────────────────────────────────────────────────────────────
+        # Deduplicate edges whose endpoints are both in `seen`
+        # ────────────────────────────────────────────────────────────────
+        edge_seen = set()
+        result_edges: list[Edge] = []
+
+        for edge in collected_edges:
+            if edge.from_name in seen and edge.to_name in seen:
+                key = (edge.edge_name, edge.from_name, edge.to_name, edge.double_edge)
+                if key not in edge_seen:
+                    edge_seen.add(key)
+                    result_edges.append(edge)
+
+        return {"words": result_words, "edges": result_edges}
 
     def word_exist(self, word_name: str):
         return word_name in self.words
