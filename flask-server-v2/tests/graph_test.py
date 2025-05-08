@@ -16,6 +16,11 @@ def equal_words(words_1, words_2):
                  for word in words_1]
     filtered_2 = [{k: v for k, v in word.items() if k not in ignore_fields} 
                  for word in words_2]
+    empty_fields = ["note"]
+    filtered_1 = [{k: v for k, v in word.items() if v or not k in empty_fields} 
+                 for word in filtered_1]
+    filtered_2 = [{k: v for k, v in word.items() if v or not k in empty_fields} 
+                 for word in filtered_2]
     sorted_1 = sorted(filtered_1, key=lambda word: (word["name"], word["username"]))
     sorted_2 = sorted(filtered_2, key=lambda word: (word["name"], word["username"]))
     for s1, s2 in zip(sorted_1, sorted_2):
