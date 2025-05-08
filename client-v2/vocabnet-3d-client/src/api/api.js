@@ -57,48 +57,6 @@ export async function updateNote(data) {
 }
 
 export async function searchWord(term) {
-  // return await request('POST', '/search', { wordname: term })
   console.log("searchWord term: ", term)
-
-  const test_data = {
-    "user": {"username": "najksdfujweqhdjsbhf"},
-    "words": [
-        {
-            "name": "e",
-            "username": "najksdfujweqhdjsbhf",
-            "note": "asdf"
-        },
-        {
-            "name": "f",
-            "username": "najksdfujweqhdjsbhf",
-            "note": "wazup"
-        },
-        {
-            "name": "g",
-            "username": "najksdfujweqhdjsbhf",
-            "note": ""
-        }
-    ],
-    "edges": [
-        {
-            "edge_name": "a",
-            "from_name": "e",
-            "to_name": "f",
-            "username": "najksdfujweqhdjsbhf",
-            "double_edge": true
-        },
-        {
-            "edge_name": "a",
-            "from_name": "f",
-            "to_name": "g",
-            "username": "najksdfujweqhdjsbhf",
-            "double_edge": false
-        }
-    ]
-}
-
-  return test_data
-
-
-  // console.error('Search: word not found on server')
+  return await request('POST', '/search', { wordname: term })
 }
