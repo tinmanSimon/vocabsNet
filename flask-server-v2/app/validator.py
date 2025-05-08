@@ -95,3 +95,10 @@ class Validator:
             raise ValueError(f"Edges have conflict values")
         for edge in edges:
             await self._validate_edge(edge, user, edge_should_exist, graph)
+
+    async def validate_note(self, wordname: str, note: str, graph: Graph):
+        if not graph.word_exist(wordname): 
+            raise ValueError(f"Validation Error:'{wordname}' doesn't exist in graph!")
+        elif not note:
+            raise ValueError(f"Validation Error: trying to update empty note for '{wordname}'!")
+    
