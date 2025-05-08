@@ -36,10 +36,36 @@ function App() {
     settingsRef.current = settings
   }, [settings])
 
-  const handleUpdateSettings = (newSettings) => {
+  const replaceGraphData = (data, term) => {
+    if (data?.words?.length) {
+      graphRef.current?.replaceWithData(
+        { words: data.words, edges: data.edges, mode: 'add-data' },
+        term.trim()
+      )
+
+      setNoteDict(prev => {
+        const dict = {}
+        for (const w of data.words || []) {
+          dict[w.name] = w.note || ''
+        }
+        noteDictRef.current = dict 
+        return dict
+      })
+    }
+  }
+
+  const refresh = async () =>{
+    const data = await getData()
+    replaceGraphData(data, "")
+  }
+
+  const handleUpdateSettings = async (newSettings) => {
+    
+    const needRefresh = settingsRef.current.graph_size != newSettings.graph_size
     setSettings(newSettings)
     settingsRef.current = newSettings   // ✅ immediate access
     localStorage.setItem('app-settings', JSON.stringify(newSettings))
+    if (needRefresh) await refresh()
   }
 
   const gotData = (data) => {
@@ -146,21 +172,7 @@ function App() {
     
     // 2) server search
     const data = await searchWord(term.trim())
-    if (data?.words?.length) {
-      graphRef.current?.replaceWithData(
-        { words: data.words, edges: data.edges, mode: 'add-data' },
-        term.trim()
-      )
-
-      setNoteDict(prev => {
-        const dict = {}
-        for (const w of data.words || []) {
-          dict[w.name] = w.note || ''
-        }
-        noteDictRef.current = dict 
-        return dict
-      })
-    }
+    replaceGraphData(data, term)
   }
 
 

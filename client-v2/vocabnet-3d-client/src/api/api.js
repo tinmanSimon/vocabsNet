@@ -10,8 +10,22 @@ export async function login(username, password) {
   return data
 }
 
+function getGraphSize() {
+  const raw = localStorage.getItem('app-settings')
+  let graph_size = 10
+  try {
+    const localSetting = JSON.parse(raw)
+    if (localSetting?.graph_size > 0) {
+      graph_size = localSetting.graph_size
+    }
+  } catch (err) {
+    console.warn("Failed to parse localStorage app-settings:", err)
+  }
+  return graph_size
+}
+
 export async function getData() {
-  const data = await request('GET', '/getdata')
+  const data = await request('GET', '/getdata', {"graph_size" : getGraphSize()})
   return data
 }
 
@@ -58,5 +72,5 @@ export async function updateNote(data) {
 
 export async function searchWord(term) {
   console.log("searchWord term: ", term)
-  return await request('POST', '/search', { wordname: term })
+  return await request('GET', '/search', { wordname: term, graph_size: getGraphSize() })
 }

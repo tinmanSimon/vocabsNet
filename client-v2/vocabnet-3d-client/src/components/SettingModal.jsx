@@ -9,8 +9,9 @@ export default function SettingModal({ open, onClose, settings, onUpdate }) {
   }, [settings, open])
 
   const handleChange = (e) => {
-    const updated = { ...local, showNoteOnClick: e.target.checked }
-    setLocal(updated)
+    const { name, type, checked, value } = e.target
+    const newValue = type === 'checkbox' ? checked : parseInt(value, 10) || 0
+    setLocal(prev => ({ ...prev, [name]: newValue }))
   }
 
   const handleSubmit = () => {
@@ -28,11 +29,24 @@ export default function SettingModal({ open, onClose, settings, onUpdate }) {
         <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <input
             type="checkbox"
+            name="showNoteOnClick"
             checked={local.showNoteOnClick}
             onChange={handleChange}
           />
           Show note on word click
         </label>
+
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
+          Graph Size:
+        <input
+          type="number"
+          name="graph_size"
+          value={local.graph_size ?? 0}
+          onChange={handleChange}
+          min={0}
+          style={{ width: '80px', height: '20px' }}
+        />
+      </label>
 
         <div className="adm-actions">
           <button className="btn-submit" onClick={handleSubmit}>Save</button>
