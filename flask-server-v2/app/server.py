@@ -40,7 +40,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 async def get_user_me(user: UserInfo = Depends(get_current_user)):
     if not user:
         raise HTTPException(status_code=401, detail="Token not found")
-    return {"user" : user}
+    return {"user" : user.model_dump(exclude={"hashed_password"})}
 
 @app.post("/api/vocabnet/login", response_model=Token)
 async def login(user_data: UserInfo):
@@ -74,7 +74,7 @@ async def createdata(request: DataCreateRequest, user: UserInfo = Depends(get_cu
         new_detail = f"{addword_msg}{e.detail}"
         raise HTTPException(status_code=e.status_code, detail=new_detail)
     
-    return {"user" : user, "message": "Data created successfully"}
+    return {"user" : user.model_dump(exclude={"hashed_password"}), "message": "Data created successfully"}
 
 # To remove data, all the info should be readily available in the graph.
 # So we validate all data at once, and remove the necessary data all at once.
@@ -83,7 +83,7 @@ async def removedata(request: DataRemoveRequest, user: UserInfo = Depends(get_cu
     if not user:
         raise HTTPException(status_code=401, detail="Token not found")
     await app.state.graph_service.remove_data(request, user)
-    return {"user" : user, "message": "Data removed successfully"}
+    return {"user" : user.model_dump(exclude={"hashed_password"}), "message": "Data removed successfully"}
     
 @app.get("/api/vocabnet/getdata")
 async def getdata(user: UserInfo = Depends(get_current_user)):
@@ -93,7 +93,7 @@ async def getdata(user: UserInfo = Depends(get_current_user)):
     if not isinstance(user_data, dict):
         raise HTTPException(status_code=500, detail="Invalid user data")
     return {
-        "user" : user, 
+        "user" : user.model_dump(exclude={"hashed_password"}), 
         "words" : user_data.get("words", []),
         "edges" : user_data.get("edges", [])
     }
@@ -103,7 +103,7 @@ async def updateNote(request: NoteUpdateRequest, user: UserInfo = Depends(get_cu
     if not user:
         raise HTTPException(status_code=401, detail="Token not found")
     await app.state.graph_service.update_note(request, user)
-    return {"user" : user, "message": "Note updated successfully"}
+    return {"user" : user.model_dump(exclude={"hashed_password"}), "message": "Note updated successfully"}
     
 
 @app.post("/api/vocabnet/cleartestdata")
