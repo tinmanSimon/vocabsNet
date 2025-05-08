@@ -2,7 +2,7 @@ from app.graph import Graph
 from app.graph_cache import GraphCacheManager
 from app.vocab_logger import logger
 from app.validator import Validator
-from core.vocab_types import Word, Edge, UserInfo, DataRemoveRequest, NoteUpdateRequest
+from core.vocab_types import Word, Edge, UserInfo, DataRemoveRequest, NoteUpdateRequest, SearchRequest
 from core.credentials import MONGO_URI, DB_NAME, DEBUG_DB_NAME, CLEAR_DATA_KEY, DEBUG_MODE
 import motor.motor_asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -171,10 +171,20 @@ class GraphService:
         return await self._get_graph(username)
 
     @handle_general_errors
-    async def get_data(self, user: UserInfo):
+    async def get_data(self, user: UserInfo, fetchSize: int = 10):
         username = user.username
         graph = await self._get_graph(username)
-        return graph.get_all_data()
+        if fetchSize < 0:
+            return graph.get_all_data()
+        return graph.get_data(user, fetchSize)
+
+    @handle_general_errors
+    async def search(self, request: SearchRequest, user: UserInfo, fetchSize: int = 10):
+        username = user.username
+        graph = await self._get_graph(username)
+        search_word = request.wordname 
+        await self._validator.validate_search(search_word, graph)
+        return graph.get_data(user, fetchSize, search_word)
     
     @handle_general_errors
     async def add_words(self, words_data: list[Word], user: UserInfo):
