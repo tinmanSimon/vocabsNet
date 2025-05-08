@@ -46,8 +46,7 @@ export async function removeData(data) {
 
 export async function updateNote(data) {
   try {
-    // await request('POST', '/updatenote', { word, note })
-    console.log("updateNote: ", data)
+    await request('POST', '/updatenote', data)
     return data
   } catch (err) {
     const msg = err.message || ''
