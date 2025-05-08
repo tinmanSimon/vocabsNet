@@ -102,3 +102,7 @@ class Validator:
         elif not note:
             raise ValueError(f"Validation Error: trying to update empty note for '{wordname}'!")
     
+    async def validate_search(self, wordname: str, graph: Graph):
+        if not graph.word_exist(wordname): 
+            raise ValueError(f"Validation Error:'{wordname}' doesn't exist in graph!")
+        

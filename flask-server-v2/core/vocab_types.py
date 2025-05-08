@@ -13,6 +13,7 @@ class Token(BaseModel):
 
 class UserInfo(BaseModel):
     username: str
+    last_focused_word: Optional[str] = None
     password: Optional[str] = None 
     hashed_password: Optional[str] = None 
 
@@ -49,6 +50,9 @@ class DataRemoveRequest(BaseModel):
 class NoteUpdateRequest(BaseModel):
     wordname: str
     note: str
+
+class SearchRequest(BaseModel):
+    wordname: str
 
 class ClearTestRequest(BaseModel):
     key: str
