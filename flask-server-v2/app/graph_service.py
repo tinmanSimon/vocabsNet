@@ -179,10 +179,9 @@ class GraphService:
         return graph.get_data(user, fetchSize)
 
     @handle_general_errors
-    async def search(self, request: SearchRequest, user: UserInfo, fetchSize: int = 10):
+    async def search(self, search_word: str, user: UserInfo, fetchSize: int = 10):
         username = user.username
         graph = await self._get_graph(username)
-        search_word = request.wordname 
         await self._validator.validate_search(search_word, graph)
         return graph.get_data(user, fetchSize, search_word)
     
