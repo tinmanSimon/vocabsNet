@@ -149,9 +149,13 @@ function App() {
   }
 
   /* ─── persist note change ─── */
-  const handleNoteUpdate = async (newNote, tag) => {
+  const handleNoteUpdate = async (newNote, tags) => {
     try {
-      const updatedData = await updateNote({ wordname: noteModal.name, note: newNote })
+      const updatedData = await updateNote({ 
+        wordname: noteModal.name, 
+        note: newNote,
+        tags: tags
+      })
       setNoteDict(prev => {
         const newDict = { ...prev, [noteModal.name]: updatedData.note }
         noteDictRef.current = newDict 
