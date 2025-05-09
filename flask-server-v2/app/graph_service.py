@@ -265,3 +265,10 @@ class GraphService:
         )
         await self._save_word_data_to_db(username, wordname, note, tags)
         graph.update_word_data(wordname, note, tags)
+
+    @handle_general_errors
+    async def search_tags(self, tags: list[str], user: UserInfo):
+        username = user.username
+        graph = await self._get_graph(username)
+        return graph.search_tags(tags)
+    
