@@ -301,7 +301,7 @@ export default function WordModal({
         
         <div className="adm-actions">
           <button className="btn-submit"
-            onClick={() => onUpdate ? onUpdate(note,tags) : null}>
+            onClick={() => onUpdate ? onUpdate(note, tags) : null}>
               Update
           </button>
           <button className="btn-cancel" onClick={onClose}>Cancel</button>
