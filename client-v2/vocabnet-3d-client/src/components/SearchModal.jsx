@@ -5,7 +5,7 @@ import './DataModal.css'
 export default function SearchModal({ open, onSearch, onClose }) {
   /* ───── size / position ───── */
   const MIN_W = 320
-  const MIN_H = 260
+  const MIN_H = 160
   const [pos,  setPos]  = useState({ x: 120, y: 120 })
   const [size, setSize] = useState({ width: 420, height: 200 })
 
@@ -76,7 +76,7 @@ export default function SearchModal({ open, onSearch, onClose }) {
 
   return (
     <div
-      className="wm-box"
+      className="wm-search-box"
       style={{ left: pos.x, top: pos.y, width: size.width, height: size.height }}
     >
       {/* header */}

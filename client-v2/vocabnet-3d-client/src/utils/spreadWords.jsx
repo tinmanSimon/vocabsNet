@@ -45,6 +45,83 @@ function segSegDist2(a1,a2,b1,b2) {
 const key = (x, y, z, s) =>
   `${Math.floor(x/s)},${Math.floor(y/s)},${Math.floor(z/s)}`
 
+function connectedComponents(nodes, edges) {
+  const adj = new Map()
+  nodes.forEach(n => adj.set(n.name, []))
+  edges.forEach(e => {
+    const a = e.from ?? e.from_name, b = e.to ?? e.to_name
+    adj.get(a).push(b); adj.get(b).push(a)
+  })
+
+  const seen = new Set(), comps = []
+  for (const n of nodes.map(v => v.name)) {
+    if (seen.has(n)) continue
+    const stack=[n], comp=[]
+    while (stack.length) {
+      const v = stack.pop()
+      if (seen.has(v)) continue
+      seen.add(v); comp.push(v)
+      stack.push(...adj.get(v))
+    }
+    comps.push(comp)
+  }
+  return comps
+}
+
+// translate every node in a component by [dx,dy,dz]
+function translateComponent(pos, comp, dx, dy, dz) {
+  for (const name of comp) {
+    pos[name][0]+=dx; pos[name][1]+=dy; pos[name][2]+=dz
+  }
+}
+
+// main routine
+function separateComponents(nodes, edges, pos, nodeDist, paddingFactor=2.0) {
+  const comps = connectedComponents(nodes, edges)
+  if (comps.length <= 1) return  // nothing to do
+
+  const pad = nodeDist * paddingFactor
+
+  // pre‑compute centroids & radii
+  const info = comps.map(comp => {
+    // centroid
+    let cx=0, cy=0, cz=0
+    comp.forEach(n => { const p=pos[n]; cx+=p[0]; cy+=p[1]; cz+=p[2] })
+    cx/=comp.length; cy/=comp.length; cz/=comp.length
+    // radius = max distance to centroid
+    let r = 0
+    comp.forEach(n => {
+      const p=pos[n]
+      r = Math.max(r, Math.hypot(p[0]-cx,p[1]-cy,p[2]-cz))
+    })
+    return { comp, cx, cy, cz, r }
+  })
+
+  // simple iterative repulsion between component spheres
+  const maxIters = 100
+  for (let iter=0; iter<maxIters; iter++) {
+    let moved = false
+    for (let i=0;i<info.length;i++)
+      for (let j=i+1;j<info.length;j++) {
+        const A=info[i], B=info[j]
+        const dx=A.cx-B.cx, dy=A.cy-B.cy, dz=A.cz-B.cz
+        const dist = Math.hypot(dx,dy,dz) || 1e-6
+        const minDist = A.r + B.r + pad
+        if (dist >= minDist) continue
+        // push them apart equally
+        const push = (minDist - dist) * 0.5
+        const nx = dx/dist, ny=dy/dist, nz=dz/dist
+        translateComponent(pos, A.comp,  nx*push, ny*push, nz*push)
+        translateComponent(pos, B.comp, -nx*push,-ny*push,-nz*push)
+        // update centroids
+        A.cx+= nx*push; A.cy+= ny*push; A.cz+= nz*push
+        B.cx-= nx*push; B.cy-= ny*push; B.cz-= nz*push
+        moved = true
+      }
+    if (!moved) break
+  }
+}
+
 // ---------------------------------------------------------------------------
 
 export default function spreadWords(nodes, edges, opt = {}) {
@@ -168,6 +245,21 @@ export default function spreadWords(nodes, edges, opt = {}) {
 
     // early exit – all movements below 0.1 units ⇒ layout stable
     if (maxMove < 0.1) break
+  }
+
+  separateComponents(nodes, edges, pos, minNN, 0.02)
+
+  {
+    const allPos = Object.values(pos)
+    const cx = allPos.reduce((a, p) => a + p[0], 0) / allPos.length
+    const cy = allPos.reduce((a, p) => a + p[1], 0) / allPos.length
+    const cz = allPos.reduce((a, p) => a + p[2], 0) / allPos.length
+  
+    for (const p of allPos) {
+      p[0] -= cx
+      p[1] -= cy
+      p[2] -= cz
+    }
   }
 
   // --- 4) return new list ---------------------------------------------------

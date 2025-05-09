@@ -59,7 +59,7 @@ const Graph = forwardRef(({ orbitControlsRef, onWordClick, pauseInteraction }, r
   const handleEdgeFadeDone = key =>
     setEdges(prev => prev.filter(e => edgeKey(e) !== key))
 
-  const applyPayload = ({ words = [], edges: edgeArr = [], mode }) => {
+  const applyPayload = ({ words = [], edges: edgeArr = [], mode = '', focus_on_last_word = false }) => {
     if (mode === 'add-data') {
       setNodes(prevNodes => {
         setEdges(prevEdges => {
@@ -120,6 +120,11 @@ const Graph = forwardRef(({ orbitControlsRef, onWordClick, pauseInteraction }, r
           ),
         )
       }
+    }
+
+    if (focus_on_last_word && words.length > 0) {
+      const focusName = words[0].name
+      setTimeout(() => handleWordClick(focusName), 50)
     }
   }
 
