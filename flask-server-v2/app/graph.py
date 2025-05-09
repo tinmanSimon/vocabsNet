@@ -2,12 +2,18 @@ from typing import Set, List, Optional
 from core.vocab_types import Word, Edge, UserInfo
 from typing import Dict, Tuple, List
 from collections import deque
+from datetime import datetime, timedelta
 
+
+TAGS_TIME_WINDOW = timedelta(hours=2)
 
 class Graph:
     def __init__(self):
         self.words: Dict[str, Word] = {}
         self.edges: Dict[Tuple[str, str, str], Edge] = {}
+        self.tagsMeta: Dict[str, int] = {} # tagName : count
+        self.last_hard_update_tags = None
+        
 
     def add_words(self, words: list[Word]):
         for word in words:
@@ -107,7 +113,15 @@ class Graph:
                     edge_seen.add(key)
                     result_edges.append(edge)
 
-        return {"words": result_words, "edges": result_edges}
+        now = datetime.now()
+        if not self.last_hard_update_tags or (now - self.last_hard_update_tags) > TIME_WINDOW:
+            self.update_tags_meta()
+
+        return {
+            "words": result_words, 
+            "edges": result_edges,
+            "tags_meta": self.get_tags_meta()
+        }
 
     def word_exist(self, word_name: str):
         return word_name in self.words
@@ -147,6 +161,27 @@ class Graph:
             to_word = self.words[edge.to_name]
             to_word.incoming.append(edge)
             self.edges[(edge.edge_name, edge.from_name, edge.to_name)] = edge
+
+    # Hard update tags for the entire graph
+    def update_tags_meta(self):
+        self.tagsMeta = {}
+        for word in self.words.values():
+            for tag in word.tags:
+                if tag not in self.tagsMeta:
+                    self.tagsMeta[tag] = 1
+                else:
+                    self.tagsMeta[tag] += 1
+
+    # Soft update tags for existence
+    def update_tags_meta_soft(self, tags: list[str]):
+        for tag in tags:
+            if tag not in self.tagsMeta:
+                self.tagsMeta[tag] = 1
+
+    def get_tags_meta(self):
+        return self.tagsMeta
     
-    def update_note(self, wordname: str, note: str):
+    def update_word_data(self, wordname: str, note: str, tags: list[str]):
         self.words[wordname].note = note
+        self.words[wordname].tags = tags
+        self.update_tags_meta_soft(tags)
