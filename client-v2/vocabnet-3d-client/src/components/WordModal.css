@@ -8,7 +8,7 @@
     box-shadow:0 6px 18px rgba(0,0,0,.25);
     display:flex;
     flex-direction:column;
-    overflow:hidden;
+    overflow:visible;
     resize:none;
   }
 
@@ -40,11 +40,12 @@
   
   /* ── main flex column ── */
   .wm-content{
-    flex:1;
-    display:flex;
-    flex-direction:column;
-    overflow:auto;
-    padding:12px 0 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: visible;     /* ← let child pop out */
+    position: relative;    /* ← anchor for positioning if needed */
+    padding: 12px 0 0;
   }
   
   /* textarea flexes vertically, stays centered horizontally */
@@ -106,3 +107,48 @@
   .wm-sw{bottom:-6px;left:-6px}
   .wm-nw{top:-6px;left:-6px}
   
+/* ───── TAG UI ───── */
+.wm-tag-area{
+  position: relative; 
+  width: 80%;
+  margin: 0 auto;
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;  /* ← important */
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  min-height: 36px;
+  overflow: visible;
+}
+.wm-tag-chip{
+  display:inline-flex; align-items:center;
+  padding:4px 8px; border-radius:12px; font-size:13px; color:#fff;
+  cursor:grab; user-select:none; transition:opacity .15s;
+  transition: transform 150ms ease, opacity 150ms ease;
+}
+.wm-tag-chip:hover{opacity:.85}
+.wm-tag-chip .remove{font-size:10px;margin-left:6px;cursor:pointer;}
+.wm-tag-input{
+  flex:1; min-width:80px; border:none; outline:none;
+  padding:4px; font-size:14px;
+}
+.wm-suggest-list{
+  position: absolute;
+  top: 100%;               /* ← directly below tag input box */
+  left: 0;                 /* align to left edge of tag input */
+  width: 100%;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  max-height: 120px;
+  overflow: auto;
+  z-index: 2200;
+  margin-top: 4px;
+}
+.wm-suggest-item{padding:4px 8px;cursor:pointer;font-size:14px;}
+.wm-suggest-item.hover,.wm-suggest-item:hover{
+  background:#2c3e50;color:#fff;
+}
