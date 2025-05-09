@@ -247,7 +247,7 @@ export default function spreadWords(nodes, edges, opt = {}) {
     if (maxMove < 0.1) break
   }
 
-  separateComponents(nodes, edges, pos, minNN, 0.02)
+  separateComponents(nodes, edges, pos, minNN, 0.5)
 
   {
     const allPos = Object.values(pos)
