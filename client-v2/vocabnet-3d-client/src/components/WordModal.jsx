@@ -50,15 +50,15 @@ export default function WordModal({
   initialNote = '',
   onClose,
   onUpdate,
-  initialTags = ['a', 'b', 'c'],
+  initialTags = ['1', '2', '3'],
   existingTags = ["c", "a", "b", "aaa", "aab", "aac", "aad"],
   debounceMs = 800,
   name = 'Word Note'
 }) {
 
   /* ───────────────── position + size ───────────────── */
-  const MIN_W = 320
-  const MIN_H = 320
+  const MIN_W = 330
+  const MIN_H = 330
 
   const [pos, setPos]   = useState({ x: 200, y: 80 })
   const [size, setSize] = useState({ width: 520, height: 340 })
@@ -163,6 +163,7 @@ export default function WordModal({
   const [tags,setTags]     = useState(initialTags)
   const [tagIn,setTagIn]   = useState('')
   const [hover,setHover]   = useState(-1)
+  const [isTagFocused, setIsTagFocused] = useState(false)
   const dragFrom = useRef(null)
 
   useEffect(() => {
@@ -178,21 +179,21 @@ export default function WordModal({
     setTags(p=>[...p,t]); setTagIn(''); setHover(-1)
   },[tags])
   
-  const suggestions = tagIn
-    ? existingTags.filter(t=>t.toLowerCase().includes(tagIn.toLowerCase()))
-    .filter(t=>!tags.includes(t)).slice(0,8)
-    : []
+  const filteredSuggestions = existingTags
+  .filter(t => t.toLowerCase().includes(tagIn.toLowerCase()))
+  .filter(t => !tags.includes(t))
+  .slice(0, 8)
 
   const tagKey = (e)=>{
     if (e.key === 'ArrowDown') {
       e.preventDefault()
-      setHover(i => Math.min(i + 1, suggestions.length - 1))
+      setHover(i => Math.min(i + 1, filteredSuggestions.length - 1))
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
       setHover(i => Math.max(i - 1, 0))
     } else if (e.key === 'Enter') {
       e.preventDefault()
-      hover > -1 ? addTag(suggestions[hover]) : addTag(tagIn)
+      hover > -1 ? addTag(filteredSuggestions[hover]) : addTag(tagIn)
     } else if (e.key === 'Backspace' && tagIn === '' && tags.length > 0) {
       e.preventDefault()
       setTags(prev => prev.slice(0, -1))
@@ -243,14 +244,7 @@ export default function WordModal({
 
       {/* content area flexes; textarea grows with box */}
       <div className="wm-content">
-        <textarea
-          className="wm-textarea"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Write your note here…"
-        />
-        <Flipper flipKey={tags.join(',')}>
+      <Flipper flipKey={tags.join(',')}>
           <div className="wm-tag-area">
             {tags.map((t, i) => (
               <Flipped key={t} flipId={t}>
@@ -273,11 +267,16 @@ export default function WordModal({
               onChange={e => { setTagIn(e.target.value); setHover(-1) }}
               onKeyDown={tagKey}
               placeholder="add tag…"
+              onFocus={() => setIsTagFocused(true)}
+              onBlur={() => setTimeout(() => setIsTagFocused(false), 150)}
             />
 
-            {suggestions.length > 0 && (
+            {isTagFocused && (
               <div className="wm-suggest-list">
-                {suggestions.map((s, i) => (
+                {(tagIn === '' ? 
+                  existingTags.filter(t => !tags.includes(t)).slice(0, 8) :
+                  filteredSuggestions
+                ).map((s, i) => (
                   <div
                     key={s}
                     className={'wm-suggest-item' + (i === hover ? ' hover' : '')}
@@ -292,6 +291,14 @@ export default function WordModal({
             )}
           </div>
         </Flipper>
+        <textarea
+          className="wm-textarea"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Write your note here…"
+        />
+        
         <div className="adm-actions">
           <button className="btn-submit"
             onClick={() => onUpdate ? onUpdate(note,tags) : null}>
