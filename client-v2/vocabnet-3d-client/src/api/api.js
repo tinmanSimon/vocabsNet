@@ -26,7 +26,6 @@ function getGraphSize() {
 
 export async function getData() {
   const data = await request('GET', '/getdata', {"graph_size" : getGraphSize()})
-  console.log("data: ", data)
   return data
 }
 
@@ -109,24 +108,6 @@ export async function searchWord(term) {
 }
 
 export async function searchByTags(tags){
-  // return request('POST','/searchtags',{ tags, graph_size:getGraphSize() })
-  const test_data = {
-    "user": {
-        "username": "najksdfujweqhdjsbhf",
-        "last_focused_word": null
-    },
-    "words": [
-        {
-            "name": "rtc",
-            "username": "najksdfujweqhdjsbhf",
-        }, {
-          "name": "a",
-          "username": "najksdfujweqhdjsbhf",
-        }, {
-          "name": "aaaa",
-          "username": "najksdfujweqhdjsbhf",
-        }
-    ]
-  }
-  return test_data
+  const data = await request('POST','/searchtags', {tags: tags})
+  return data
 }
