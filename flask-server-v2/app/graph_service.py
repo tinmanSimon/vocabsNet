@@ -2,7 +2,7 @@ from app.graph import Graph
 from app.graph_cache import GraphCacheManager
 from app.vocab_logger import logger
 from app.validator import Validator
-from core.vocab_types import Word, Edge, UserInfo, DataRemoveRequest, NoteUpdateRequest, SearchRequest
+from core.vocab_types import Word, Edge, UserInfo, DataRemoveRequest, WordDataUpdateRequest, SearchRequest
 from core.credentials import MONGO_URI, DB_NAME, DEBUG_DB_NAME, CLEAR_DATA_KEY, DEBUG_MODE
 import motor.motor_asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -114,7 +114,7 @@ class GraphService:
         return True 
 
     @handle_mongo_errors
-    async def _save_note_to_db(self, username: str, wordname: str, note: str) -> bool:
+    async def _save_word_data_to_db(self, username: str, wordname: str, note: str, tags: list[str]) -> bool:
         self._db.words.update_one(
             {
                 "username": username,
@@ -122,7 +122,8 @@ class GraphService:
             },
             {
                 "$set": {
-                    "word_data.note": note
+                    "word_data.note": note,
+                    "word_data.tags": tags
                 }
             }
         )
@@ -252,14 +253,15 @@ class GraphService:
         await self._cache_manager.mark_all_dirty()
 
     @handle_general_errors
-    async def update_note(self, request: NoteUpdateRequest, user: UserInfo):
-        wordname, note = request.wordname, request.note 
+    async def update_word_data(self, request: WordDataUpdateRequest, user: UserInfo):
+        wordname, note, tags = request.wordname, request.note, request.tags
         username = user.username
         graph = await self._get_graph(username)
-        await self._validator.validate_note(
+        await self._validator.validate_word_data(
             wordname, 
             note, 
+            tags,
             graph=graph
         )
-        await self._save_note_to_db(username, wordname, note)
-        graph.update_note(wordname, note)
+        await self._save_word_data_to_db(username, wordname, note, tags)
+        graph.update_word_data(wordname, note, tags)

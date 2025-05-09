@@ -36,6 +36,7 @@ class Word(BaseModel):
     note: Optional[str] = ""
     outgoing: Optional[list[Edge]] = []
     incoming: Optional[list[Edge]] = []
+    tags: Optional[list[str]] = []
 
 class GetRequest(BaseModel):
     graph_size: Optional[int] = 10
@@ -50,9 +51,10 @@ class DataRemoveRequest(BaseModel):
     edges: list[Edge] = [] 
     tags: list[str] = []
 
-class NoteUpdateRequest(BaseModel):
+class WordDataUpdateRequest(BaseModel):
     wordname: str
     note: str
+    tags: Optional[list[str]] = []
 
 class SearchRequest(BaseModel):
     wordname: str
