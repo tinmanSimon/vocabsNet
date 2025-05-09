@@ -31,6 +31,13 @@ function App() {
   const graphRef = useRef(null);
   const controlsRef = useRef()
   const noteDictRef = useRef(noteDict)
+  const [tagDict, setTagDict] = useState({})
+  const tagDictRef = useRef(tagDict)
+  const [existingTags, setExistingTags] = useState([])
+
+  useEffect(() => {
+    tagDictRef.current = tagDict
+  }, [tagDict])
 
   useEffect(() => {
     settingsRef.current = settings
@@ -51,6 +58,12 @@ function App() {
         noteDictRef.current = dict 
         return dict
       })
+
+      const tagD = {}
+      for (const w of data.words || []) {
+        tagD[w.name] = w.tags || []
+      }
+      setTagDict(tagD)
     }
   }
 
@@ -68,6 +81,14 @@ function App() {
     localStorage.setItem('app-settings', JSON.stringify(newSettings))
     if (needRefresh) await refresh()
   }
+
+  const parseExistingTags = (data) => {
+    if (!data || !data.tags_meta) return [];
+  
+    return Object.entries(data.tags_meta)
+      .sort((a, b) => b[1] - a[1])  
+      .map(([tag, _count]) => tag); 
+  };
 
   const gotData = (data) => {
     const uname = data.user.username
@@ -87,6 +108,15 @@ function App() {
       dict[w.name] = w.note || ''
     }
     setNoteDict(dict)
+
+    const tagD = {}
+    for (const w of data.words || []) {
+      tagD[w.name] = w.tags || []
+    }
+    setTagDict(tagD)
+
+    const existingTagsList = parseExistingTags(data)
+    setExistingTags(existingTagsList)
   }
 
   useEffect(() => {
@@ -161,6 +191,16 @@ function App() {
         noteDictRef.current = newDict 
         return newDict
       })
+      setTagDict(prev => {
+        const newDict = { ...prev, [noteModal.name]: tags }
+        tagDictRef.current = newDict
+        return newDict
+      })
+      setExistingTags(prev => {
+        const tagSet = new Set(prev)
+        for (const tag of tags) tagSet.add(tag)
+        return Array.from(tagSet)
+      })
     } finally {
       setNoteModal({ open:false, name:'', note:'' })
     }
@@ -218,6 +258,8 @@ function App() {
             <WordModal
               open={noteModal.open}
               initialNote={noteModal.note}
+              initialTags={tagDict[noteModal.name] || []}
+              existingTags={existingTags}
               onClose={() => setNoteModal({ open:false, name:'', note:'' })}
               onUpdate={handleNoteUpdate}
               debounceMs={600} 

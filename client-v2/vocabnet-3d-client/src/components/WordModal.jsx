@@ -119,14 +119,27 @@ export default function WordModal({
   const [idx, setIdx] = useState(0)
   const debounceRef = useRef(null)
   const undoRedoRef = useRef(false)
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
     if (open) {
       setNote(initialNote)
       setHistory([initialNote])
       setIdx(0)
+      setTags(initialTags)
+      setTagIn('')
+      setHover(-1)
+      setReady(true)
+    } else {
+      setReady(false)
+      setNote('')
+      setTags([])
+      setTagIn('')
+      setHistory([])
+      setIdx(0)
+      setHover(-1)
     }
-  }, [open])
+  }, [open, name])
 
   useEffect(() => {
     if (!open || undoRedoRef.current) return
@@ -165,14 +178,6 @@ export default function WordModal({
   const [hover,setHover]   = useState(-1)
   const [isTagFocused, setIsTagFocused] = useState(false)
   const dragFrom = useRef(null)
-
-  useEffect(() => {
-    if (open) {
-      setTags(initialTags)
-      setTagIn('')
-      setHover(-1)
-    }
-  }, [open])
   
   const addTag = useCallback((t)=>{
     t=t.trim(); if(!t||tags.includes(t))return
@@ -232,7 +237,7 @@ export default function WordModal({
     dragFrom.current = null
   }
 
-  if (!open) return null
+  if (!open || !ready) return null
 
   return (
     <div
