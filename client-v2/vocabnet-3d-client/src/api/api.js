@@ -12,7 +12,7 @@ export async function login(username, password) {
 
 function getGraphSize() {
   const raw = localStorage.getItem('app-settings')
-  let graph_size = 10
+  let graph_size = 30
   try {
     const localSetting = JSON.parse(raw)
     if (localSetting?.graph_size > 0) {
