@@ -59,5 +59,8 @@ class WordDataUpdateRequest(BaseModel):
 class SearchRequest(BaseModel):
     wordname: str
 
+class SearchTagRequest(BaseModel):
+    tags: list[str]
+
 class ClearTestRequest(BaseModel):
     key: str
