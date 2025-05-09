@@ -56,11 +56,12 @@ function App() {
 
   const refresh = async () =>{
     const data = await getData()
-    replaceGraphData(data, "")
+    if (data.words) {
+      replaceGraphData(data, data.words[0].name)
+    }
   }
 
   const handleUpdateSettings = async (newSettings) => {
-    
     const needRefresh = settingsRef.current.graph_size != newSettings.graph_size
     setSettings(newSettings)
     settingsRef.current = newSettings   // ✅ immediate access

@@ -32,7 +32,39 @@ export async function getData() {
 export async function createData(data) {
   try {
     await request('POST', '/createdata', data)
-    console.log("Data creation succeeded");
+    let at_least_one_detached = false
+    const wordSet = new Set(data.words.map(w => w.name));
+
+    for (const word of data.words) {
+      let detachedCreation = true
+      for (const edge of data.edges) {
+        if (edge.from_name === word.name && !wordSet.has(edge.to_name)){
+          detachedCreation = false 
+          break
+        }
+        if (edge.to_name === word.name && !wordSet.has(edge.from_name)){
+          detachedCreation = false 
+          break
+        }
+      }
+      if (detachedCreation) {
+        at_least_one_detached = true 
+        break
+      }
+    }
+
+    for (const edge of data.edges) {
+      if (!wordSet.has(edge.from_name)) {
+        data.words.push({ name: edge.from_name });
+        wordSet.add(edge.from_name);
+      }
+      if (!wordSet.has(edge.to_name)) {
+        data.words.push({ name: edge.to_name });
+        wordSet.add(edge.to_name);
+      }
+    }
+
+    data.focus_on_last_word = !at_least_one_detached
     return data
   } catch (err) {
     const msg = err.message || ''
@@ -42,7 +74,7 @@ export async function createData(data) {
       return {words: data.words, mode: data.mode}
     }
 
-    console.error("Data creation failed entirely");
+    console.error("Data creation failed entirely: ", msg);
     return {}
   }
 }
