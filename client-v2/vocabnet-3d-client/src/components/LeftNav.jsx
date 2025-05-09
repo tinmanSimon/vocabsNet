@@ -11,7 +11,8 @@ export default function LeftNav({
   username, 
   settings, 
   onUpdateSettings,
-  onSearchRequest 
+  onSearchRequest,
+  onSearchTagsRequest
 }) {
   const [open, setOpen] = useState(false)
   const [launchedMenuItem, setLaunchedMenuItem] = useState("")
@@ -62,7 +63,8 @@ export default function LeftNav({
     { label: 'Add Data',    onClick: () => {onModalOpen();setLaunchedMenuItem("add-data")}},
     { label: 'Remove Data', onClick: () => {onModalOpen();setLaunchedMenuItem("remove-data")}},
     { label: 'Settings',    onClick: () => {onModalOpen();setLaunchedMenuItem("settings")}},
-    { label: 'Search',      onClick: () => onSearchRequest() },
+    { label: 'Search Word', onClick: () => onSearchRequest() },
+    { label: 'Search Tags', onClick: () => onSearchTagsRequest() },
     { label: 'Collapse',    onClick: () => setOpen(false) }
   ]
 

@@ -46,57 +46,94 @@ export default function TagInput({
   placeholder="add tag…",
 }){
 
-  const [tagIn,setTagIn]=useState('')
-  const [hover,setHover]=useState(-1)
-  const dragFrom=useRef(null)
+    const [tagIn,setTagIn]=useState('')
+    const [hover,setHover]=useState(-1)
+    const [focused, setFocused] = useState(false)
+    const dragFrom=useRef(null)
 
-  const addTag=useCallback(t=>{
-    t=t.trim();if(!t||value.includes(t))return
-    onChange([...value,t]);setTagIn('');setHover(-1)
-  },[value,onChange])
+    const listRef = useRef(null)
+    const itemRefs = useRef([])
 
-  const filtered=existingTags
-      .filter(t=>t.toLowerCase().includes(tagIn.toLowerCase()))
-      .filter(t=>!value.includes(t))
-      .slice(0,8)
+    const addTag=useCallback(t=>{
+        t=t.trim();if(!t||value.includes(t))return
+        onChange([...value,t]);setTagIn('');setHover(-1)
+    },[value,onChange])
 
-  const tagKey=e=>{
-    if(e.key==='ArrowDown'){e.preventDefault();setHover(i=>Math.min(i+1,filtered.length-1))}
-    else if(e.key==='ArrowUp'){e.preventDefault();setHover(i=>Math.max(i-1,0))}
-    else if(e.key==='Enter'){e.preventDefault();hover>-1?addTag(filtered[hover]):addTag(tagIn)}
-    else if(e.key==='Backspace'&&tagIn===''&&value.length){onChange(value.slice(0,-1))}
-    else hover!==-1&&setHover(-1)
-  }
+    const filtered=existingTags
+        .filter(t=>t.toLowerCase().includes(tagIn.toLowerCase()))
+        .filter(t=>!value.includes(t))
 
-  const rm=i=>onChange(value.filter((_,j)=>j!==i))
-  const dragS=(e,i)=>dragFrom.current=i
-  const dragO=(e,idx)=>{e.preventDefault();const from=dragFrom.current;if(from===idx)return
-    const next=[...value];const[moved]=next.splice(from,1);next.splice(idx,0,moved)
-    onChange(next);dragFrom.current=idx}
-  const dragE=()=>dragFrom.current=null
+    const tagKey=e=>{
+        if (e.key === 'ArrowDown') {
+            e.preventDefault()
+            setHover(i => {
+              const next = Math.min(i + 1, filtered.length - 1)
+              setTimeout(() => itemRefs.current[next]?.scrollIntoView({ block: 'nearest' }), 0)
+              return next
+            })
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault()
+            setHover(i => {
+              const next = Math.max(i - 1, 0)
+              setTimeout(() => itemRefs.current[next]?.scrollIntoView({ block: 'nearest' }), 0)
+              return next
+            })
+          } else if (e.key === 'Enter') {
+            e.preventDefault()
+            hover > -1 ? addTag(filtered[hover]) : addTag(tagIn)
+          } else if (e.key === 'Backspace' && tagIn === '' && value.length) {
+            onChange(value.slice(0, -1))
+          } else if (hover !== -1) {
+            setHover(-1)
+          }
+    }
 
-  return(
-    <Flipper flipKey={value.join(',')}>
-      <div className="wm-tag-area">
-        {value.map((t,i)=>
-          <Flipped key={t} flipId={t}>
-            <div><TagChip tag={t} idx={i} onRemove={rm}
-                          onDragStart={dragS} onDragOver={dragO} onDrop={dragE}/></div>
-          </Flipped>)}
-        <input className="wm-tag-input"
-               value={tagIn}
-               onChange={e=>{setTagIn(e.target.value);setHover(-1)}}
-               onKeyDown={tagKey}
-               placeholder={placeholder}/>
-        {/* suggestions */}
-        {filtered.length>0&&(
-          <div className="wm-suggest-list">
-            {filtered.map((s,i)=>
-              <div key={s} className={'wm-suggest-item'+(i===hover?' hover':'')}
-                   onMouseEnter={()=>setHover(i)}
-                   onMouseLeave={()=>setHover(-1)}
-                   onMouseDown={e=>{e.preventDefault();addTag(s)}}>{s}</div>)}
-          </div>)}
-      </div>
-    </Flipper>)
+    const rm=i=>onChange(value.filter((_,j)=>j!==i))
+    const dragS=(e,i)=>dragFrom.current=i
+    const dragO=(e,idx)=>{
+        e.preventDefault();
+        const from=dragFrom.current;
+        if(from===idx)
+            return
+        const next=[...value];
+        const[moved]=next.splice(from,1);
+        next.splice(idx,0,moved)
+        onChange(next);
+        dragFrom.current=idx
+    }
+    const dragE=()=>dragFrom.current=null
+
+    return(
+        <Flipper flipKey={value.join(',')}>
+        <div className="wm-tag-area">
+            {value.map((t,i)=>
+            <Flipped key={t} flipId={t}>
+                <div><TagChip tag={t} idx={i} onRemove={rm}
+                            onDragStart={dragS} onDragOver={dragO} onDrop={dragE}/></div>
+            </Flipped>)}
+            <input className="wm-tag-input"
+                value={tagIn}
+                onChange={e=>{setTagIn(e.target.value);setHover(-1)}}
+                onKeyDown={tagKey}
+                onFocus={() => setFocused(true)}
+                onBlur={() => setTimeout(() => setFocused(false), 100)}
+                placeholder={placeholder}/>
+            {/* suggestions */}
+            {focused && filtered.length > 0 && (
+            <div className="wm-suggest-list">
+                {filtered.map((s, i) => (
+                    <div
+                        key={s}
+                        ref={el => itemRefs.current[i] = el}
+                        className={'wm-suggest-item' + (i === hover ? ' hover' : '')}
+                        onMouseEnter={() => setHover(i)}
+                        onMouseLeave={() => setHover(-1)}
+                        onMouseDown={e => { e.preventDefault(); addTag(s) }}
+                    >
+                        {s}
+                    </div>
+                ))}
+            </div>)}
+        </div>
+        </Flipper>)
 }
