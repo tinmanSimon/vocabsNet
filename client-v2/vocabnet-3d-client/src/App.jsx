@@ -10,7 +10,8 @@ import LeftNav from './components/LeftNav'
 import WelcomeBanner from "./components/WelcomeBanner"
 import WordModal from './components/WordModal'
 import SearchModal from './components/SearchModal'
-import { searchWord }  from './api/api'
+import SearchTagsModal from './components/SearchTagsModal'
+import { searchWord, searchByTags }  from './api/api'
 
 function App() {
   const [showLogin, setShowLogin] = useState(!getToken())
@@ -34,6 +35,8 @@ function App() {
   const [tagDict, setTagDict] = useState({})
   const tagDictRef = useRef(tagDict)
   const [existingTags, setExistingTags] = useState([])
+  const [searchTagsModal,setSearchTagsModal]=useState({open:false,results:[]})
+
 
   useEffect(() => {
     tagDictRef.current = tagDict
@@ -220,6 +223,17 @@ function App() {
     replaceGraphData(data, term)
   }
 
+  const handleOpenSearchTags=()=>setSearchTagsModal({open:true,results:[]})
+
+  const handleTagSearch=async(selectedTags)=>{
+    if(!selectedTags.length)return
+    const data=await searchByTags(selectedTags)
+    setSearchTagsModal({open:true,results:data.words||[]})
+  }
+
+  const handleWordFromTag=(word)=>{
+    handleSearch(word)        // reuse the existing word‑search flow
+  }
 
   return (
       <div style={{ width: '100vw', height: '100vh' }}>
@@ -234,6 +248,7 @@ function App() {
               settings={settings}
               onUpdateSettings={handleUpdateSettings}
               onSearchRequest={()=>{ setSearchModalOpen(true)}}
+              onSearchTagsRequest={handleOpenSearchTags}
             />
             <Canvas camera={{ position: [0, 0, 50], fov: 60 }} style={{ background: 'lightblue' }}>
               <ambientLight />
@@ -249,7 +264,7 @@ function App() {
                   ref={graphRef} 
                   orbitControlsRef={controlsRef}
                   onWordClick={handleWordClick}
-                  pauseInteraction={noteModal.open || searchModalOpen || modalOpen }
+                  pauseInteraction={noteModal.open || searchModalOpen || modalOpen || searchTagsModal.open }
                 />
               }
               <OrbitControls ref={controlsRef}/>
@@ -269,6 +284,14 @@ function App() {
               open={searchModalOpen}
               onSearch={(term)=>{handleSearch(term)}}
               onClose={()=>setSearchModalOpen(false)}
+            />
+            <SearchTagsModal
+              open={searchTagsModal.open}
+              existingTags={existingTags}
+              results={searchTagsModal.results}
+              onSearch={handleTagSearch}
+              onWordClick={handleWordFromTag}
+              onClose={()=>setSearchTagsModal({open:false,results:[]})}
             />
           </>
         )}
