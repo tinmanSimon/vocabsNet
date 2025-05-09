@@ -62,44 +62,38 @@ const Graph = forwardRef(({ orbitControlsRef, onWordClick, pauseInteraction }, r
   const applyPayload = ({ words = [], edges: edgeArr = [], mode = '', focus_on_last_word = false }) => {
     if (mode === 'add-data') {
       setNodes(prevNodes => {
-        setEdges(prevEdges => {
-          const existing = new Map(prevNodes.map(n => [n.name, n]))
-          const mergedWords = [...prevNodes]
-          let lastNewWord = null
-
-          words.forEach(w => {
-            if (!existing.has(w.name)) {
-              const newWord = {
-                name: w.name,
-                position: randomVecInView(camera),
-                isRemoving: false,
-              }
-              mergedWords.push(newWord)
-              lastNewWord = newWord
-            }
-          })
-
-          const existingKeys = new Set(prevEdges.map(edgeKey))
-          const newEdges = edgeArr.filter(e => !existingKeys.has(edgeKey(e)))
-          const mergedEdges = [
-            ...prevEdges,
-            ...newEdges.map(e => ({ ...e, isRemoving: false })),
-          ]
-
-          const laidOut = spreadWords(mergedWords, mergedEdges, {
-            nodeDistance:        40,
-            edgeDistance:        30,
-            edgeEdgeDistance:    30,
-            iterations:          30,
-            boxSize:             500,
-          })
-
-          setNodes(laidOut)
-          setEdges(mergedEdges)
-          return prevEdges
+        const existing     = new Map(prevNodes.map(n => [n.name, n]))
+        const mergedWords  = [...prevNodes]
+      
+        words.forEach(w => {
+          if (!existing.has(w.name)) {
+            mergedWords.push({
+              name:       w.name,
+              position:   randomVecInView(camera),
+              isRemoving: false,
+            })
+          }
         })
-        return prevNodes
+      
+        const existingEdgeKeys = new Set(edges.map(edgeKey))
+        const mergedEdges = [
+          ...edges,
+          ...edgeArr.filter(e => !existingEdgeKeys.has(edgeKey(e)))
+                     .map(e => ({ ...e, isRemoving: false }))
+        ]
+      
+        setEdges(mergedEdges)              // update edges *once*
+      
+        const laidOut = spreadWords(
+          mergedWords,
+          mergedEdges,
+          { nodeDistance:40, edgeDistance:30, edgeEdgeDistance:30,
+            iterations:30, boxSize:500 }
+        )
+        
+        return laidOut 
       })
+      
     } else if (mode === 'remove-data') {
       if (words.length) {
         setNodes(prev =>
