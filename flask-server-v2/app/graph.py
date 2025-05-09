@@ -185,3 +185,10 @@ class Graph:
         self.words[wordname].note = note
         self.words[wordname].tags = tags
         self.update_tags_meta_soft(tags)
+
+    # Brute force, can be optimized later.
+    def search_tags(self, tags: list[str]):
+        return {
+            "words" : [word for word in self.words.values() if all(tag in word.tags for tag in tags)]
+        }
+    
