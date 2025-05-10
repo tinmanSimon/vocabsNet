@@ -25,16 +25,6 @@ export default function LeftNav({
     setLaunchedMenuItem('')
   }
 
-  const MODALS = {
-    "add-data": <DataModal username={username} open mode="add-data" onSubmit={onDataRequest} onClose={modalClose} />,
-    "remove-data": <DataModal username={username} open mode="remove-data" onSubmit={onDataRequest} onClose={modalClose} />,
-    "settings": <SettingModal open settings={settings} onUpdate={onUpdateSettings} onClose={modalClose} />,
-  }
-  
-  function renderLaunchedModal() {
-    return MODALS[launchedMenuItem] || null
-  }
-
   const dragRef = useRef(null)
   const startDrag = e => {
     dragRef.current = { x: e.clientX, y: e.clientY, origin: pos }
@@ -104,7 +94,21 @@ export default function LeftNav({
           ))}
         </ul>
       )}
-      {renderLaunchedModal()}
+
+      <DataModal 
+        username={username} 
+        open={['add-data', 'remove-data'].includes(launchedMenuItem)}
+        mode={launchedMenuItem}
+        onSubmit={onDataRequest} 
+        onClose={modalClose} 
+      />
+      
+      <SettingModal 
+        open={launchedMenuItem === 'settings'}
+        settings={settings} 
+        onUpdate={onUpdateSettings} 
+        onClose={modalClose} 
+      />
     </div>
   )
 }
