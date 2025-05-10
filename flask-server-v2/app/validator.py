@@ -99,8 +99,6 @@ class Validator:
     async def validate_word_data(self, wordname: str, note: str, tags: list[str], graph: Graph):
         if not graph.word_exist(wordname): 
             raise ValueError(f"Validation Error:'{wordname}' doesn't exist in graph!")
-        elif not note and not tags:
-            raise ValueError(f"Validation Error: trying to update '{wordname}' but the data is empty!")
     
     async def validate_search(self, wordname: str, graph: Graph):
         if not graph.word_exist(wordname): 
