@@ -21,7 +21,7 @@ class Graph:
 
     def get_all_data(self):
         now = datetime.now()
-        if not self.last_hard_update_tags or (now - self.last_hard_update_tags) > TIME_WINDOW:
+        if not self.last_hard_update_tags or (now - self.last_hard_update_tags) > TAGS_TIME_WINDOW:
             self.update_tags_meta()
 
         return {
@@ -119,7 +119,7 @@ class Graph:
                     result_edges.append(edge)
 
         now = datetime.now()
-        if not self.last_hard_update_tags or (now - self.last_hard_update_tags) > TIME_WINDOW:
+        if not self.last_hard_update_tags or (now - self.last_hard_update_tags) > TAGS_TIME_WINDOW:
             self.update_tags_meta()
 
         return {
