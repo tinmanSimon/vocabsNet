@@ -64,7 +64,7 @@
 .adm-edge label { flex:0 0 90px; }      /* same fixed 90 px label */
 
 .adm-edge .edge-field {
-  flex:1 1 0;            /* three equal columns share remaining width */
+  flex:1;            /* three equal columns share remaining width */
   min-width:0;           /* allow shrinking but keep on one line      */
 }
 
@@ -73,6 +73,14 @@
 .adm-row label,
 .adm-edge label { flex:0 0 90px; text-align:left; }
 
+/* EdgeNameInput wrapper so all three columns divide space equally */
+.adm-edge .edge-wrapper{
+  flex: 1 1 0;          /* grow & shrink exactly like .edge-field inputs */
+  min-width: 0;         /* allow shrinking when window is squeezed        */
+  position: relative;   /* keeps suggestion‑list absolutely positioned    */
+  display: flex;        /* vertically center the inner <input>            */
+  align-items: center;
+}
 
 /* ── footer buttons (unchanged) ─────────────────── */
 .adm-actions { 
@@ -98,3 +106,4 @@
   flex: 2;  
   max-width: 33.33%;
 }
+
