@@ -175,6 +175,9 @@ class Graph:
                     self.tagsMeta[tag] = 1
                 else:
                     self.tagsMeta[tag] += 1
+        now = datetime.now()
+        self.last_hard_update_tags = now
+        
 
     # Soft update tags for existence
     def update_tags_meta_soft(self, tags: list[str]):
