@@ -13,6 +13,7 @@ class Graph:
         self.edges: Dict[Tuple[str, str, str], Edge] = {}
         self.tagsMeta: Dict[str, int] = {} # tagName : count
         self.last_hard_update_tags = None
+        self.edgesMeta: Dict[str, int] = {}
         
 
     def add_words(self, words: list[Word]):
@@ -27,7 +28,8 @@ class Graph:
         return {
             "words" : list(self.words.values()),
             "edges" : list(self.edges.values()),
-            "tags_meta": self.get_tags_meta()
+            "tags_meta": self.get_tags_meta(),
+            "edges_meta": self.get_edges_meta()
         }
 
     def get_data(
@@ -125,7 +127,8 @@ class Graph:
         return {
             "words": result_words, 
             "edges": result_edges,
-            "tags_meta": self.get_tags_meta()
+            "tags_meta": self.get_tags_meta(),
+            "edges_meta": self.get_edges_meta()
         }
 
     def word_exist(self, word_name: str):
@@ -166,9 +169,14 @@ class Graph:
             to_word = self.words[edge.to_name]
             to_word.incoming.append(edge)
             self.edges[(edge.edge_name, edge.from_name, edge.to_name)] = edge
+            if edge.edge_name not in self.edgesMeta:
+                self.edgesMeta[edge.edge_name] = 1
 
     # Hard update tags for the entire graph
     def update_tags_meta(self):
+        now = datetime.now()
+        self.last_hard_update_tags = now
+
         self.tagsMeta = {}
         for word in self.words.values():
             for tag in word.tags:
@@ -176,8 +184,13 @@ class Graph:
                     self.tagsMeta[tag] = 1
                 else:
                     self.tagsMeta[tag] += 1
-        now = datetime.now()
-        self.last_hard_update_tags = now
+
+        self.edgesMeta = {}
+        for edge in self.edges.values():
+            if edge.edge_name not in self.edgesMeta:
+                self.edgesMeta[edge.edge_name] = 1
+            else:
+                self.edgesMeta[edge.edge_name] += 1
         
 
     # Soft update tags for existence
@@ -188,6 +201,9 @@ class Graph:
 
     def get_tags_meta(self):
         return self.tagsMeta
+
+    def get_edges_meta(self):
+        return self.edgesMeta
     
     def update_word_data(self, wordname: str, note: str, tags: list[str]):
         self.words[wordname].note = note

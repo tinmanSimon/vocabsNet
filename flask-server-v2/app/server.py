@@ -31,7 +31,8 @@ async def test():
 
 @app.post("/api/vocabnet/register", status_code=status.HTTP_201_CREATED, response_model=RegisterResponse)
 async def register_user(user_data: UserInfo):
-    return await app.state.auth_service.register_user(user_data)
+    return  {}
+    # return await app.state.auth_service.register_user(user_data)
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
     return await app.state.auth_service.get_current_user(token)
@@ -98,7 +99,8 @@ async def getdata(graph_size: int = 10, user: UserInfo = Depends(get_current_use
         "user" : user.model_dump(exclude={"hashed_password", "password"}), 
         "words" : user_data.get("words", []),
         "edges" : user_data.get("edges", []),
-        "tags_meta" : user_data.get("tags_meta", [])
+        "tags_meta" : user_data.get("tags_meta", []),
+        "edges_meta" : user_data.get("edges_meta", [])
     }
 
 @app.post("/api/vocabnet/updatenote")
