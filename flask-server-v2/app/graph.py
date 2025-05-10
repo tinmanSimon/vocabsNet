@@ -20,6 +20,7 @@ class Graph:
             self.words[word.name] = word
 
     def get_all_data(self):
+        now = datetime.now()
         if not self.last_hard_update_tags or (now - self.last_hard_update_tags) > TIME_WINDOW:
             self.update_tags_meta()
 
