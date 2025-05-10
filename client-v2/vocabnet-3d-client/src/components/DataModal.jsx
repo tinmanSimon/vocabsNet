@@ -1,15 +1,16 @@
 import { useState, useEffect, useRef } from 'react'
 import './WordModal.css'            // re‑use draggable / resizable styles
 import './DataModal.css'            // keep existing field/layout styles
+import EdgeNameInput from './EdgeNameInput'
 
-export default function DataModal({ open, username, mode, onClose, onSubmit }) {
+export default function DataModal({ open, username, mode, onClose, onSubmit, existingEdges }) {
   /* ────────────────────────────────────────────────────────────
      Geometry (drag / resize) — identical behaviour to SearchModal
   ──────────────────────────────────────────────────────────── */
   const MIN_W = 560
   const MIN_H = 240
   const [pos,  setPos]  = useState({ x: 160, y: 80 })
-  const [size, setSize] = useState({ width: 600, height: 420 })
+  const [size, setSize] = useState({ width: MIN_W, height: MIN_H })
 
   /* ─── drag whole window ─── */
   const dragRef = useRef(null)
@@ -155,11 +156,10 @@ export default function DataModal({ open, username, mode, onClose, onSubmit }) {
           {edges.map((ed, i) => (
             <div key={`e-${i}`} className="adm-edge">
               <label>Edge {i + 1}</label>
-              <input
-                className="edge-field"
+              <EdgeNameInput
                 value={ed.edge_name}
-                placeholder="Edge Name"
-                onChange={e => updateEdge(i, 'edge_name', e.target.value)}
+                onChange={val => updateEdge(i, 'edge_name', val)}
+                existingEdges={existingEdges}
               />
               <input
                 className="edge-field"

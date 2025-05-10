@@ -35,6 +35,7 @@ function App() {
   const [tagDict, setTagDict] = useState({})
   const tagDictRef = useRef(tagDict)
   const [existingTags, setExistingTags] = useState([])
+  const [existingEdges, setExistingEdges] = useState([])
   const [searchTagsModal,setSearchTagsModal]=useState({open:false,results:[]})
 
 
@@ -93,6 +94,14 @@ function App() {
       .map(([tag, _count]) => tag); 
   };
 
+  const parseExistingEdges = (data) => {
+    if (!data || !data.edges_meta) return [];
+  
+    return Object.entries(data.edges_meta)
+      .sort((a, b) => b[1] - a[1])  
+      .map(([edge, _count]) => edge); 
+  };
+
   const gotData = (data) => {
     const uname = data.user.username
     setUsername(uname)
@@ -120,6 +129,9 @@ function App() {
 
     const existingTagsList = parseExistingTags(data)
     setExistingTags(existingTagsList)
+
+    const existingEdgesList = parseExistingEdges(data)
+    setExistingEdges(existingEdgesList)
   }
 
   useEffect(() => {
@@ -168,6 +180,11 @@ function App() {
     if (data.mode === "add-data") {
       const createdData = await createData(data)
       graphRef.current?.applyPayload(createdData); 
+      setExistingEdges(prev => {
+        const edgeSet = new Set(prev)
+        for (const edge of createdData.edges) edgeSet.add(edge)
+        return Array.from(edgeSet)
+      })
     } else if (data.mode === "remove-data") {
       const removedData = await removeData(data)
       graphRef.current?.applyPayload(removedData); 
@@ -249,6 +266,7 @@ function App() {
               onUpdateSettings={handleUpdateSettings}
               onSearchRequest={()=>{ setSearchModalOpen(true)}}
               onSearchTagsRequest={handleOpenSearchTags}
+              existingEdges={existingEdges}
             />
             <Canvas camera={{ position: [0, 0, 50], fov: 60 }} style={{ background: 'lightblue' }}>
               <ambientLight />

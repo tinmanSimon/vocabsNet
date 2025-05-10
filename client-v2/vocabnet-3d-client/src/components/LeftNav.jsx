@@ -12,7 +12,8 @@ export default function LeftNav({
   settings, 
   onUpdateSettings,
   onSearchRequest,
-  onSearchTagsRequest
+  onSearchTagsRequest,
+  existingEdges
 }) {
   const [open, setOpen] = useState(false)
   const [launchedMenuItem, setLaunchedMenuItem] = useState("")
@@ -101,6 +102,7 @@ export default function LeftNav({
         mode={launchedMenuItem}
         onSubmit={onDataRequest} 
         onClose={modalClose} 
+        existingEdges={existingEdges}
       />
       
       <SettingModal 
