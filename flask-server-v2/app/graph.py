@@ -20,9 +20,13 @@ class Graph:
             self.words[word.name] = word
 
     def get_all_data(self):
+        if not self.last_hard_update_tags or (now - self.last_hard_update_tags) > TIME_WINDOW:
+            self.update_tags_meta()
+
         return {
             "words" : list(self.words.values()),
-            "edges" : list(self.edges.values())
+            "edges" : list(self.edges.values()),
+            "tags_meta": self.get_tags_meta()
         }
 
     def get_data(
