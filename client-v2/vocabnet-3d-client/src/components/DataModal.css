@@ -23,12 +23,42 @@
 .adm-toolbar button { padding:6px 12px; background-color: #d0e0f0;}
 
 .adm-row {
-  display:flex; align-items:center; gap:8px; min-width:min(550px, 70vw);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  width: 100%;
+  box-sizing: border-box;
 }
 .adm-row input { flex:1 0 0; min-width:0; }
 
+.adm-middle {
+   flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* change from center */
+  overflow-y: auto;
+  gap: 8px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.wm-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: hidden;
+  gap: 8px;
+}
+
 .adm-edge {
-  display:flex; align-items:center; gap:8px; min-width:550px; flex-wrap:nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  width: 100%;
+  flex-wrap: nowrap;
+  box-sizing: border-box;
 }
 
 .adm-edge label { flex:0 0 90px; }      /* same fixed 90 px label */
@@ -46,10 +76,11 @@
 
 /* ── footer buttons (unchanged) ─────────────────── */
 .adm-actions { 
-  margin-top: auto;                   /* pushes footer to bottom */
+  margin-top: auto;                   
   display: flex; 
   width: 100%;
-  gap: 0; 
+  gap: 12px;           /* ← previously 0, now adds spacing */
+  box-sizing: border-box;
 }
 
 .btn-submit { 
