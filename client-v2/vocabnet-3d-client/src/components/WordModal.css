@@ -12,6 +12,26 @@
     resize:none;
   }
 
+  /* scrolling area */
+  .wm-body{
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;   /* scrolls when chips > space */
+    position: relative;
+    padding: 12
+  }
+
+/* footer with buttons */
+.wm-footer{
+  padding: 12px 0 16px;
+  border-top: 1px solid #eee;
+  display:flex;
+  justify-content:center;
+  gap:24px;
+  background:#fff;      /* avoids transparency when body scrolls */
+}
+
   .wm-search-box{
     position:fixed;
     z-index:2100;

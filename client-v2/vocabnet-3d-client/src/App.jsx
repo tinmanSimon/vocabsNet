@@ -232,12 +232,16 @@ function App() {
     // 1) local search
     if (graphRef.current?.hasWord(term)) {
       graphRef.current.focusOnWord(term, {suppressClickCallback: true})
+      const existingNote = noteDictRef.current[term.trim()] || ''
+      setNoteModal({ open:noteModal.open, name:term.trim(), note: existingNote })
       return
     }
     
     // 2) server search
     const data = await searchWord(term.trim())
     replaceGraphData(data, term)
+    const existingNote = noteDictRef.current[term.trim()] || ''
+    setNoteModal({ open:noteModal.open, name:term.trim(), note: existingNote })
   }
 
   const handleOpenSearchTags=()=>setSearchTagsModal({open:true,results:[]})
@@ -248,8 +252,8 @@ function App() {
     setSearchTagsModal({open:true,results:data.words||[]})
   }
 
-  const handleWordFromTag=(word)=>{
-    handleSearch(word)        // reuse the existing word‑search flow
+  const handleWordFromTag=(wordname)=>{
+    handleSearch(wordname)        // reuse the existing word‑search flow
   }
 
   return (

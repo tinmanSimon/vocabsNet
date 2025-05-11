@@ -140,8 +140,8 @@ export default function WordModal({
       {/* header (drag handle) */}
       <div className="wm-header" onMouseDown={startDrag}>{name}</div>
 
-      {/* content area flexes; textarea grows with box */}
-      <div className="wm-content">
+      {/* ── BODY that can scroll ──  */}
+      <div className="wm-body">
         <TagInput value={tags}
             onChange={setTags}
             existingTags={existingTags}/>
@@ -152,14 +152,14 @@ export default function WordModal({
           onKeyDown={handleKeyDown}
           placeholder="Write your note here…"
         />
-        
-        <div className="adm-actions">
-          <button className="btn-submit"
-            onClick={() => onUpdate ? onUpdate(note, tags) : null}>
-              Update
-          </button>
-          <button className="btn-cancel" onClick={onClose}>Cancel</button>
-        </div>
+      </div>
+
+      <div className="wm-footer">
+        <button className="btn-submit"
+          onClick={() => onUpdate ? onUpdate(note, tags) : null}>
+            Update
+        </button>
+        <button className="btn-cancel" onClick={onClose}>Cancel</button>
       </div>
 
       {/* eight resize handles */}
