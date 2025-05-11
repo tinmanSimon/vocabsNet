@@ -13,8 +13,8 @@
 export default function forceLayout3D(nodes, edges, opts = {}) {
     const {
       iterations      = 300,
-      kRepel          = 600,
-      kSpring         = 0.04,
+      kRepel          = 20000,
+      kSpring         = 3,
       restLength      = 40,
       initialTemp     = 8,
       coolFactor      = 0.95,

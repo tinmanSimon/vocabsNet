@@ -85,7 +85,7 @@ const Graph = forwardRef(({ orbitControlsRef, onWordClick, pauseInteraction }, r
         setEdges(mergedEdges)
         const laidOut = forceLayout3D(mergedWords, mergedEdges, {
           restLength        : 45,
-          iterations        : 400,
+          iterations        : 60,
           splitComponents: true,    // ⬅ default anyway
           compMargin        : 15,      // little extra breathing room
         })
