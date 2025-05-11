@@ -12,7 +12,7 @@ import * as THREE from 'three'
 import Word from './Word'
 import Edge from './Edge'
 import { randomVecInView } from './utils/randomVecInView'
-import spreadWords from './utils/spreadWords'
+import forceLayout3D from './utils/forceLayout3D'
 import { AxesHelper } from 'three'
 
 
@@ -82,14 +82,13 @@ const Graph = forwardRef(({ orbitControlsRef, onWordClick, pauseInteraction }, r
                      .map(e => ({ ...e, isRemoving: false }))
         ]
       
-        setEdges(mergedEdges)              // update edges *once*
-      
-        const laidOut = spreadWords(
-          mergedWords,
-          mergedEdges,
-          { nodeDistance:40, edgeDistance:30, edgeEdgeDistance:30,
-            iterations:30, boxSize:500 }
-        )
+        setEdges(mergedEdges)
+        const laidOut = forceLayout3D(mergedWords, mergedEdges, {
+          restLength        : 45,
+          iterations        : 400,
+          splitComponents: true,    // ⬅ default anyway
+          compMargin        : 15,      // little extra breathing room
+        })
         
         return laidOut 
       })

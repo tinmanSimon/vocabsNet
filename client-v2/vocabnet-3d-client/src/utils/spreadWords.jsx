@@ -12,8 +12,11 @@
 //   boxSize           : 200  – starting cube for un‑positioned nodes
 //   cellSize          : nodeDistance * 1.1  (for spatial hash)
 
-function sq(x) { return x * x }
-function dot(a, b) { return a[0]*b[0] + a[1]*b[1] + a[2]*b[2] }
+function sq(x){return x*x}
+function dot(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]}
+function len(v){return Math.hypot(...v)}
+function norm(v){const l=len(v)||1e-6;return [v[0]/l,v[1]/l,v[2]/l]}
+function sub(a,b){return[a[0]-b[0],a[1]-b[1],a[2]-b[2]]}
 
 // --- helpers ---------------------------------------------------------------
 
@@ -124,144 +127,179 @@ function separateComponents(nodes, edges, pos, nodeDist, paddingFactor=2.0) {
 
 // ---------------------------------------------------------------------------
 
-export default function spreadWords(nodes, edges, opt = {}) {
-  const minNN   = opt.nodeDistance      ?? 15
-  const minNE   = opt.edgeDistance      ?? 10
-  const minEE   = opt.edgeEdgeDistance  ?? 10
-  const iters   = opt.iterations        ?? 50
-  const box     = opt.boxSize           ?? 200
-  const cell    = opt.cellSize          ?? minNN * 1.1
+export default function spreadWords(
+  nodes,
+  edges,
+  options = {}
+){
+  // ─────────── parameters & derived values
+  const {
+    nodeDistance       =15,
+    edgeDistance       =10,
+    edgeEdgeDistance   =10,
+    idealEdgeLength    =nodeDistance*1.2,
+    maxEdgeFactor      =2,
+    iterations         =50,
+    boxSize            =200,
+    cellSize           =nodeDistance*1.1,
+    new_nodes          =[],
+    camera             =null,
+    concave        = true,
+    concaveStrength= 0.25,
+  } = options
 
-  const pos = {}, vel = {}, frozen = {}
+  const newSet = new Set(new_nodes)
+  const maxEdgeLength = idealEdgeLength*maxEdgeFactor
+  const desiredRadius = Math.max(nodeDistance * Math.cbrt(nodes.length) * 1.15, nodeDistance * 3);  
 
-  // --- 1) initialise positions --------------------------------------------
-  for (const n of nodes) {
-    if (Array.isArray(n.position) && n.position.length === 3) {
-      pos[n.name]   = [...n.position]
-      frozen[n.name]= true
-    } else {
-      pos[n.name]   = [
-        (Math.random()-.5)*box,
-        (Math.random()-.5)*box,
-        (Math.random()-.5)*box,
-      ]
-      frozen[n.name]= false
-    }
-    vel[n.name] = [0,0,0]
+  // ─────────── state vectors
+  const pos  = {}   // name -> [x,y,z]
+  const vel  = {}
+  const frozen = {} // bool
+
+  // helper to seed brand‑new nodes directly in front of the camera
+  function seedInView(){
+    if(!camera)return[(Math.random()-.5)*boxSize,(Math.random()-.5)*boxSize,(Math.random()-.5)*boxSize]
+    const {position:[cx,cy,cz],direction:[dx,dy,dz]} = camera
+    const dir = norm([dx,dy,dz])
+    // push 1½ × ideal length away from camera, then jitter slightly
+    return [
+      cx + dir[0] * desiredRadius + (Math.random() - .5) * nodeDistance * .3,
+      cx + dir[1] * desiredRadius + (Math.random() - .5) * nodeDistance * .3,
+      cx + dir[2] * desiredRadius + (Math.random() - .5) * nodeDistance * .3,
+    ]
   }
 
-  // --- 2) unfreeze overlapping frozen nodes --------------------------------
-  for (let i=0;i<nodes.length;i++)
-    for (let j=i+1;j<nodes.length;j++) {
-      const a = nodes[i].name, b = nodes[j].name
-      if (!(frozen[a]&&frozen[b])) continue
-      const dx=pos[a][0]-pos[b][0], dy=pos[a][1]-pos[b][1], dz=pos[a][2]-pos[b][2]
-      if (Math.hypot(dx,dy,dz) < minNN) { frozen[a]=frozen[b]=false }
+  // ─────────── 1) initialise positions
+  for(const n of nodes){
+    if(Array.isArray(n.position)&&n.position.length===3){
+      pos[n.name]=[...n.position]
+      frozen[n.name]=!newSet.has(n.name)        // newly‑added nodes always start unfrozen
+    }else{
+      pos[n.name]= newSet.has(n.name) ? seedInView()
+                   : [(Math.random()-.5)*boxSize,(Math.random()-.5)*boxSize,(Math.random()-.5)*boxSize]
+      frozen[n.name]=false
     }
+    vel[n.name]=[0,0,0]
+  }
 
-  // --- 3) main relaxation ---------------------------------------------------
-  for (let step=0; step<iters; step++) {
-
-    // 3a) reset velocities + build spatial hash for quick neighbour look‑up
-    const buckets = new Map()
-    for (const n of nodes) {
-      if (!frozen[n.name]) vel[n.name] = [0,0,0]
-      const [x,y,z] = pos[n.name]
-      const k = key(x,y,z,cell)
+  // ─────────── 2) relax
+  for(let step=0;step<iterations;step++){
+    // 2a) build spatial hash + zero velocities
+    const buckets=new Map()
+    for(const n of nodes){
+      if(!frozen[n.name]) vel[n.name]=[0,0,0]
+      const p=pos[n.name],k=key(p[0],p[1],p[2],cellSize)
       ;(buckets.get(k)||buckets.set(k,[]).get(k)).push(n.name)
     }
-
-    // helper to iterate neighbours in ±1 cell cube
-    const near = ([x,y,z]) => {
-      const res=[]
-      const X=Math.floor(x/cell), Y=Math.floor(y/cell), Z=Math.floor(z/cell)
+    const neighbours=([x,y,z])=>{
+      const res=[],X=Math.floor(x/cellSize),Y=Math.floor(y/cellSize),Z=Math.floor(z/cellSize)
       for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++)for(let k=-1;k<=1;k++){
         const b=buckets.get(`${X+i},${Y+j},${Z+k}`); if(b) res.push(...b)
       }
       return res
     }
 
-    // 3b) node‑node
-    for (const n of nodes) {
-      const a = n.name, pa = pos[a], neigh = near(pa)
-      for (const b of neigh) {
-        if (a >= b) continue                    // avoid dup pairs
-        const pb = pos[b]
-        const dx=pa[0]-pb[0], dy=pa[1]-pb[1], dz=pa[2]-pb[2]
-        const dist = Math.hypot(dx,dy,dz)
-        if (dist >= minNN || dist===0) continue
-        const push = (minNN - dist) * 0.5
-        const nx=dx/dist, ny=dy/dist, nz=dz/dist
-        if (!frozen[a]) { vel[a][0]+=nx*push; vel[a][1]+=ny*push; vel[a][2]+=nz*push }
-        if (!frozen[b]) { vel[b][0]-=nx*push; vel[b][1]-=ny*push; vel[b][2]-=nz*push }
+    // 2b) node‑node repulsion (minimum distance)
+    for(const aNode of nodes){
+      const a=aNode.name,pa=pos[a],neighboursA=neighbours(pa)
+      for(const b of neighboursA){
+        if(a>=b)continue
+        const pb=pos[b],delta=sub(pa,pb),d=len(delta)
+        if(d===0||d>=nodeDistance)continue
+        const push=(nodeDistance-d)*0.5,normD=delta.map(v=>v/d)
+        if(!frozen[a]) vel[a]=vel[a].map((v,i)=>v+normD[i]*push)
+        if(!frozen[b]) vel[b]=vel[b].map((v,i)=>v-normD[i]*push)
       }
     }
 
-    // 3c) node‑edge
-    for (const n of nodes) {
-      if (frozen[n.name]) continue
-      const [px,py,pz]=pos[n.name]
-      for (const e of edges) {
-        const f   = e.from ?? e.from_name,  t = e.to ?? e.to_name
-        if (f===n.name || t===n.name) continue
-        const [ax,ay,az]=pos[f], [bx,by,bz]=pos[t]
-        const [qx,qy,qz]=closestPointOnSegment(px,py,pz,ax,ay,az,bx,by,bz)
-        const dx=px-qx, dy=py-qy, dz=pz-qz, dist=Math.hypot(dx,dy,dz)
-        if (dist>=minNE || dist===0) continue
-        const push = (minNE - dist)
-        vel[n.name][0]+=dx/dist*push
-        vel[n.name][1]+=dy/dist*push
-        vel[n.name][2]+=dz/dist*push
+    // 2c) node‑edge clearance
+    for(const n of nodes){
+      if(frozen[n.name])continue
+      const p=pos[n.name]
+      for(const e of edges){
+        const f=e.from_name??e.from,t=e.to_name??e.to
+        if(f===n.name||t===n.name)continue
+        const [ax,ay,az]=pos[f],[bx,by,bz]=pos[t]
+        const [qx,qy,qz]=closestPointOnSegment(p[0],p[1],p[2],ax,ay,az,bx,by,bz)
+        const delta=[p[0]-qx,p[1]-qy,p[2]-qz],d=len(delta)
+        if(d===0||d>=edgeDistance)continue
+        const push=(edgeDistance-d)
+        const normD=delta.map(v=>v/d)
+        vel[n.name]=vel[n.name].map((v,i)=>v+normD[i]*push)
       }
     }
 
-    // 3d) edge‑edge  (keep it simple but deterministic)
-    for (let i=0;i<edges.length;i++)
-      for (let j=i+1;j<edges.length;j++) {
-        const e1=edges[i], e2=edges[j]
-        const f1=e1.from??e1.from_name, t1=e1.to??e1.to_name
-        const f2=e2.from??e2.from_name, t2=e2.to??e2.to_name
-        const A1=pos[f1], A2=pos[t1], B1=pos[f2], B2=pos[t2]
-        const [d2, P, Q] = segSegDist2(A1,A2,B1,B2)
-        if (d2 >= sq(minEE) || d2===0) continue
-        const dist = Math.sqrt(d2)
-        const push = (minEE - dist) * 0.25
-        const nx = (P[0]-Q[0])/dist, ny=(P[1]-Q[1])/dist, nz=(P[2]-Q[2])/dist
-        for (const node of [f1,t1])
-          if (!frozen[node]) { vel[node][0]+=nx*push; vel[node][1]+=ny*push; vel[node][2]+=nz*push }
-        for (const node of [f2,t2])
-          if (!frozen[node]) { vel[node][0]-=nx*push; vel[node][1]-=ny*push; vel[node][2]-=nz*push }
+    // 2d) edge‑edge clearance
+    for(let i=0;i<edges.length;i++)
+      for(let j=i+1;j<edges.length;j++){
+        const e1=edges[i],e2=edges[j]
+        const f1=e1.from_name??e1.from,t1=e1.to_name??e1.to
+        const f2=e2.from_name??e2.from,t2=e2.to_name??e2.to
+        const [d2,P,Q]=segSegDist2(pos[f1],pos[t1],pos[f2],pos[t2])
+        if(d2===0||d2>=sq(edgeEdgeDistance))continue
+        const d=Math.sqrt(d2),push=(edgeEdgeDistance-d)*0.25,normD=sub(P,Q).map(v=>v/d)
+        for(const node of[f1,t1])
+          if(!frozen[node]) vel[node]=vel[node].map((v,i)=>v+normD[i]*push)
+        for(const node of[f2,t2])
+          if(!frozen[node]) vel[node]=vel[node].map((v,i)=>v-normD[i]*push)
       }
 
-    // 3e) integrate  (light friction to damp oscillations)
-    let maxMove = 0
-    for (const n of nodes) {
-      if (frozen[n.name]) continue
-      const v = vel[n.name]
-      v[0]*=0.6; v[1]*=0.6; v[2]*=0.6            // friction
-      pos[n.name][0]+=v[0]; pos[n.name][1]+=v[1]; pos[n.name][2]+=v[2]
-      maxMove = Math.max(maxMove, Math.hypot(...v))
+    // 2e) edge‑spring attraction (keep edges from getting too long)
+    for(const e of edges){
+      const f=e.from_name??e.from,t=e.to_name??e.to
+      const a=pos[f],b=pos[t],delta=sub(b,a),d=len(delta)||1e-6
+      const isNewEdge = newSet.has(f)||newSet.has(t)
+      const limit = isNewEdge ? maxEdgeLength*2 : maxEdgeLength
+      if(d<=limit) continue
+      // if both nodes are currently frozen, loosen them a bit so they can move
+      if(frozen[f]&&frozen[t]){frozen[f]=false; frozen[t]=false}
+      const pull=(d-limit)*0.5
+      const normD=delta.map(v=>v/d)
+      if(!frozen[f]) vel[f]=vel[f].map((v,i)=>v+normD[i]*pull)
+      if(!frozen[t]) vel[t]=vel[t].map((v,i)=>v-normD[i]*pull)
     }
 
-    // early exit – all movements below 0.1 units ⇒ layout stable
-    if (maxMove < 0.1) break
+    // 2f) integrate + damping
+    let maxMove=0
+    for(const n of nodes){
+      if(frozen[n.name])continue
+      const v=vel[n.name]
+      v[0]*=0.6;v[1]*=0.6;v[2]*=0.6
+      pos[n.name][0]+=v[0];pos[n.name][1]+=v[1];pos[n.name][2]+=v[2]
+      maxMove=Math.max(maxMove,len(v))
+    }
+
+    // 2g) concavity – hollow out the middle so nodes hug a shell
+    if (concave) {
+      for (const n of nodes) {
+        if (frozen[n.name]) continue
+        const p = pos[n.name]
+        const r = len(p) || 1e-6
+        const dir = p.map(v => v / r)          // unit vector from centre → node
+        const delta = desiredRadius - r        // +ve means “inside” the shell
+        // ‑ inside: push outward strongly ‑ //
+        // ‑ outside: let it drift back in very gently (1/5 the force) ‑ //
+        const factor = delta > 0 ?  concaveStrength
+                                :  concaveStrength * 0.2
+        for (let i = 0; i < 3; i++)
+          vel[n.name][i] += dir[i] * delta * factor
+      }
+    }
+
+    if(maxMove<0.05) break   // stable enough
   }
 
-  separateComponents(nodes, edges, pos, minNN, 0.5)
+  // 2h) quick component‑separation pass (same as before)
+  separateComponents(nodes, edges, pos, nodeDistance, 0.5)
 
-  {
-    const allPos = Object.values(pos)
-    const cx = allPos.reduce((a, p) => a + p[0], 0) / allPos.length
-    const cy = allPos.reduce((a, p) => a + p[1], 0) / allPos.length
-    const cz = allPos.reduce((a, p) => a + p[2], 0) / allPos.length
-  
-    for (const p of allPos) {
-      p[0] -= cx
-      p[1] -= cy
-      p[2] -= cz
-    }
-  }
+  // 3) centre everything around origin (unchanged)
+  const all=Object.values(pos)
+  const cx=all.reduce((s,p)=>s+p[0],0)/all.length
+  const cy=all.reduce((s,p)=>s+p[1],0)/all.length
+  const cz=all.reduce((s,p)=>s+p[2],0)/all.length
+  for(const p of all){p[0]-=cx;p[1]-=cy;p[2]-=cz}
 
-  // --- 4) return new list ---------------------------------------------------
-  return nodes.map(n => ({ ...n, position: pos[n.name] }))
+  // 4) pack results back out
+  return nodes.map(n=>({...n,position:pos[n.name]}))
 }
