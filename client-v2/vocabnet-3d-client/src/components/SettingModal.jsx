@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import './DataModal.css'
+import "./ModalScaffold.css"
 
 export default function SettingModal({ open, onClose, settings, onUpdate }) {
   const [local, setLocal] = useState(settings)

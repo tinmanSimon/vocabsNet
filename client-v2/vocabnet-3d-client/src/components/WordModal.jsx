@@ -1,77 +1,19 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { Flipper, Flipped } from 'react-flip-toolkit'
+import { useState, useEffect, useRef } from 'react'
 import TagInput from './TagInput'
 import './WordModal.css'
 import './DataModal.css'
+import ModalScaffold from './ModalScaffold'
 
 export default function WordModal({
   open,
   initialNote = '',
   onClose,
   onUpdate,
-  initialTags = ['1', '2', '3'],
-  existingTags = ["c", "a", "b", "aaa", "aab", "aac", "aad"],
+  initialTags = [],
+  existingTags = [],
   debounceMs = 800,
   name = 'Word Note'
 }) {
-
-  /* ───────────────── position + size ───────────────── */
-  const MIN_W = 330
-  const MIN_H = 330
-
-  const [pos, setPos]   = useState({ x: 200, y: 80 })
-  const [size, setSize] = useState({ width: 520, height: 340 })
-
-  /* ─── drag whole window ─── */
-  const dragRef = useRef(null)
-  const startDrag = (e) => {
-    dragRef.current = { sx: e.clientX, sy: e.clientY, ox: pos.x, oy: pos.y }
-    window.addEventListener('mousemove', moveDrag)
-    window.addEventListener('mouseup', endDrag)
-  }
-  const moveDrag = (e) => {
-    const { sx, sy, ox, oy } = dragRef.current
-    setPos({ x: ox + e.clientX - sx, y: oy + e.clientY - sy })
-  }
-  const endDrag = () => {
-    window.removeEventListener('mousemove', moveDrag)
-    window.removeEventListener('mouseup', endDrag)
-  }
-
-  /* ─── resize from any edge / corner ─── */
-  const startResize = (e, dir) => {
-    e.preventDefault(); e.stopPropagation()
-    const { clientX: sx, clientY: sy } = e
-    const { width: sw, height: sh }   = size
-    const { x: sl, y: st }            = pos
-
-    const onMove = (e) => {
-      let dx = e.clientX - sx
-      let dy = e.clientY - sy
-      let w  = sw, h = sh, nx = sl, ny = st
-
-      if (dir.includes('e')) w = Math.max(MIN_W, sw + dx)
-      if (dir.includes('s')) h = Math.max(MIN_H, sh + dy)
-      if (dir.includes('w')) {
-        w  = Math.max(MIN_W, sw - dx)
-        nx = sl + (sw - w)             // move left edge with cursor
-      }
-      if (dir.includes('n')) {
-        h  = Math.max(MIN_H, sh - dy)
-        ny = st + (sh - h)             // move top edge with cursor
-      }
-      setSize({ width: w, height: h })
-      setPos({ x: nx, y: ny })
-    }
-
-    const onUp = () => {
-      window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('mouseup', onUp)
-    }
-    window.addEventListener('mousemove', onMove)
-    window.addEventListener('mouseup', onUp)
-  }
-
   /* ───────────────── note + history (unchanged) ───────────────── */
   const [note, setNote] = useState('')
   const [history, setHistory] = useState([initialNote])
@@ -128,18 +70,20 @@ export default function WordModal({
     setTimeout(() => { undoRedoRef.current = false }, 0)
   }
 
-  const [tags,setTags]     = useState(initialTags)
-
-  if (!open || !ready) return null
+  const [tags, setTags] = useState(initialTags)
 
   return (
-    <div
+    <ModalScaffold
+      title="Word Info"
       className="wm-box"
-      style={{ left: pos.x, top: pos.y, width: size.width, height: size.height }}
+      onClose={onClose}
+      onSubmit={() => onUpdate(note, tags)}
+      visible={open && ready}
+      minWidth={330}
+      minHeight={330}
+      initialPos={{ x: 200, y: 80 }}
+      initialSize={{ width: 330, height: 330 }}
     >
-      {/* header (drag handle) */}
-      <div className="wm-header" onMouseDown={startDrag}>{name}</div>
-
       {/* ── BODY that can scroll ──  */}
       <div className="wm-body">
         <TagInput value={tags}
@@ -153,23 +97,6 @@ export default function WordModal({
           placeholder="Write your note here…"
         />
       </div>
-
-      <div className="wm-footer">
-        <button className="btn-submit"
-          onClick={() => onUpdate ? onUpdate(note, tags) : null}>
-            Update
-        </button>
-        <button className="btn-cancel" onClick={onClose}>Cancel</button>
-      </div>
-
-      {/* eight resize handles */}
-      {['n','e','s','w','ne','se','sw','nw'].map(dir => (
-        <div
-          key={dir}
-          className={`wm-resize-handle wm-${dir}`}
-          onMouseDown={(e) => startResize(e, dir)}
-        />
-      ))}
-    </div>
+    </ModalScaffold>
   )
 }

@@ -2,70 +2,11 @@ import { useState, useEffect, useRef } from 'react'
 import './WordModal.css'            // re‑use draggable / resizable styles
 import './DataModal.css'            // keep existing field/layout styles
 import EdgeNameInput from './EdgeNameInput'
+import ModalScaffold from './ModalScaffold'
 
-export default function DataModal({ open, username, mode, onClose, onSubmit, existingEdges }) {
-  /* ────────────────────────────────────────────────────────────
-     Geometry (drag / resize) — identical behaviour to SearchModal
-  ──────────────────────────────────────────────────────────── */
-  const MIN_W = 560
-  const MIN_H = 240
-  const [pos,  setPos]  = useState({ x: 160, y: 80 })
-  const [size, setSize] = useState({ width: MIN_W, height: MIN_H })
-
-  /* ─── drag whole window ─── */
-  const dragRef = useRef(null)
-  const startDrag = (e) => {
-    dragRef.current = { sx: e.clientX, sy: e.clientY, ox: pos.x, oy: pos.y }
-    window.addEventListener('mousemove', moveDrag)
-    window.addEventListener('mouseup',  endDrag)
-  }
-  const moveDrag = (e) => {
-    const { sx, sy, ox, oy } = dragRef.current
-    setPos({ x: ox + e.clientX - sx, y: oy + e.clientY - sy })
-  }
-  const endDrag = () => {
-    window.removeEventListener('mousemove', moveDrag)
-    window.removeEventListener('mouseup',  endDrag)
-  }
-
-  /* ─── resize from edges / corners ─── */
-  const startResize = (e, dir) => {
-    e.preventDefault(); e.stopPropagation()
-    const { clientX: sx, clientY: sy } = e
-    const { width: sw, height: sh }   = size
-    const { x: sl, y: st }            = pos
-
-    const onMove = (e) => {
-      let dx = e.clientX - sx, dy = e.clientY - sy
-      let w = sw, h = sh, nx = sl, ny = st
-
-      if (dir.includes('e')) w = Math.max(MIN_W, sw + dx)
-      if (dir.includes('s')) h = Math.max(MIN_H, sh + dy)
-      if (dir.includes('w')) {
-        let desiredW = sw - dx
-        if (desiredW < MIN_W) { desiredW = MIN_W; dx = sw - MIN_W }
-        w  = desiredW
-        nx = sl + dx
-      }
-      if (dir.includes('n')) {
-        let desiredH = sh - dy
-        if (desiredH < MIN_H) { desiredH = MIN_H; dy = sh - MIN_H }
-        h  = desiredH
-        ny = st + dy
-      }
-
-      setSize({ width: w, height: h })
-      setPos({ x: nx,    y: ny })
-    }
-
-    const onUp = () => {
-      window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('mouseup',   onUp)
-    }
-    window.addEventListener('mousemove', onMove)
-    window.addEventListener('mouseup',   onUp)
-  }
-
+export default function DataModal({ 
+  open, username, mode, onClose, onSubmit, existingEdges 
+}) {
   /* ────────────────────────────────────────────────────────────
      Form state (copied from original DataModal)
   ──────────────────────────────────────────────────────────── */
@@ -116,23 +57,20 @@ export default function DataModal({ open, username, mode, onClose, onSubmit, exi
     initWordsEdges()
   }
 
-  if (!open || !ready) return null
-
-  /* ────────────────────────────────────────────────────────────
-     Render
-  ──────────────────────────────────────────────────────────── */
   return (
-    <div
-      className="wm-search-box"         /* same look‑and‑feel as other modals */
-      style={{ left: pos.x, top: pos.y, width: size.width, height: size.height }}
+    <ModalScaffold
+      title={actionLabel}
+      className="wm-box"
+      onClose={onClose}
+      onSubmit={handleSubmit}
+      submitButtonText = {actionLabel}
+      visible={open && ready}
+      minWidth={560}
+      minHeight={240}
+      initialPos={{ x: 200, y: 80 }}
+      initialSize={{ width: 560, height: 240 }}
     >
-      {/* ── header / drag handle ── */}
-      <div className="wm-header" onMouseDown={startDrag}>
-        {isAdd ? 'Add Data' : 'Remove Data'}
-      </div>
-
-      {/* ── scrollable content inside a <form> ── */}
-      <form className="wm-content" style={{ overflowY: 'auto', gap: 8 }} onSubmit={handleSubmit}>
+      <div className="wm-content" style={{ overflowY: 'auto', gap: 8 }}>
         {/* toolbar */}
         <div className="adm-toolbar">
           <button type="button" onClick={addWordRow}>{wordLabel}</button>
@@ -184,24 +122,7 @@ export default function DataModal({ open, username, mode, onClose, onSubmit, exi
             </div>
           ))}
         </div>
-
-        
-
-        {/* actions */}
-        <div className="adm-actions">
-          <button type="submit" className="btn-submit">{actionLabel}</button>
-          <button type="button" className="btn-cancel" onClick={onClose}>Cancel</button>
-        </div>
-      </form>
-
-      {/* ── resize handles ── */}
-      {['n','e','s','w','ne','se','sw','nw'].map(dir => (
-        <div
-          key={dir}
-          className={`wm-resize-handle wm-${dir}`}
-          onMouseDown={(e) => startResize(e, dir)}
-        />
-      ))}
-    </div>
+      </div>
+    </ModalScaffold>
   )
 }

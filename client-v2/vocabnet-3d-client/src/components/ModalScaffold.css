@@ -1,0 +1,117 @@
+/* modal-frame covers shared structure */
+.modal-frame {
+    position:fixed;
+    z-index:2000;
+    min-width:320px;
+    min-height:160px;
+    background:#fff;
+    border-radius:8px;
+    box-shadow:0 6px 18px rgba(0,0,0,.25);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    resize:none;
+  }
+  
+  /* title bar */
+  .modal-header {
+    height:36px;
+    background:#2c3e50;
+    color:#ecf0f1;
+    display:flex;
+    align-items:center;
+    padding:0 12px;
+    user-select:none;
+    cursor:move;
+    border-radius:8px 8px 0 0;
+    justify-content: center;
+  }
+
+  .modal-body{
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;   /* scrolls when chips > space */
+    position: relative;
+    padding: 12
+  }
+
+  .modal-footer{
+    padding: 12px 0 16px;
+    border-top: 1px solid #eee;
+    display:flex;
+    justify-content:center;
+    gap:24px;
+    background:#fff;      /* avoids transparency when body scrolls */
+  }
+
+  .btn-submit { 
+    justify-self: center; 
+    padding: 6px 14px; 
+    background-color: #f0f0f0;
+    flex: 1;  
+    max-width: 33.33%;
+  }
+  
+  .btn-cancel { 
+    justify-self: center; 
+    padding: 6px 14px; 
+    background-color: #f0f0f0;
+    flex: 2;  
+    max-width: 33.33%;
+  }
+  
+  /* shared resize handles */
+  .resize-handle {
+    position:absolute;
+    background:transparent;
+    z-index:2000;
+  }
+
+/* ── Shared handles ─────────────────────────── */
+.resize-handle {
+    position: absolute;
+    background: transparent;
+    z-index: 2000;
+  }
+  
+  /* ── Vertical handles (north/south) ─────────── */
+  .resize-handle-n,
+  .resize-handle-s {
+    height: 6px;
+    left: 0;
+    right: 0;
+    cursor: ns-resize;
+  }
+  .resize-handle-n { top: -3px; }
+  .resize-handle-s { bottom: -3px; }
+  
+  /* ── Horizontal handles (east/west) ─────────── */
+  .resize-handle-e,
+  .resize-handle-w {
+    width: 6px;
+    top: 0;
+    bottom: 0;
+    cursor: ew-resize;
+  }
+  .resize-handle-e { right: -3px; }
+  .resize-handle-w { left: -3px; }
+  
+  /* ── Corner handles ─────────────────────────── */
+  .resize-handle-ne,
+  .resize-handle-sw {
+    width: 12px;
+    height: 12px;
+    cursor: nesw-resize;
+  }
+  .resize-handle-ne { top: -6px; right: -6px; }
+  .resize-handle-sw { bottom: -6px; left: -6px; }
+  
+  .resize-handle-nw,
+  .resize-handle-se {
+    width: 12px;
+    height: 12px;
+    cursor: nwse-resize;
+  }
+  .resize-handle-nw { top: -6px; left: -6px; }
+  .resize-handle-se { bottom: -6px; right: -6px; }
