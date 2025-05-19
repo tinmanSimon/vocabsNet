@@ -27,6 +27,10 @@ export default function ModalScaffold({
 
   const expand = () => {
     setCollapsed(false)
+    setShowContent(false)
+    setTimeout(() => {
+      setShowContent(true)
+    }, 800) // matches CSS transition duration
   }
   const onHeaderClick = ()=>{ if (collapsedRef.current) expand() }
 
@@ -55,11 +59,11 @@ export default function ModalScaffold({
       }}
     >
       <div className="modal-header" onMouseDown={startDrag}>
-        {!collapsed && title}
-        {collapsed && 'C'}
+        {!collapsed && showContent && title}
+        {collapsed && showContent && 'C'}
       </div>
 
-        {!collapsed && (
+        {!collapsed && showContent && (
           <>
             <div className="modal-body">
               {children}
