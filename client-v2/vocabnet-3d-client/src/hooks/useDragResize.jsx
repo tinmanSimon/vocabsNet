@@ -11,6 +11,7 @@ export default function useDragResize({
   /* ───────── state ───────── */
   const [pos,  setPos]  = useState(initialPos)
   const [size, setSize] = useState(initialSize)
+  const [resizing, setResizing] = useState(false)
 
   /* ───────── dragging ─────── */
   const dragRef = useRef(null)
@@ -50,6 +51,7 @@ export default function useDragResize({
   /* ───────── resizing ─────── */
   const startResize = useCallback((e, dir) => {
     e.preventDefault(); e.stopPropagation()
+    setResizing(true)
 
     const { clientX: sx, clientY: sy } = e
     const { width: sw, height: sh }    = size
@@ -76,6 +78,7 @@ export default function useDragResize({
     const onUp = () => {
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup',   onUp)
+      setResizing(false)
     }
 
     window.addEventListener('mousemove', onMove)
@@ -87,5 +90,5 @@ export default function useDragResize({
     endDrag()      // removes any listeners that might still be attached
   }, [endDrag])
 
-  return { pos, size, startDrag, startResize, setSize }
+  return { pos, size, startDrag, startResize, setSize, resizing }
 }

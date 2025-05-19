@@ -47,6 +47,11 @@
     transition: width 1.0s ease, height 1.0s ease, border-radius 1.0s ease;
   }
 
+.modal-frame.no-transition,
+.modal-frame.no-transition .modal-header {
+  transition: none !important;
+}
+
   .modal-body{
     flex: 1;
     display: flex;

@@ -35,9 +35,10 @@ export default function ModalScaffold({
   const onHeaderClick = ()=>{ if (collapsedRef.current) expand() }
 
   const {
-    pos, size, startDrag, startResize
+    pos, size, startDrag, startResize, resizing
   } = useDragResize({ minWidth, minHeight, initialPos, initialSize, onClick: onHeaderClick })
-  
+  const interacting = resizing
+
   const handleClose = () => {
     if (collapseOnClose) {
       setCollapsed(true)
@@ -49,7 +50,9 @@ export default function ModalScaffold({
   if (!visible) return null
   return (
     <div
-      className={`modal-frame ${className} ${collapsed ? 'collapsed' : ''}`}
+      className={`modal-frame ${className} 
+        ${collapsed ? 'collapsed' : ''}
+        ${interacting ? 'no-transition' : ''}`}
       style={{
         left: pos.x,
         top: pos.y,
