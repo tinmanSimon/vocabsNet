@@ -1,4 +1,21 @@
-/* modal-frame covers shared structure */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+.fade-in {
+  animation: fadeIn 1.5s ease forwards;
+}
+
+.fade-out {
+  animation: fadeOut 1.0s ease forwards;
+}
+
 .modal-frame {
     position:fixed;
     z-index:2000;
@@ -11,7 +28,7 @@
     flex-direction:column;
     overflow:hidden;
     resize:none;
-    transition: width 1.0s ease, height 1.0s ease, border-radius 1.0s ease;
+    transition: width 1.5s ease, height 1.5s ease, border-radius 1.5s ease;
   }
 
 .modal-frame.collapsed {
@@ -34,7 +51,8 @@
   
   /* title bar */
   .modal-header {
-    height:36px;
+    height:40px;
+    min-height: 40px;
     background:#2c3e50;
     color:#ecf0f1;
     display:flex;
@@ -44,7 +62,25 @@
     cursor:move;
     border-radius:8px 8px 0 0;
     justify-content: center;
-    transition: width 1.0s ease, height 1.0s ease, border-radius 1.0s ease;
+    transition: width 1.5s ease, height 1.5s ease, border-radius 1.5s ease;
+  }
+
+  .header-lock-height {
+    height: 40px;
+    min-height: 40px;
+    max-height: 40px;
+    overflow: hidden;
+  }
+
+  .modal-header span {
+    position: absolute;
+  }
+
+  .modal-content-fade {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
   }
 
 .modal-frame.no-transition,
@@ -58,7 +94,7 @@
     flex-direction: column;
     overflow-y: auto;   /* scrolls when chips > space */
     position: relative;
-    padding: 12
+    padding: 12 
   }
 
   .modal-footer{
@@ -67,7 +103,7 @@
     display:flex;
     justify-content:center;
     gap:24px;
-    background:#fff;      /* avoids transparency when body scrolls */
+    background:#fff;     
   }
 
   .modal-content {

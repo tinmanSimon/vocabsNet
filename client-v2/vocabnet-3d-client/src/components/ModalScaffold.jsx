@@ -19,7 +19,8 @@ export default function ModalScaffold({
 
   const [collapsed, setCollapsed] = useState(false)
   const [showContent, setShowContent] = useState(true)
-  const [restoring, setRestoring] = useState(false)
+  const [showHeader, setShowHeader] = useState(true)
+  const [lastCollapse, setLastCollapse] = useState(false)
   const collapsedRef = useRef(collapsed)
   useEffect(() => {
     collapsedRef.current = collapsed
@@ -28,9 +29,13 @@ export default function ModalScaffold({
   const expand = () => {
     setCollapsed(false)
     setShowContent(false)
+    setShowHeader(false)
     setTimeout(() => {
       setShowContent(true)
-    }, 800) // matches CSS transition duration
+    }, 1200) 
+    setTimeout(() => {
+      setShowHeader(true)
+    }, 500) 
   }
   const onHeaderClick = ()=>{ if (collapsedRef.current) expand() }
 
@@ -42,8 +47,10 @@ export default function ModalScaffold({
   const handleClose = () => {
     if (collapseOnClose) {
       setCollapsed(true)
+      setLastCollapse(true)
     } else {
       onClose?.()
+      setLastCollapse(false)
     }
   }
 
@@ -61,31 +68,43 @@ export default function ModalScaffold({
         position: 'fixed'
       }}
     >
-      <div className="modal-header" onMouseDown={startDrag}>
-        {!collapsed && showContent && title}
-        {collapsed && showContent && 'C'}
+      <div className={`modal-header
+        ${!collapsed && !showContent ? 'header-lock-height' : ''}`} 
+        onMouseDown={startDrag}
+      >
+        { showHeader &&
+          <span className={collapsed ? 'fade-out' : 'fade-in'}>
+            {title}
+          </span>
+        }
+        
+        {lastCollapse && 
+          <span className={collapsed ? 'fade-in' : 'fade-out'}>
+            C
+          </span>
+        }
       </div>
 
-        {!collapsed && showContent && (
-          <>
-            <div className="modal-body">
-              {children}
-            </div>
+      {!collapsed && showContent && (
+        <div className="modal-content-fade fade-in">
+          <div className="modal-body">
+            {children}
+          </div>
 
-            <div className="modal-footer">
-              <button className="btn-submit" onClick={onSubmit}>{submitButtonText}</button>
-              <button className="btn-cancel" onClick={handleClose}>Cancel</button>
-            </div>
+          <div className="modal-footer">
+            <button className="btn-submit" onClick={onSubmit}>{submitButtonText}</button>
+            <button className="btn-cancel" onClick={handleClose}>Cancel</button>
+          </div>
 
-            {['n', 'e', 's', 'w', 'ne', 'se', 'sw', 'nw'].map(dir => (
-              <div
-                key={dir}
-                className={`resize-handle resize-handle-${dir}`}
-                onMouseDown={(e) => startResize(e, dir)}
-              />
-            ))}
-          </>
-        )}
+          {['n', 'e', 's', 'w', 'ne', 'se', 'sw', 'nw'].map(dir => (
+            <div
+              key={dir}
+              className={`resize-handle resize-handle-${dir}`}
+              onMouseDown={(e) => startResize(e, dir)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
