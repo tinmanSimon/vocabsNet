@@ -65,6 +65,7 @@ export default function DataModal({
       onSubmit={handleSubmit}
       submitButtonText = {actionLabel}
       visible={open && ready}
+      collapseOnClose={true}
       minWidth={560}
       minHeight={240}
       initialPos={{ x: 200, y: 80 }}

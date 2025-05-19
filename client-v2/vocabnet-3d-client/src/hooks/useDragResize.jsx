@@ -5,7 +5,8 @@ export default function useDragResize({
   minWidth  = 320,
   minHeight = 200,
   initialPos  = { x: 180, y: 100 },
-  initialSize = { width: minWidth, height: minHeight }
+  initialSize = { width: minWidth, height: minHeight },
+  onClick = null
 } = {}) {
   /* ───────── state ───────── */
   const [pos,  setPos]  = useState(initialPos)
@@ -15,20 +16,36 @@ export default function useDragResize({
   const dragRef = useRef(null)
 
   const startDrag = useCallback((e) => {
-    dragRef.current = { sx: e.clientX, sy: e.clientY, ox: pos.x, oy: pos.y }
+    dragRef.current = {
+      sx: e.clientX,
+      sy: e.clientY,
+      ox: pos.x,
+      oy: pos.y,
+      moved: false
+    }
     window.addEventListener('mousemove', moveDrag)
     window.addEventListener('mouseup',   endDrag)
   }, [pos])
 
   const moveDrag = useCallback((e) => {
-    const { sx, sy, ox, oy } = dragRef.current
-    setPos({ x: ox + e.clientX - sx, y: oy + e.clientY - sy })
+    const ref = dragRef.current
+    const dx = e.clientX - ref.sx
+    const dy = e.clientY - ref.sy
+    const distance = Math.sqrt(dx * dx + dy * dy)
+    if (distance > 3) ref.moved = true
+  
+    setPos({ x: ref.ox + dx, y: ref.oy + dy })
   }, [])
-
-  const endDrag = useCallback(() => {
+  
+  const endDrag = useCallback((e) => {
     window.removeEventListener('mousemove', moveDrag)
     window.removeEventListener('mouseup',   endDrag)
-  }, [moveDrag])
+  
+    const ref = dragRef.current
+    if (ref && !ref.moved && typeof onClick === 'function') {
+      onClick(e)
+    }
+  }, [])
 
   /* ───────── resizing ─────── */
   const startResize = useCallback((e, dir) => {
@@ -70,5 +87,5 @@ export default function useDragResize({
     endDrag()      // removes any listeners that might still be attached
   }, [endDrag])
 
-  return { pos, size, startDrag, startResize }
+  return { pos, size, startDrag, startResize, setSize }
 }
