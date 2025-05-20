@@ -105,3 +105,9 @@
 .wm-suggest-item.hover,.wm-suggest-item:hover{
   background:#2c3e50;color:#fff;
 }
+
+.header-icon-img {
+  width: 20px;     /* adjust size as needed */
+  height: 20px;
+  display: block;  /* prevent inline baseline shift */
+}

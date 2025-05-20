@@ -9,15 +9,23 @@ export default function SearchTagsModal({
   onSearch, onWordClick, onClose,
 }){
     const [tags,setTags]=useState([])
+    const searchTagsRef = useRef()
     useEffect(()=>{if(open){setTags([])}},[open])
 
     return(
         <ModalScaffold
+            ref={searchTagsRef}
             title="Search Tags"
             className="wm-box"
             onClose={onClose}
             onSubmit={() => onSearch(tags)}
             submitButtonText = "Search Tags"
+            collapseOnClose={true}
+            initialism = { <img
+                src="src/assets/tags.png"
+                alt="icon"
+                className="header-icon-img"
+            />}
             visible={open}
             minWidth={360}
             minHeight={330}

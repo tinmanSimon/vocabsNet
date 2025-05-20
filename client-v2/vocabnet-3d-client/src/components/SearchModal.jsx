@@ -6,15 +6,23 @@ import ModalScaffold from './ModalScaffold'
 export default function SearchModal({ open, onSearch, onClose }) {
   /* clear field each time modal opens */
   const [term, setTerm] = useState('')
+  const searchRef = useRef()
   useEffect(() => { if (open) setTerm('') }, [open])
 
   return (
     <ModalScaffold
+      ref={searchRef}
       title="Search Word"
       className="wm-box"
       onClose={onClose}
       onSubmit={() => {onSearch(term); setTerm('')}}
       submitButtonText = "Search"
+      collapseOnClose={true}
+      initialism = { <img
+        src="src/assets/search.png"
+        alt="icon"
+        className="header-icon-img"
+      />}
       visible={open}
       minWidth={320}
       minHeight={160}
