@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState} from 'react'
 import './LeftNav.css'
 import DataModal from './DataModal'
 import SettingModal from './SettingModal'
@@ -21,6 +21,8 @@ export default function LeftNav({
   const [pos, setPos] = useState(() => {
     return { x: 32, y: 32 }
   })
+
+  const addDataRef = useRef()
 
   const onSettingModalClose = ()=>{
     onModalClose()
@@ -62,7 +64,14 @@ export default function LeftNav({
 
   /* ----- menu items ----- */
   const items = [
-    { label: 'Add Data',    onClick: () => {onModalOpen(); setOpenAddDataModal(true);}},
+    { label: 'Add Data',    onClick: () => {
+      if (openAddDataModal) {
+        addDataRef.current?.expand()
+      } else {
+        onModalOpen()
+        setOpenAddDataModal(true)
+      }
+    }},
     { label: 'Remove Data', onClick: () => {onModalOpen(); setOpenRemoveDataModal(true);}},
     { label: 'Settings',    onClick: () => {onModalOpen();setOpenSettingModal(true);}},
     { label: 'Search Word', onClick: () => onSearchRequest() },
@@ -114,6 +123,7 @@ export default function LeftNav({
         onSubmit={onDataRequest} 
         onClose={onAddDataModalClose} 
         existingEdges={existingEdges}
+        ref={addDataRef}
       />
 
       <DataModal 

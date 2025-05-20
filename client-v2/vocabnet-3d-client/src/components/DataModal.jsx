@@ -1,12 +1,17 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useImperativeHandle, forwardRef } from 'react'
 import './WordModal.css'            // re‑use draggable / resizable styles
 import './DataModal.css'            // keep existing field/layout styles
 import EdgeNameInput from './EdgeNameInput'
 import ModalScaffold from './ModalScaffold'
 
-export default function DataModal({ 
-  open, username, mode, onClose, onSubmit, existingEdges 
-}) {
+const DataModal = forwardRef(function DataModal(props, ref) {
+  const { open, username, mode, onClose, onSubmit, existingEdges } = props
+  const scaffoldRef = useRef()
+
+  useImperativeHandle(ref, () => ({
+    expand: () => scaffoldRef.current?.expand?.(),
+    isCollapsed: () => scaffoldRef.current?.isCollapsed?.()
+  }))
   /* ────────────────────────────────────────────────────────────
      Form state (copied from original DataModal)
   ──────────────────────────────────────────────────────────── */
@@ -60,6 +65,7 @@ export default function DataModal({
 
   return (
     <ModalScaffold
+      ref={scaffoldRef}
       title={actionLabel}
       className="wm-box"
       onClose={onClose}
@@ -128,4 +134,6 @@ export default function DataModal({
       </div>
     </ModalScaffold>
   )
-}
+})
+
+export default DataModal

@@ -1,22 +1,23 @@
-import { React, useState, useRef, useEffect } from 'react'
+import { React, useState, useRef, useEffect, useImperativeHandle, forwardRef } from 'react'
 import useDragResize from '../hooks/useDragResize'
 import './ModalScaffold.css'
 
-export default function ModalScaffold({
-  children,
-  title = '',
-  className = '',
-  onSubmit,
-  onClose,
-  visible,
-  collapseOnClose = false,
-  minWidth = 300,
-  minHeight = 200,
-  submitButtonText = "Update",
-  initialism='B',
-  initialPos = { x: 200, y: 100 },
-  initialSize = { width: 500, height: 300 }
-}) {
+const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
+  const {
+    children,
+    title = '',
+    className = '',
+    onSubmit,
+    onClose,
+    visible,
+    collapseOnClose = false,
+    minWidth = 300,
+    minHeight = 200,
+    submitButtonText = "Update",
+    initialism='B',
+    initialPos = { x: 200, y: 100 },
+    initialSize = { width: 500, height: 300 }
+  } = props
 
   const [collapsed, setCollapsed] = useState(false)
   const [showContent, setShowContent] = useState(true)
@@ -31,13 +32,14 @@ export default function ModalScaffold({
     setCollapsed(false)
     setShowContent(false)
     setShowHeader(false)
-    setTimeout(() => {
-      setShowContent(true)
-    }, 1200) 
-    setTimeout(() => {
-      setShowHeader(true)
-    }, 500) 
+    setTimeout(() => {setShowContent(true)}, 1200) 
+    setTimeout(() => {setShowHeader(true)}, 500) 
   }
+
+  useImperativeHandle(ref, () => ({
+    expand,
+    isCollapsed: () => collapsedRef.current
+  }))
 
   const onHeaderClick = (e) => {
     if (collapsedRef.current) {
@@ -121,4 +123,6 @@ export default function ModalScaffold({
       )}
     </div>
   )
-}
+})
+
+export default ModalScaffold
