@@ -33,6 +33,7 @@ export default function DataModal({
   const wordLabel    = isAdd ? 'Add Word'    : 'Remove Word'
   const edgeLabel    = isAdd ? 'Add Edge'    : 'Remove Edge'
   const actionLabel  = isAdd ? 'Add Data'    : 'Remove Data'
+  const initialism = isAdd ? '+' : '−'
 
   /* — helpers to mutate arrays immutably — */
   const updateWord = (i, val) =>
@@ -64,6 +65,7 @@ export default function DataModal({
       onClose={onClose}
       onSubmit={handleSubmit}
       submitButtonText = {actionLabel}
+      initialism = {initialism}
       visible={open && ready}
       collapseOnClose={true}
       minWidth={560}

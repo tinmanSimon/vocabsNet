@@ -2,7 +2,6 @@ import { useRef, useState } from 'react'
 import './LeftNav.css'
 import DataModal from './DataModal'
 import SettingModal from './SettingModal'
-import SearchModal  from './SearchModal'
 
 export default function LeftNav({ 
   onModalOpen,
@@ -16,14 +15,26 @@ export default function LeftNav({
   existingEdges
 }) {
   const [open, setOpen] = useState(false)
-  const [launchedMenuItem, setLaunchedMenuItem] = useState("")
+  const [openAddDataModal, setOpenAddDataModal] = useState(false)
+  const [openRemoveDataModal, setOpenRemoveDataModal] = useState(false)
+  const [openSettingModal, setOpenSettingModal] = useState(false)
   const [pos, setPos] = useState(() => {
     return { x: 32, y: 32 }
   })
 
-  const modalClose = ()=>{
+  const onSettingModalClose = ()=>{
     onModalClose()
-    setLaunchedMenuItem('')
+    setOpenSettingModal(false)
+  }
+
+  const onAddDataModalClose = ()=>{
+    onModalClose()
+    setOpenAddDataModal(false)
+  }
+
+  const onRemoveDataModalClose = ()=>{
+    onModalClose()
+    setOpenRemoveDataModal(false)
   }
 
   const dragRef = useRef(null)
@@ -51,9 +62,9 @@ export default function LeftNav({
 
   /* ----- menu items ----- */
   const items = [
-    { label: 'Add Data',    onClick: () => {onModalOpen();setLaunchedMenuItem("add-data")}},
-    { label: 'Remove Data', onClick: () => {onModalOpen();setLaunchedMenuItem("remove-data")}},
-    { label: 'Settings',    onClick: () => {onModalOpen();setLaunchedMenuItem("settings")}},
+    { label: 'Add Data',    onClick: () => {onModalOpen(); setOpenAddDataModal(true);}},
+    { label: 'Remove Data', onClick: () => {onModalOpen(); setOpenRemoveDataModal(true);}},
+    { label: 'Settings',    onClick: () => {onModalOpen();setOpenSettingModal(true);}},
     { label: 'Search Word', onClick: () => onSearchRequest() },
     { label: 'Search Tags', onClick: () => onSearchTagsRequest() },
     { label: 'Collapse',    onClick: () => setOpen(false) }
@@ -98,18 +109,27 @@ export default function LeftNav({
 
       <DataModal 
         username={username} 
-        open={['add-data', 'remove-data'].includes(launchedMenuItem)}
-        mode={launchedMenuItem}
+        open={openAddDataModal}
+        mode={'add-data'}
         onSubmit={onDataRequest} 
-        onClose={modalClose} 
+        onClose={onAddDataModalClose} 
+        existingEdges={existingEdges}
+      />
+
+      <DataModal 
+        username={username} 
+        open={openRemoveDataModal}
+        mode={"remove-data"}
+        onSubmit={onDataRequest} 
+        onClose={onRemoveDataModalClose} 
         existingEdges={existingEdges}
       />
       
       <SettingModal 
-        open={launchedMenuItem === 'settings'}
+        open={openSettingModal}
         settings={settings} 
         onUpdate={onUpdateSettings} 
-        onClose={modalClose} 
+        onClose={onSettingModalClose} 
       />
     </div>
   )

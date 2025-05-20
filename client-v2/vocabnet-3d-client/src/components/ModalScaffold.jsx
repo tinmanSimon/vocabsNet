@@ -13,6 +13,7 @@ export default function ModalScaffold({
   minWidth = 300,
   minHeight = 200,
   submitButtonText = "Update",
+  initialism='B',
   initialPos = { x: 200, y: 100 },
   initialSize = { width: 500, height: 300 }
 }) {
@@ -91,7 +92,7 @@ export default function ModalScaffold({
         {lastCollapse && 
           <div className="header-container">
             <span className={`header-icon ${collapsed ? 'fade-in' : 'fade-out'}`}>
-              ST
+              {initialism}
             </span>
             <span className={`remove ${collapsed ? 'fade-in' : 'fade-out'}`} onClick={handleClose}>✕</span>
           </div>
