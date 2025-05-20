@@ -66,6 +66,34 @@
     transition: width 1.5s ease, height 1.5s ease, border-radius 1.5s ease;
   }
 
+  .header-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .header-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);  /* 💡 perfect centering */
+    white-space: nowrap;
+    font-size: 20px;
+    pointer-events: none;
+  }
+
+  .remove {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    font-size: 10px;
+    cursor: pointer;
+  }
+
+  .remove:hover {
+    color: #ff4d4d;
+  }
+
   .header-lock-height {
     height: 40px;
     min-height: 40px;

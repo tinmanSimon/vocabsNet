@@ -37,7 +37,16 @@ export default function ModalScaffold({
       setShowHeader(true)
     }, 500) 
   }
-  const onHeaderClick = ()=>{ if (collapsedRef.current) expand() }
+
+  const onHeaderClick = (e) => {
+    if (collapsedRef.current) {
+      if (e.target.closest('.remove')) {
+        // click was on ✕ button — skip expansion
+        return
+      }
+      expand()
+    }
+  }
 
   const {
     pos, size, startDrag, startResize, resizing
@@ -45,11 +54,12 @@ export default function ModalScaffold({
   const interacting = resizing
 
   const handleClose = () => {
-    if (collapseOnClose) {
+    if (collapseOnClose && collapsedRef.current === false) {
       setCollapsed(true)
       setLastCollapse(true)
     } else {
       onClose?.()
+      setCollapsed(false)
       setLastCollapse(false)
     }
   }
@@ -77,11 +87,14 @@ export default function ModalScaffold({
             {title}
           </span>
         }
-        
+
         {lastCollapse && 
-          <span className={collapsed ? 'fade-in' : 'fade-out'}>
-            C
-          </span>
+          <div className="header-container">
+            <span className={`header-icon ${collapsed ? 'fade-in' : 'fade-out'}`}>
+              ST
+            </span>
+            <span className={`remove ${collapsed ? 'fade-in' : 'fade-out'}`} onClick={handleClose}>✕</span>
+          </div>
         }
       </div>
 
