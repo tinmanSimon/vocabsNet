@@ -90,5 +90,5 @@ export default function useDragResize({
     endDrag()      // removes any listeners that might still be attached
   }, [endDrag])
 
-  return { pos, size, startDrag, startResize, setSize, resizing }
+  return { pos, size, startDrag, startResize, setSize, setPos, resizing }
 }

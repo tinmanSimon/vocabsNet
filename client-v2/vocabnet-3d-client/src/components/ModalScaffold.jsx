@@ -16,13 +16,15 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
     submitButtonText = "Update",
     initialism='B',
     initialPos = { x: 200, y: 100 },
-    initialSize = { width: 500, height: 300 }
+    initialSize = { width: 500, height: 300 },
+    targetPosition = null
   } = props
 
   const [collapsed, setCollapsed] = useState(false)
   const [showContent, setShowContent] = useState(true)
   const [showHeader, setShowHeader] = useState(true)
   const [lastCollapse, setLastCollapse] = useState(false)
+  const [targetPos, setTargetPos] = useState(null)
   const collapsedRef = useRef(collapsed)
   useEffect(() => {
     collapsedRef.current = collapsed
@@ -52,14 +54,39 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
   }
 
   const {
-    pos, size, startDrag, startResize, resizing
+    pos, size, startDrag, startResize, setPos, resizing
   } = useDragResize({ minWidth, minHeight, initialPos, initialSize, onClick: onHeaderClick })
   const interacting = resizing
+  const posRef   = useRef(pos)
+  const rAFRef   = useRef()
+  useEffect(() => { posRef.current = pos }, [pos])
+
+  useEffect(() => {
+    if (!targetPos) return
+    const speed = 0.03            // fraction of the remaining distance / frame
+    const tick  = () => {
+      const { x, y } = posRef.current
+      const dx = targetPos.x - x
+      const dy = targetPos.y - y
+      const dist = Math.hypot(dx, dy)
+      if (dist < 1.0) {             // snap when close enough
+        setPos(targetPos)
+        return
+      }
+      const delta_x = Math.min(dx * speed, 2.0)
+      const delta_y = Math.min(dy * speed, 2.0)
+      setPos({ x: x + delta_x, y: y + delta_y })
+      rAFRef.current = requestAnimationFrame(tick)
+    }
+    rAFRef.current = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(rAFRef.current)
+  }, [targetPos])
 
   const handleClose = () => {
     if (collapseOnClose && collapsedRef.current === false) {
       setCollapsed(true)
       setLastCollapse(true)
+      setTargetPos({ x: targetPosition.x, y: targetPosition.y })
     } else {
       onClose?.()
       setCollapsed(false)
