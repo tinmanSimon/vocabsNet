@@ -32,7 +32,7 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
     setCollapsed(false)
     setShowContent(false)
     setShowHeader(false)
-    setTimeout(() => {setShowContent(true)}, 1200) 
+    setTimeout(() => {setShowContent(true)}, 800) 
     setTimeout(() => {setShowHeader(true)}, 500) 
   }
 
@@ -82,7 +82,7 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
       }}
     >
       <div className={`modal-header
-        ${!collapsed && !showContent ? 'header-lock-height' : ''}`} 
+        ${!collapsed ? 'header-lock-height' : ''}`} 
         onMouseDown={startDrag}
       >
         { showHeader &&

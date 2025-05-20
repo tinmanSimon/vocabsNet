@@ -326,7 +326,7 @@ function App() {
                   ref={graphRef} 
                   orbitControlsRef={controlsRef}
                   onWordClick={handleWordClick}
-                  pauseInteraction={noteModal.open || searchModalOpen || modalOpen || searchTagsModal.open }
+                  pauseInteraction={noteModal.open || searchModalOpen || modalOpen || searchTagsModal.open || openAddDataModal || openRemoveDataModal}
                 />
               }
               <OrbitControls ref={controlsRef}/>
