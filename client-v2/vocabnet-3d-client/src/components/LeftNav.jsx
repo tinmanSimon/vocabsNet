@@ -23,6 +23,7 @@ export default function LeftNav({
   })
 
   const addDataRef = useRef()
+  const removeDataRef = useRef()
 
   const onSettingModalClose = ()=>{
     onModalClose()
@@ -72,7 +73,16 @@ export default function LeftNav({
         setOpenAddDataModal(true)
       }
     }},
-    { label: 'Remove Data', onClick: () => {onModalOpen(); setOpenRemoveDataModal(true);}},
+
+    { label: 'Remove Data', onClick: () => {
+      if (openRemoveDataModal) {
+        removeDataRef.current?.expand()
+      } else {
+        onModalOpen()
+        setOpenRemoveDataModal(true)
+      }
+    }},
+    
     { label: 'Settings',    onClick: () => {onModalOpen();setOpenSettingModal(true);}},
     { label: 'Search Word', onClick: () => onSearchRequest() },
     { label: 'Search Tags', onClick: () => onSearchTagsRequest() },
@@ -133,6 +143,7 @@ export default function LeftNav({
         onSubmit={onDataRequest} 
         onClose={onRemoveDataModalClose} 
         existingEdges={existingEdges}
+        ref={removeDataRef}
       />
       
       <SettingModal 
