@@ -6,38 +6,19 @@ import SettingModal from './SettingModal'
 export default function LeftNav({ 
   onModalOpen,
   onModalClose,
-  onDataRequest, 
-  username, 
   settings, 
   onUpdateSettings,
-  onSearchRequest,
-  onSearchTagsRequest,
-  existingEdges
+  handleLeftnavClick
 }) {
   const [open, setOpen] = useState(false)
-  const [openAddDataModal, setOpenAddDataModal] = useState(false)
-  const [openRemoveDataModal, setOpenRemoveDataModal] = useState(false)
   const [openSettingModal, setOpenSettingModal] = useState(false)
   const [pos, setPos] = useState(() => {
     return { x: 32, y: 32 }
   })
 
-  const addDataRef = useRef()
-  const removeDataRef = useRef()
-
   const onSettingModalClose = ()=>{
     onModalClose()
     setOpenSettingModal(false)
-  }
-
-  const onAddDataModalClose = ()=>{
-    onModalClose()
-    setOpenAddDataModal(false)
-  }
-
-  const onRemoveDataModalClose = ()=>{
-    onModalClose()
-    setOpenRemoveDataModal(false)
   }
 
   const dragRef = useRef(null)
@@ -65,27 +46,11 @@ export default function LeftNav({
 
   /* ----- menu items ----- */
   const items = [
-    { label: 'Add Data',    onClick: () => {
-      if (openAddDataModal) {
-        addDataRef.current?.expand()
-      } else {
-        onModalOpen()
-        setOpenAddDataModal(true)
-      }
-    }},
-
-    { label: 'Remove Data', onClick: () => {
-      if (openRemoveDataModal) {
-        removeDataRef.current?.expand()
-      } else {
-        onModalOpen()
-        setOpenRemoveDataModal(true)
-      }
-    }},
-    
+    { label: 'Add Data',    onClick: () => { handleLeftnavClick('add-data')}},
+    { label: 'Remove Data', onClick: () => { handleLeftnavClick('remove-data')}},
     { label: 'Settings',    onClick: () => {onModalOpen();setOpenSettingModal(true);}},
-    { label: 'Search Word', onClick: () => onSearchRequest() },
-    { label: 'Search Tags', onClick: () => onSearchTagsRequest() },
+    { label: 'Search Word', onClick: () => { handleLeftnavClick('search-word')}},
+    { label: 'Search Tags', onClick: () => { handleLeftnavClick('search-tags')}},
     { label: 'Collapse',    onClick: () => setOpen(false) }
   ]
 
@@ -125,26 +90,6 @@ export default function LeftNav({
           ))}
         </ul>
       )}
-
-      <DataModal 
-        username={username} 
-        open={openAddDataModal}
-        mode={'add-data'}
-        onSubmit={onDataRequest} 
-        onClose={onAddDataModalClose} 
-        existingEdges={existingEdges}
-        ref={addDataRef}
-      />
-
-      <DataModal 
-        username={username} 
-        open={openRemoveDataModal}
-        mode={"remove-data"}
-        onSubmit={onDataRequest} 
-        onClose={onRemoveDataModalClose} 
-        existingEdges={existingEdges}
-        ref={removeDataRef}
-      />
       
       <SettingModal 
         open={openSettingModal}

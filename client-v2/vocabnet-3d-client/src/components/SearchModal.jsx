@@ -1,13 +1,20 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useImperativeHandle, forwardRef } from 'react'
 import './WordModal.css'
 import './DataModal.css'
 import ModalScaffold from './ModalScaffold'
 
-export default function SearchModal({ open, onSearch, onClose }) {
+const SearchModal = forwardRef(function SearchModal(props, ref) {
+  const { open, onSearch, onClose } = props
+
   /* clear field each time modal opens */
   const [term, setTerm] = useState('')
   const searchRef = useRef()
   useEffect(() => { if (open) setTerm('') }, [open])
+
+  useImperativeHandle(ref, () => ({
+    expand: () => searchRef.current?.expand?.(),
+    isCollapsed: () => searchRef.current?.isCollapsed?.()
+  }))
 
   return (
     <ModalScaffold
@@ -40,4 +47,6 @@ export default function SearchModal({ open, onSearch, onClose }) {
       </div>
     </ModalScaffold>
   )
-}
+})
+
+export default SearchModal

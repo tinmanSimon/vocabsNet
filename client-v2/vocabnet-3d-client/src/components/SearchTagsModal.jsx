@@ -1,16 +1,23 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useImperativeHandle, forwardRef } from 'react'
 import TagInput,{ TagChip } from './TagInput'
 import './WordModal.css'
 import './DataModal.css'
 import ModalScaffold from './ModalScaffold'
 
-export default function SearchTagsModal({
-  open, existingTags, results,              // ← results is array of word‑objects
-  onSearch, onWordClick, onClose,
-}){
+const SearchTagsModal = forwardRef(function SearchTagsModal(props, ref) {
+  const {
+    open, existingTags, results,           
+    onSearch, onWordClick, onClose,
+  } = props
+
     const [tags,setTags]=useState([])
     const searchTagsRef = useRef()
     useEffect(()=>{if(open){setTags([])}},[open])
+
+    useImperativeHandle(ref, () => ({
+        expand: () => searchTagsRef.current?.expand?.(),
+        isCollapsed: () => searchTagsRef.current?.isCollapsed?.()
+    }))
 
     return(
         <ModalScaffold
@@ -54,4 +61,6 @@ export default function SearchTagsModal({
             </div>
         </ModalScaffold>
     )
-}
+})
+
+export default SearchTagsModal

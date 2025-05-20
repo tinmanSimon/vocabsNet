@@ -11,6 +11,7 @@ import WelcomeBanner from "./components/WelcomeBanner"
 import WordModal from './components/WordModal'
 import SearchModal from './components/SearchModal'
 import SearchTagsModal from './components/SearchTagsModal'
+import DataModal from './components/DataModal'
 import { searchWord, searchByTags }  from './api/api'
 
 function App() {
@@ -26,6 +27,12 @@ function App() {
     const cached = localStorage.getItem('app-settings')
     return cached ? JSON.parse(cached) : { showNoteOnClick: false }
   })
+  const [openAddDataModal, setOpenAddDataModal] = useState(false)
+  const [openRemoveDataModal, setOpenRemoveDataModal] = useState(false)
+  const addDataRef = useRef()
+  const removeDataRef = useRef()
+  const searchRef = useRef()
+  const searchTagsRef = useRef()
   const [searchModalOpen, setSearchModalOpen] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const settingsRef = useRef(settings)
@@ -244,8 +251,6 @@ function App() {
     setNoteModal({ open:noteModal.open, name:term.trim(), note: existingNote })
   }
 
-  const handleOpenSearchTags=()=>setSearchTagsModal({open:true,results:[]})
-
   const handleTagSearch=async(selectedTags)=>{
     if(!selectedTags.length)return
     const data=await searchByTags(selectedTags)
@@ -256,6 +261,45 @@ function App() {
     handleSearch(wordname)        // reuse the existing word‑search flow
   }
 
+  const handleLeftnavClick = (menu_id) => {
+    switch (menu_id) {
+      case 'add-data':
+        if (openAddDataModal) {
+          addDataRef.current?.expand()
+        } else {
+          setOpenAddDataModal(true)
+        }
+        break
+    
+      case 'remove-data':
+        if (openRemoveDataModal) {
+          removeDataRef.current?.expand()
+        } else {
+          setOpenRemoveDataModal(true)
+        }
+        break
+    
+      case 'search-word':
+        if (searchModalOpen) {
+          searchRef.current?.expand()
+        } else {
+          setSearchModalOpen(true)
+        }
+        break
+
+      case 'search-tags':
+        if (searchTagsModal.open) {
+          searchTagsRef.current?.expand()
+        } else {
+          setSearchTagsModal({open:true,results:[]})
+        }
+        break
+    
+      default:
+        console.log('Unknown fruit')
+    }
+  }
+
   return (
       <div style={{ width: '100vw', height: '100vh' }}>
         {showLogin && <LoginModal onLogin={handleLogin} error={loginError} />}
@@ -264,13 +308,9 @@ function App() {
             <LeftNav 
               onModalOpen={()=>{setModalOpen(true)}}
               onModalClose={()=>{setModalOpen(false)}}
-              onDataRequest={handleDataRequest} 
-              username={username} 
               settings={settings}
               onUpdateSettings={handleUpdateSettings}
-              onSearchRequest={()=>{ setSearchModalOpen(true)}}
-              onSearchTagsRequest={handleOpenSearchTags}
-              existingEdges={existingEdges}
+              handleLeftnavClick={handleLeftnavClick}
             />
             <Canvas camera={{ position: [0, 0, 50], fov: 60 }} style={{ background: 'lightblue' }}>
               <ambientLight />
@@ -303,17 +343,42 @@ function App() {
               name={noteModal.name}
             />
             <SearchModal
+              ref={searchRef}
               open={searchModalOpen}
               onSearch={(term)=>{handleSearch(term)}}
               onClose={()=>setSearchModalOpen(false)}
             />
             <SearchTagsModal
+              ref={searchTagsRef}
               open={searchTagsModal.open}
               existingTags={existingTags}
               results={searchTagsModal.results}
               onSearch={handleTagSearch}
               onWordClick={handleWordFromTag}
               onClose={()=>setSearchTagsModal({open:false,results:[]})}
+            />
+            <DataModal 
+              username={username} 
+              open={openAddDataModal}
+              mode={'add-data'}
+              onSubmit={handleDataRequest} 
+              onClose={()=>{
+                setOpenAddDataModal(false)
+              }} 
+              existingEdges={existingEdges}
+              ref={addDataRef}
+            />
+
+            <DataModal 
+              username={username} 
+              open={openRemoveDataModal}
+              mode={"remove-data"}
+              onSubmit={handleDataRequest} 
+              onClose={()=>{
+                setOpenRemoveDataModal(false)
+              }} 
+              existingEdges={existingEdges}
+              ref={removeDataRef}
             />
           </>
         )}
