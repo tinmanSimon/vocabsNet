@@ -20,6 +20,7 @@ export default function WordModal({
   const [idx, setIdx] = useState(0)
   const debounceRef = useRef(null)
   const undoRedoRef = useRef(false)
+  const wordRef = useRef()
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
@@ -74,11 +75,18 @@ export default function WordModal({
 
   return (
     <ModalScaffold
-      title="Word Info"
+      ref={wordRef}
+      title={name}
       className="wm-box"
       onClose={onClose}
       onSubmit={() => onUpdate(note, tags)}
       visible={open && ready}
+      collapseOnClose={true}
+      initialism = { <img
+        src="src/assets/note.png"
+        alt="icon"
+        className="header-icon-img"
+      />}
       minWidth={330}
       minHeight={330}
       initialPos={{ x: 200, y: 80 }}
