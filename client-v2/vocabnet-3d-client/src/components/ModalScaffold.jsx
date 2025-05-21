@@ -17,7 +17,8 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
     initialism='B',
     initialPos = { x: 200, y: 100 },
     initialSize = { width: 500, height: 300 },
-    targetPosition = null
+    targetPosition = null,
+    onCollapse     = null
   } = props
 
   const [collapsed, setCollapsed] = useState(false)

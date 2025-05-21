@@ -4,7 +4,7 @@ import { OrbitControls } from '@react-three/drei'
 import Graph from './Graph'
 import LoginModal from './components/LoginModal'
 import { login, getData, createData, removeData, updateNote } from './api/api'
-import { CREATE_DATA_SUCCEED, CREATE_DATA_PARTIAL, CREATE_DATA_FAILED } from './api/api'
+import ModalsMatrix from './components/ModalsMatrix';
 import { getToken } from './utils/request'
 import LeftNav from './components/LeftNav'
 import WelcomeBanner from "./components/WelcomeBanner"
@@ -44,6 +44,7 @@ function App() {
   const [existingTags, setExistingTags] = useState([])
   const [existingEdges, setExistingEdges] = useState([])
   const [searchTagsModal,setSearchTagsModal]=useState({open:false,results:[]})
+  const matrixRef = useRef(null);
 
 
   useEffect(() => {
@@ -379,6 +380,14 @@ function App() {
               }} 
               existingEdges={existingEdges}
               ref={removeDataRef}
+            />
+            
+            <ModalsMatrix
+              ref={matrixRef}
+              onPositionChange={pos => {
+                // live position is available here if you need it
+                // console.log('Matrix at', pos);
+              }}
             />
           </>
         )}
