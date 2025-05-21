@@ -32,6 +32,7 @@ function App() {
   const addDataRef = useRef()
   const removeDataRef = useRef()
   const searchRef = useRef()
+  const wordRef = useRef()
   const searchTagsRef = useRef()
   const [searchModalOpen, setSearchModalOpen] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
@@ -230,7 +231,7 @@ function App() {
         return Array.from(tagSet)
       })
     } finally {
-      setNoteModal({ open:false, name:'', note:'' })
+      wordRef.current?.collapse()
     }
   }
 
@@ -297,7 +298,7 @@ function App() {
         break
     
       default:
-        console.log('Unknown fruit')
+        break
     }
   }
 
@@ -334,14 +335,21 @@ function App() {
             </Canvas>
 
             <WordModal
+              ref={wordRef}
               open={noteModal.open}
               initialNote={noteModal.note}
               initialTags={tagDict[noteModal.name] || []}
               existingTags={existingTags}
-              onClose={() => setNoteModal({ open:false, name:'', note:'' })}
+              onClose={() => {
+                setNoteModal({ open:false, name:'', note:'' })
+                matrixRef.current?.unObserveModal(wordRef)
+              }}
               onUpdate={handleNoteUpdate}
               debounceMs={600} 
               name={noteModal.name}
+              onCollapse={() => {
+                matrixRef.current?.observeModal(wordRef);
+              }}
             />
             <SearchModal
               ref={searchRef}
@@ -402,13 +410,7 @@ function App() {
               }}
             />
             
-            <ModalsMatrix
-              ref={matrixRef}
-              onPositionChange={pos => {
-                // live position is available here if you need it
-                // console.log('Matrix at', pos);
-              }}
-            />
+            <ModalsMatrix ref={matrixRef}/>
           </>
         )}
       </div>

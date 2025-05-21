@@ -1,19 +1,22 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useImperativeHandle, forwardRef } from 'react'
 import TagInput from './TagInput'
 import './WordModal.css'
 import './DataModal.css'
 import ModalScaffold from './ModalScaffold'
 
-export default function WordModal({
-  open,
-  initialNote = '',
-  onClose,
-  onUpdate,
-  initialTags = [],
-  existingTags = [],
-  debounceMs = 800,
-  name = 'Word Note'
-}) {
+const WordModal = forwardRef(function WordModal(props, ref) {
+  const {
+    open,
+    initialNote = '',
+    onClose,
+    onUpdate,
+    initialTags = [],
+    existingTags = [],
+    debounceMs = 800,
+    name = 'Word Note',
+    onCollapse
+  } = props
+
   /* ───────────────── note + history (unchanged) ───────────────── */
   const [note, setNote] = useState('')
   const [history, setHistory] = useState([initialNote])
@@ -22,6 +25,15 @@ export default function WordModal({
   const undoRedoRef = useRef(false)
   const wordRef = useRef()
   const [ready, setReady] = useState(false)
+
+  useImperativeHandle(ref, () => ({
+    expand: () => wordRef.current?.expand?.(),
+    isCollapsed: () => wordRef.current?.isCollapsed?.(),
+    setTargetPosition: (pos) => {
+      wordRef.current?.setTargetPosition(pos)
+    },
+    collapse: () =>{wordRef.current?.collapse?.()}
+  }))
 
   useEffect(() => {
     if (open) {
@@ -91,6 +103,7 @@ export default function WordModal({
       minHeight={330}
       initialPos={{ x: 200, y: 80 }}
       initialSize={{ width: 330, height: 330 }}
+      onCollapse={onCollapse}
     >
       {/* ── BODY that can scroll ──  */}
       <div className="wm-body">
@@ -107,4 +120,6 @@ export default function WordModal({
       </div>
     </ModalScaffold>
   )
-}
+})
+
+export default WordModal

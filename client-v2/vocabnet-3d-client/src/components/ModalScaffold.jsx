@@ -54,7 +54,8 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
       setTargetPos(pos)
       setMatrixPos(pos)
       matrixPosRef.current = pos
-    }
+    },
+    collapse: () => {handleClose()}
   }))
 
   const onHeaderClick = (e) => {

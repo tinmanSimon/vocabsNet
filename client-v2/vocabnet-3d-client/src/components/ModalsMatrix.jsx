@@ -66,11 +66,7 @@ const ModalsMatrix = forwardRef(({ onPositionChange }, ref) => {
     const centres = getCellCenters();
     observed.current.forEach((ref, idx) => {
         const api = ref.current;
-        if (!api?.isCollapsed) return;
-
-        console.log("handleMouseUp idx: ", idx, ", api.isCollapsed(): ", api.isCollapsed())
-        console.log("center pos ", centres[idx])
-        if (api.isCollapsed()) {
+        if (api?.isCollapsed?.()) {
             api.setTargetPosition?.(centres[idx]);
         }
     });
