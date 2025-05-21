@@ -35,7 +35,6 @@ const SearchModal = forwardRef(function SearchModal(props, ref) {
       minHeight={160}
       initialPos={{ x: 200, y: 80 }}
       initialSize={{ width: 320, height: 160 }}
-      targetPosition={{ x: 600, y: 80 }}
     >
       <div className="wm-content" style={{ justifyContent: 'center' }}>
         <input
