@@ -78,7 +78,16 @@
   line-height: 28px;
 }
 .wm-tag-chip:hover{opacity:.85}
-.wm-tag-chip .remove{font-size:10px;margin-left:6px;cursor:pointer;}
+.tag-remove{
+  font-size:10px;
+  margin-left:6px;
+  cursor:pointer;
+}
+
+.tag-remove:hover{
+  color:rosybrown
+}
+
 .wm-tag-input{
   flex: 1;
   width: 100%;      /* ← ensure it fills the container */

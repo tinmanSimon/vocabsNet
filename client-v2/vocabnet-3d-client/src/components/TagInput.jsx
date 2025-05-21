@@ -36,7 +36,7 @@ export const TagChip=({tag,idx,onRemove,onDragStart,onDragOver,onDrop,clickable}
         onDragStart={e=>onDragStart?.(e,idx)}
         onDragOver={e=>onDragOver?.(e,idx)}
         onDrop={e=>onDrop?.(e,idx)}>
-    {tag}{!clickable&&<span className="remove" onClick={()=>onRemove(idx)}>✕</span>}
+    {tag}{!clickable&&<span className="tag-remove" onClick={()=>onRemove(idx)}>✕</span>}
   </span>)
 
 export default function TagInput({

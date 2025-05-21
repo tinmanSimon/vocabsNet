@@ -37,10 +37,10 @@ const SearchTagsModal = forwardRef(function SearchTagsModal(props, ref) {
                 className="header-icon-img"
             />}
             visible={open}
-            minWidth={360}
+            minWidth={400}
             minHeight={330}
             initialPos={{ x: 200, y: 80 }}
-            initialSize={{ width: 360, height: 330 }}
+            initialSize={{ width: 400, height: 330 }}
             onCollapse={onCollapse}
             >
             <div className="wm-content" style={{gap:12}}>
