@@ -5,12 +5,15 @@ import EdgeNameInput from './EdgeNameInput'
 import ModalScaffold from './ModalScaffold'
 
 const DataModal = forwardRef(function DataModal(props, ref) {
-  const { open, username, mode, onClose, onSubmit, existingEdges } = props
+  const { open, username, mode, onClose, onSubmit, existingEdges, onCollapse } = props
   const scaffoldRef = useRef()
 
   useImperativeHandle(ref, () => ({
     expand: () => scaffoldRef.current?.expand?.(),
-    isCollapsed: () => scaffoldRef.current?.isCollapsed?.()
+    isCollapsed: () => scaffoldRef.current?.isCollapsed?.(),
+    setTargetPosition: (pos) => {
+      scaffoldRef.current?.setTargetPosition(pos)
+    }
   }))
   /* ────────────────────────────────────────────────────────────
      Form state (copied from original DataModal)
@@ -78,6 +81,7 @@ const DataModal = forwardRef(function DataModal(props, ref) {
       minHeight={240}
       initialPos={{ x: 200, y: 80 }}
       initialSize={{ width: 560, height: 240 }}
+      onCollapse={onCollapse}
     >
       <div className="wm-content" style={{ overflowY: 'auto', gap: 8 }}>
         {/* toolbar */}

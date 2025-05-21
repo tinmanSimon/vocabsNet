@@ -353,7 +353,6 @@ function App() {
               }}
               onCollapse={() => {
                 matrixRef.current?.observeModal(searchRef);
-                console.log("SearchModal collapse")
               }}
             />
             <SearchTagsModal
@@ -363,7 +362,13 @@ function App() {
               results={searchTagsModal.results}
               onSearch={handleTagSearch}
               onWordClick={handleWordFromTag}
-              onClose={()=>setSearchTagsModal({open:false,results:[]})}
+              onClose={()=>{
+                setSearchTagsModal({open:false,results:[]})
+                matrixRef.current?.unObserveModal(searchTagsRef)
+              }}
+              onCollapse={() => {
+                matrixRef.current?.observeModal(searchTagsRef);
+              }}
             />
             <DataModal 
               username={username} 
@@ -372,9 +377,13 @@ function App() {
               onSubmit={handleDataRequest} 
               onClose={()=>{
                 setOpenAddDataModal(false)
+                matrixRef.current?.unObserveModal(addDataRef)
               }} 
               existingEdges={existingEdges}
               ref={addDataRef}
+              onCollapse={() => {
+                matrixRef.current?.observeModal(addDataRef);
+              }}
             />
 
             <DataModal 
@@ -384,9 +393,13 @@ function App() {
               onSubmit={handleDataRequest} 
               onClose={()=>{
                 setOpenRemoveDataModal(false)
+                matrixRef.current?.unObserveModal(removeDataRef)
               }} 
               existingEdges={existingEdges}
               ref={removeDataRef}
+              onCollapse={() => {
+                matrixRef.current?.observeModal(removeDataRef);
+              }}
             />
             
             <ModalsMatrix

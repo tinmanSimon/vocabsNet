@@ -24,8 +24,9 @@ const ModalsMatrix = forwardRef(({ onPositionChange }, ref) => {
             if (!modalRef?.current) return;
             if (!observed.current.find(o => o === modalRef)) 
                 observed.current.push(modalRef);
+            const index = observed.current.indexOf(modalRef);
             const centres = getCellCenters();
-            modalRef.current.setTargetPosition?.(centres[observed.current.length - 1]);
+            modalRef.current.setTargetPosition?.(centres[index]);
         },
 
         unObserveModal(modalRef) {

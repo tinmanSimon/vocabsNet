@@ -4,7 +4,7 @@ import './DataModal.css'
 import ModalScaffold from './ModalScaffold'
 
 const SearchModal = forwardRef(function SearchModal(props, ref) {
-  const { open, onSearch, onClose, targetPosition, onCollapse } = props
+  const { open, onSearch, onClose, onCollapse } = props
 
   /* clear field each time modal opens */
   const [term, setTerm] = useState('')
@@ -38,7 +38,6 @@ const SearchModal = forwardRef(function SearchModal(props, ref) {
       minHeight={160}
       initialPos={{ x: 200, y: 80 }}
       initialSize={{ width: 320, height: 160 }}
-      targetPosition={targetPosition}
       onCollapse={onCollapse}
     >
       <div className="wm-content" style={{ justifyContent: 'center' }}>
