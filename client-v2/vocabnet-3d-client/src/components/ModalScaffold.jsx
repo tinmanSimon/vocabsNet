@@ -25,13 +25,20 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
   const [showHeader, setShowHeader] = useState(true)
   const [lastCollapse, setLastCollapse] = useState(false)
   const [targetPos, setTargetPos] = useState(null)
+  const [lastExpandPos, setLastExpandPos] = useState(null)
+  const lastExpandRef = useRef(lastExpandPos)
   const collapsedRef = useRef(collapsed)
   useEffect(() => {
     collapsedRef.current = collapsed
   }, [collapsed])
 
+  useEffect(() => {
+    lastExpandRef.current = lastExpandPos
+  }, [lastExpandPos])
+
   const expand = () => {
     setCollapsed(false)
+    collapsedRef.current = false
     setShowContent(false)
     setShowHeader(false)
     setTimeout(() => {setShowContent(true)}, 800) 
@@ -50,12 +57,27 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
         return
       }
       expand()
+      moveToTargetPos()
+    }
+  }
+
+  const moveToTargetPos = (collapseOnly = false) => {
+    if (collapseOnly && collapsedRef.current != true) return
+    if (targetPosition === null) return
+    const { x, y } = posRef.current
+    const dist = Math.hypot(targetPosition.x - x, targetPosition.y - y)
+    if (collapseOnly && dist > 400) return
+    if (collapsedRef.current === true) {
+      if (targetPosition) setTargetPos({ x: targetPosition.x, y: targetPosition.y })
+    } else {
+      if (lastExpandRef.current) 
+        setTargetPos({ x: lastExpandRef.current.x, y: lastExpandRef.current.y })
     }
   }
 
   const {
     pos, size, startDrag, startResize, setPos, resizing
-  } = useDragResize({ minWidth, minHeight, initialPos, initialSize, onClick: onHeaderClick })
+  } = useDragResize({ minWidth, minHeight, initialPos, initialSize, onClick: onHeaderClick, moveToTargetPos })
   const interacting = resizing
   const posRef   = useRef(pos)
   const rAFRef   = useRef()
@@ -63,18 +85,33 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
 
   useEffect(() => {
     if (!targetPos) return
-    const speed = 0.03            // fraction of the remaining distance / frame
-    const tick  = () => {
+    let lastTime = null
+
+    const tick = (time) => {
+      if (lastTime === null) lastTime = time
+      const dt = (time - lastTime) / 1000 
+      lastTime = time
+
       const { x, y } = posRef.current
       const dx = targetPos.x - x
       const dy = targetPos.y - y
       const dist = Math.hypot(dx, dy)
-      if (dist < 1.0) {             // snap when close enough
+
+      if (dist < 1.0) {
         setPos(targetPos)
         return
       }
-      const delta_x = Math.min(dx * speed, 2.0)
-      const delta_y = Math.min(dy * speed, 2.0)
+
+      const speed = 400 
+      const unit_x = dx / dist
+      const unit_y = dy / dist
+
+      let delta = speed * dt
+      if (delta > dist) delta = dist
+
+      const delta_x = unit_x * delta
+      const delta_y = unit_y * delta
+
       setPos({ x: x + delta_x, y: y + delta_y })
       rAFRef.current = requestAnimationFrame(tick)
     }
@@ -85,8 +122,11 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
   const handleClose = () => {
     if (collapseOnClose && collapsedRef.current === false) {
       setCollapsed(true)
+      collapsedRef.current = true
       setLastCollapse(true)
-      setTargetPos({ x: targetPosition.x, y: targetPosition.y })
+      moveToTargetPos()
+      setLastExpandPos(pos)
+      lastExpandRef.current = pos
     } else {
       onClose?.()
       setCollapsed(false)

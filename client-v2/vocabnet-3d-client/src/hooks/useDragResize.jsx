@@ -6,7 +6,8 @@ export default function useDragResize({
   minHeight = 200,
   initialPos  = { x: 180, y: 100 },
   initialSize = { width: minWidth, height: minHeight },
-  onClick = null
+  onClick = null,
+  moveToTargetPos = null
 } = {}) {
   /* ───────── state ───────── */
   const [pos,  setPos]  = useState(initialPos)
@@ -45,6 +46,8 @@ export default function useDragResize({
     const ref = dragRef.current
     if (ref && !ref.moved && typeof onClick === 'function') {
       onClick(e)
+    } else {
+      moveToTargetPos(true)
     }
   }, [])
 
