@@ -10,11 +10,30 @@ import { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 're
  * onPositionChange?: (pos) => void   // optional live-update callback
  */
 const ModalsMatrix = forwardRef(({ onPositionChange }, ref) => {
-  const [pos, setPos] = useState({ x: 100, y: 100 });       // start somewhere visible
+  const [pos, setPos] = useState({ x: 100, y: 100 });
+  const posRef = useRef(pos)
   const dragInfo = useRef({ dragging: false, offsetX: 0, offsetY: 0 });
+  const observed = useRef([]);
 
   // expose current position through a ref, e.g. matrixRef.current.getPos()
-  useImperativeHandle(ref, () => ({ getPos: () => pos }), [pos]);
+    useImperativeHandle(ref, () => ({
+        getPos: () => pos,
+        
+        /** register an external modal (forwardRef) for observation */
+        observeModal(modalRef) {
+            if (!modalRef?.current) return;
+            if (!observed.current.find(o => o === modalRef)) 
+                observed.current.push(modalRef);
+            const centres = getCellCenters();
+            modalRef.current.setTargetPosition?.(centres[observed.current.length - 1]);
+        },
+
+        unObserveModal(modalRef) {
+            if (!modalRef?.current) return;
+            const index = observed.current.indexOf(modalRef);
+            if (index !== -1) observed.current.splice(index, 1);
+        }
+    }), [pos]);
 
   /* ——— internal handlers ——— */
   const handleMouseDown = e => {
@@ -34,6 +53,7 @@ const ModalsMatrix = forwardRef(({ onPositionChange }, ref) => {
       y: e.clientY - dragInfo.current.offsetY
     };
     setPos(newPos);
+    posRef.current = newPos
     onPositionChange?.(newPos);
   };
 
@@ -41,6 +61,18 @@ const ModalsMatrix = forwardRef(({ onPositionChange }, ref) => {
     dragInfo.current.dragging = false;
     window.removeEventListener('mousemove', handleMouseMove);
     window.removeEventListener('mouseup', handleMouseUp);
+
+    const centres = getCellCenters();
+    observed.current.forEach((ref, idx) => {
+        const api = ref.current;
+        if (!api?.isCollapsed) return;
+
+        console.log("handleMouseUp idx: ", idx, ", api.isCollapsed(): ", api.isCollapsed())
+        console.log("center pos ", centres[idx])
+        if (api.isCollapsed()) {
+            api.setTargetPosition?.(centres[idx]);
+        }
+    });
   };
 
   function getCellCenters() {
@@ -50,8 +82,8 @@ const ModalsMatrix = forwardRef(({ onPositionChange }, ref) => {
     for (let row = 0; row < 3; row++) {
       for (let col = 0; col < 3; col++) {
         centers.push({
-          x: pos.x + col * cellSize + cellSize / 2,
-          y: pos.y + row * cellSize + cellSize / 2
+          x: posRef.current.x + col * cellSize + cellSize / 2 - 20,
+          y: posRef.current.y + row * cellSize + cellSize / 2 - 20
         });
       }
     }

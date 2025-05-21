@@ -347,7 +347,14 @@ function App() {
               ref={searchRef}
               open={searchModalOpen}
               onSearch={(term)=>{handleSearch(term)}}
-              onClose={()=>setSearchModalOpen(false)}
+              onClose={()=>{
+                setSearchModalOpen(false)
+                matrixRef.current?.unObserveModal(searchRef)
+              }}
+              onCollapse={() => {
+                matrixRef.current?.observeModal(searchRef);
+                console.log("SearchModal collapse")
+              }}
             />
             <SearchTagsModal
               ref={searchTagsRef}

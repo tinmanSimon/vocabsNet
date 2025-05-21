@@ -17,7 +17,6 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
     initialism='B',
     initialPos = { x: 200, y: 100 },
     initialSize = { width: 500, height: 300 },
-    targetPosition = null,
     onCollapse     = null
   } = props
 
@@ -26,6 +25,8 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
   const [showHeader, setShowHeader] = useState(true)
   const [lastCollapse, setLastCollapse] = useState(false)
   const [targetPos, setTargetPos] = useState(null)
+  const [matrixPos, setMatrixPos] = useState(null)
+  const matrixPosRef = useRef(matrixPos)
   const [lastExpandPos, setLastExpandPos] = useState(null)
   const lastExpandRef = useRef(lastExpandPos)
   const collapsedRef = useRef(collapsed)
@@ -48,7 +49,12 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
 
   useImperativeHandle(ref, () => ({
     expand,
-    isCollapsed: () => collapsedRef.current
+    isCollapsed: () => collapsedRef.current,
+    setTargetPosition: (pos) => {
+      setTargetPos(pos)
+      setMatrixPos(pos)
+      matrixPosRef.current = pos
+    }
   }))
 
   const onHeaderClick = (e) => {
@@ -64,12 +70,12 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
 
   const moveToTargetPos = (collapseOnly = false) => {
     if (collapseOnly && collapsedRef.current != true) return
-    if (targetPosition === null) return
+    if (matrixPosRef.current === null) return
     const { x, y } = posRef.current
-    const dist = Math.hypot(targetPosition.x - x, targetPosition.y - y)
+    const dist = Math.hypot(matrixPosRef.current.x - x, matrixPosRef.current.y - y)
     if (collapseOnly && dist > 400) return
     if (collapsedRef.current === true) {
-      if (targetPosition) setTargetPos({ x: targetPosition.x, y: targetPosition.y })
+      if (matrixPosRef.current) setTargetPos({ x: matrixPosRef.current.x, y: matrixPosRef.current.y })
     } else {
       if (lastExpandRef.current) 
         setTargetPos({ x: lastExpandRef.current.x, y: lastExpandRef.current.y })
@@ -128,10 +134,13 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
       moveToTargetPos()
       setLastExpandPos(pos)
       lastExpandRef.current = pos
+      onCollapse?.()
     } else {
       onClose?.()
       setCollapsed(false)
       setLastCollapse(false)
+      if (lastExpandRef.current) 
+        setTargetPos({ x: lastExpandRef.current.x, y: lastExpandRef.current.y })
     }
   }
 
