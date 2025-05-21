@@ -12,9 +12,7 @@ export default function LeftNav({
 }) {
   const [open, setOpen] = useState(false)
   const [openSettingModal, setOpenSettingModal] = useState(false)
-  const [pos, setPos] = useState(() => {
-    return { x: 32, y: 32 }
-  })
+  const [pos, setPos] = useState({ x: 32, y: 32})
 
   const onSettingModalClose = ()=>{
     onModalClose()

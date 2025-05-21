@@ -10,7 +10,7 @@ import { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 're
  * onPositionChange?: (pos) => void   // optional live-update callback
  */
 const ModalsMatrix = forwardRef(({ onPositionChange }, ref) => {
-  const [pos, setPos] = useState({ x: 100, y: 100 });
+  const [pos, setPos] = useState({ x: 22, y: 22 });
   const posRef = useRef(pos)
   const dragInfo = useRef({ dragging: false, offsetX: 0, offsetY: 0 });
   const observed = useRef([]);
@@ -98,7 +98,7 @@ const ModalsMatrix = forwardRef(({ onPositionChange }, ref) => {
         width: 180,
         height: 180,
         userSelect: 'none',
-        zIndex: 9999,
+        zIndex: 0,
         pointerEvents: 'none', // 🔒 ignore all pointer events by default
       }}
     >
