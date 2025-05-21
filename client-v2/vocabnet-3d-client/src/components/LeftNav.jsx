@@ -15,9 +15,12 @@ const LeftNav = forwardRef(function LeftNav(props, ref) {
   } = props
 
   const [open, setOpen] = useState(false)
+  const openRef = useRef(open)
   const [openSettingModal, setOpenSettingModal] = useState(false)
   const [targetPos, setTargetPos] = useState({x : 32, y : 32})
   const targetPosRef = useRef(targetPos)
+  const [enableMoveToTarget, setEnableMoveToTarget] = useState(false)
+  const enableMoveToTargetRef = useRef(enableMoveToTarget)
   const [pos, setPos] = useState({ x: 32, y: 32})
   const [lastExpandPos, setLastExpandPos] = useState(null)
   const lastExpandRef = useRef(lastExpandPos)
@@ -32,8 +35,14 @@ const LeftNav = forwardRef(function LeftNav(props, ref) {
   useImperativeHandle(ref, () => ({
     isCollapsed: () => !open,
     setTargetPosition: (pos) => {
-      setTargetPos({x : pos.x, y : pos.y})
-      targetPosRef.current = pos
+      if (openRef.current && enableMoveToTargetRef.current) {
+        setTargetPos({x : pos.x, y : pos.y})
+        targetPosRef.current = pos
+      }
+    },
+    enableModalMove: (enable) =>{
+      setEnableMoveToTarget(enable)
+      enableMoveToTargetRef.current = enable
     }
   }))
 
@@ -67,14 +76,15 @@ const LeftNav = forwardRef(function LeftNav(props, ref) {
       )
       if (!moved) {
         setOpen(true)
-        if (lastExpandRef.current) {
-          console.log("lastExpandRef.current", lastExpandRef.current)
+        openRef.current = open
+        if (lastExpandRef.current && enableMoveToTargetRef.current) {
           setTargetPos({ x: lastExpandRef.current.x, y: lastExpandRef.current.y })
           targetPosRef.current = lastExpandRef.current
         }
       }
-      else if (targetDist < 400) {
-        setTargetPos({x : targetPosRef.current.x, y : targetPosRef.current.y})
+      else {
+        if (targetDist < 400 && enableMoveToTargetRef.current)
+          setTargetPos({x : targetPosRef.current.x, y : targetPosRef.current.y})
       }
     }
   }
@@ -124,6 +134,7 @@ const LeftNav = forwardRef(function LeftNav(props, ref) {
     { label: 'Search Tags', onClick: () => { handleLeftnavClick('search-tags')}},
     { label: 'Collapse',    onClick: () => {
       setOpen(false)
+      openRef.current = open
       onCollapse?.()
       setLastExpandPos(pos)
       lastExpandRef.current = pos

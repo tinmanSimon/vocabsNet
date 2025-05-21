@@ -304,8 +304,10 @@ function App() {
   }
 
   useEffect(() => {
-    matrixRef.current?.observeModal(leftnavRef);
-  }, [leftnavRef.current, matrixRef.current])
+    if (matrixRef.current && leftnavRef.current) {
+      matrixRef.current.observeModal(leftnavRef);
+    }
+  }, []);
 
   return (
       <div style={{ width: '100vw', height: '100vh' }}>

@@ -14,6 +14,17 @@ const ModalsMatrix = forwardRef(({ onPositionChange }, ref) => {
   const posRef = useRef(pos)
   const dragInfo = useRef({ dragging: false, offsetX: 0, offsetY: 0 });
   const observed = useRef([]);
+  const [visible, setVisible] = useState(false);
+
+  const enableModalMove = () => {
+    if (observed.current.length === 1) {
+      observed.current[0].current?.enableModalMove?.(false)
+    } else if (observed.current.length > 1) {
+      const centres = getCellCenters();
+      observed.current[0].current?.enableModalMove?.(true)
+      observed.current[0].current?.setTargetPosition?.(centres[0]);
+    }
+  }
 
   // expose current position through a ref, e.g. matrixRef.current.getPos()
     useImperativeHandle(ref, () => ({
@@ -24,6 +35,10 @@ const ModalsMatrix = forwardRef(({ onPositionChange }, ref) => {
             if (!modalRef?.current) return;
             if (!observed.current.find(o => o === modalRef)) 
                 observed.current.push(modalRef);
+            if (observed.current.length >= 2) {
+              setVisible(true);
+              enableModalMove()
+            }
             const index = observed.current.indexOf(modalRef);
             const centres = getCellCenters();
             modalRef.current.setTargetPosition?.(centres[index]);
@@ -32,7 +47,23 @@ const ModalsMatrix = forwardRef(({ onPositionChange }, ref) => {
         unObserveModal(modalRef) {
             if (!modalRef?.current) return;
             const index = observed.current.indexOf(modalRef);
-            if (index !== -1) observed.current.splice(index, 1);
+            if (index !== -1) {
+              observed.current.splice(index, 1);
+              if (observed.current.length < 2) {
+                setVisible(false);
+                enableModalMove()
+              }
+
+              // Move the modals to fill the gap
+              const centres = getCellCenters();
+              observed.current.forEach((ref, idx) => {
+                  const api = ref.current;
+                  if (api?.isCollapsed?.()) {
+                      api.setTargetPosition?.(centres[idx]);
+                  }
+              });
+            }
+            
         }
     }), [pos]);
 
@@ -99,7 +130,7 @@ const ModalsMatrix = forwardRef(({ onPositionChange }, ref) => {
         height: 180,
         userSelect: 'none',
         zIndex: 0,
-        pointerEvents: 'none', // 🔒 ignore all pointer events by default
+        pointerEvents: 'none'
       }}
     >
       {/* Grid lines only */}
@@ -125,7 +156,9 @@ const ModalsMatrix = forwardRef(({ onPositionChange }, ref) => {
             strokeWidth={10}
             style={{
               pointerEvents: 'stroke', // ✅ only interact with the line stroke
-              cursor: 'move',
+              cursor: visible ? 'move' : 'auto',
+              opacity: visible ? 1 : 0,            // ← fade in/out
+              transition: 'opacity 1.5s ease-in-out'
             }}
             onMouseDown={handleMouseDown}
           />
@@ -142,28 +175,15 @@ const ModalsMatrix = forwardRef(({ onPositionChange }, ref) => {
             strokeWidth={10}
             style={{
               pointerEvents: 'stroke',
-              cursor: 'move',
+              cursor: visible ? 'move' : 'auto',
+              opacity: visible ? 1 : 0,            // ← fade in/out
+              transition: 'opacity 1.5s ease-in-out'
             }}
             onMouseDown={handleMouseDown}
           />
         ))}
       </svg>
   
-      {/* Visual placeholders (non-interactive) */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 60px)',
-          gridTemplateRows: 'repeat(3, 60px)',
-          width: '100%',
-          height: '100%',
-          pointerEvents: 'none',
-        }}
-      >
-        {Array.from({ length: 9 }).map((_, i) => (
-          <div key={i} />
-        ))}
-      </div>
     </div>
   );
   
