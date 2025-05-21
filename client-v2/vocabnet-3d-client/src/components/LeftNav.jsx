@@ -1,18 +1,31 @@
-import { useRef, useState} from 'react'
+import { useState, useRef, useEffect, useImperativeHandle, forwardRef } from 'react'
 import './LeftNav.css'
-import DataModal from './DataModal'
 import SettingModal from './SettingModal'
 
-export default function LeftNav({ 
-  onModalOpen,
-  onModalClose,
-  settings, 
-  onUpdateSettings,
-  handleLeftnavClick
-}) {
+const LeftNav = forwardRef(function LeftNav(props, ref) {
+  const { 
+    onModalOpen,
+    onModalClose,
+    settings, 
+    onUpdateSettings,
+    handleLeftnavClick,
+    onCollapse
+  } = props
+
   const [open, setOpen] = useState(false)
   const [openSettingModal, setOpenSettingModal] = useState(false)
+  const [targetPos, setTargetPos] = useState(null)
   const [pos, setPos] = useState({ x: 32, y: 32})
+  const leftnavRef = useRef()
+  const rAFRef   = useRef()
+  const posRef   = useRef(pos)
+  useEffect(() => { posRef.current = pos }, [pos])
+
+  useImperativeHandle(ref, () => ({
+    setTargetPosition: (pos) => {
+      setTargetPos({x : pos.x, y : pos.y})
+    }
+  }))
 
   const onSettingModalClose = ()=>{
     onModalClose()
@@ -38,9 +51,52 @@ export default function LeftNav({
         e.clientX - dragRef.current.x,
         e.clientY - dragRef.current.y
       ) > 3
+      const targetDist = Math.hypot(
+        e.clientX - targetPos.x,
+        e.clientY - targetPos.y
+      )
       if (!moved) setOpen(true)
+      else if (targetDist < 400) {
+        setTargetPos({x : targetPos.x, y : targetPos.y})
+      }
     }
   }
+
+  useEffect(() => {
+    if (!targetPos) return
+    let lastTime = null
+
+    const tick = (time) => {
+      if (lastTime === null) lastTime = time
+      const dt = (time - lastTime) / 1000 
+      lastTime = time
+
+      const { x, y } = posRef.current
+      const dx = targetPos.x - x
+      const dy = targetPos.y - y
+      const dist = Math.hypot(dx, dy)
+
+      if (dist < 1.0) {
+        setPos(targetPos)
+        return
+      }
+
+      const speed = 400 
+      const unit_x = dx / dist
+      const unit_y = dy / dist
+
+      let delta = speed * dt
+      if (delta > dist) delta = dist
+
+      const delta_x = unit_x * delta
+      const delta_y = unit_y * delta
+
+      setPos({ x: x + delta_x, y: y + delta_y })
+      rAFRef.current = requestAnimationFrame(tick)
+    }
+    rAFRef.current = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(rAFRef.current)
+  }, [targetPos])
 
   /* ----- menu items ----- */
   const items = [
@@ -49,7 +105,10 @@ export default function LeftNav({
     { label: 'Settings',    onClick: () => {onModalOpen();setOpenSettingModal(true);}},
     { label: 'Search Word', onClick: () => { handleLeftnavClick('search-word')}},
     { label: 'Search Tags', onClick: () => { handleLeftnavClick('search-tags')}},
-    { label: 'Collapse',    onClick: () => setOpen(false) }
+    { label: 'Collapse',    onClick: () => {
+      setOpen(false)
+      onCollapse?.()
+    }}
   ]
 
   /* compute expanded height: header 40 px + items*48 px */
@@ -57,6 +116,7 @@ export default function LeftNav({
 
   return (
     <div
+      ref={leftnavRef}
       className={`ln-box ${open ? 'open' : ''}`}
       style={{
         left: pos.x,
@@ -97,4 +157,7 @@ export default function LeftNav({
       />
     </div>
   )
-}
+})
+
+export default LeftNav
+

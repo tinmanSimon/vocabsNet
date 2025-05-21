@@ -46,6 +46,7 @@ function App() {
   const [existingEdges, setExistingEdges] = useState([])
   const [searchTagsModal,setSearchTagsModal]=useState({open:false,results:[]})
   const matrixRef = useRef(null);
+  const leftnavRef = useRef(null);
 
 
   useEffect(() => {
@@ -308,11 +309,15 @@ function App() {
         {!showLogin && (
           <>
             <LeftNav 
+              ref={leftnavRef}
               onModalOpen={()=>{setModalOpen(true)}}
               onModalClose={()=>{setModalOpen(false)}}
               settings={settings}
               onUpdateSettings={handleUpdateSettings}
               handleLeftnavClick={handleLeftnavClick}
+              onCollapse={() => {
+                matrixRef.current?.observeModal(leftnavRef);
+              }}
             />
             <Canvas camera={{ position: [0, 0, 50], fov: 60 }} style={{ background: 'lightblue' }}>
               <ambientLight />
