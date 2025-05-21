@@ -303,6 +303,10 @@ function App() {
     }
   }
 
+  useEffect(() => {
+    matrixRef.current?.observeModal(leftnavRef);
+  }, [leftnavRef.current, matrixRef.current])
+
   return (
       <div style={{ width: '100vw', height: '100vh' }}>
         {showLogin && <LoginModal onLogin={handleLogin} error={loginError} />}

@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useImperativeHandle, forwardRef } from 'react'
 import './LeftNav.css'
+import './WordModal.css'
+import './DataModal.css'
 import SettingModal from './SettingModal'
 
 const LeftNav = forwardRef(function LeftNav(props, ref) {

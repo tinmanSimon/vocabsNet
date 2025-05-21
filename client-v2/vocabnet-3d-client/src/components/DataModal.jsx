@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useImperativeHandle, forwardRef } from 'react'
-import './WordModal.css'            // re‑use draggable / resizable styles
-import './DataModal.css'            // keep existing field/layout styles
+import './WordModal.css'
+import './DataModal.css'
 import EdgeNameInput from './EdgeNameInput'
 import ModalScaffold from './ModalScaffold'
 
