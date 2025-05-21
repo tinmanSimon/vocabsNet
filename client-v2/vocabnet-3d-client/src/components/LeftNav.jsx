@@ -14,16 +14,24 @@ const LeftNav = forwardRef(function LeftNav(props, ref) {
 
   const [open, setOpen] = useState(false)
   const [openSettingModal, setOpenSettingModal] = useState(false)
-  const [targetPos, setTargetPos] = useState(null)
+  const [targetPos, setTargetPos] = useState({x : 32, y : 32})
+  const targetPosRef = useRef(targetPos)
   const [pos, setPos] = useState({ x: 32, y: 32})
+  const [lastExpandPos, setLastExpandPos] = useState(null)
+  const lastExpandRef = useRef(lastExpandPos)
   const leftnavRef = useRef()
   const rAFRef   = useRef()
   const posRef   = useRef(pos)
   useEffect(() => { posRef.current = pos }, [pos])
+  useEffect(() => {
+    lastExpandRef.current = lastExpandPos
+  }, [lastExpandPos])
 
   useImperativeHandle(ref, () => ({
+    isCollapsed: () => !open,
     setTargetPosition: (pos) => {
       setTargetPos({x : pos.x, y : pos.y})
+      targetPosRef.current = pos
     }
   }))
 
@@ -52,18 +60,25 @@ const LeftNav = forwardRef(function LeftNav(props, ref) {
         e.clientY - dragRef.current.y
       ) > 3
       const targetDist = Math.hypot(
-        e.clientX - targetPos.x,
-        e.clientY - targetPos.y
+        e.clientX - targetPosRef.current.x,
+        e.clientY - targetPosRef.current.y
       )
-      if (!moved) setOpen(true)
+      if (!moved) {
+        setOpen(true)
+        if (lastExpandRef.current) {
+          console.log("lastExpandRef.current", lastExpandRef.current)
+          setTargetPos({ x: lastExpandRef.current.x, y: lastExpandRef.current.y })
+          targetPosRef.current = lastExpandRef.current
+        }
+      }
       else if (targetDist < 400) {
-        setTargetPos({x : targetPos.x, y : targetPos.y})
+        setTargetPos({x : targetPosRef.current.x, y : targetPosRef.current.y})
       }
     }
   }
 
   useEffect(() => {
-    if (!targetPos) return
+    if (!targetPosRef.current) return
     let lastTime = null
 
     const tick = (time) => {
@@ -72,12 +87,12 @@ const LeftNav = forwardRef(function LeftNav(props, ref) {
       lastTime = time
 
       const { x, y } = posRef.current
-      const dx = targetPos.x - x
-      const dy = targetPos.y - y
+      const dx = targetPosRef.current.x - x
+      const dy = targetPosRef.current.y - y
       const dist = Math.hypot(dx, dy)
 
       if (dist < 1.0) {
-        setPos(targetPos)
+        setPos(targetPosRef.current)
         return
       }
 
@@ -108,6 +123,8 @@ const LeftNav = forwardRef(function LeftNav(props, ref) {
     { label: 'Collapse',    onClick: () => {
       setOpen(false)
       onCollapse?.()
+      setLastExpandPos(pos)
+      lastExpandRef.current = pos
     }}
   ]
 

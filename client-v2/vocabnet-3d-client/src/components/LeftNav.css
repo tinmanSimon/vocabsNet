@@ -1,7 +1,7 @@
 /* ------ container box morphs ------ */
 .ln-box {
     position:fixed; z-index:1000; user-select:none;
-    transition: width 0.8s ease, height 0.8s ease, border-radius 0.8s ease;
+    transition: width 1.5s ease, height 1.5s ease, border-radius 1.5s ease;
     border-radius:8px;            /* fully rounded when closed */
     box-shadow:0 2px 6px rgba(0,0,0,.25);
     overflow:hidden;              /* clips content during animation */
