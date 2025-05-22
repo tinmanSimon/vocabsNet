@@ -22,6 +22,7 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
     setZIndexCount
   } = props
 
+  const frameRef = useRef(null)
   const [collapsed, setCollapsed] = useState(false)
   const [showContent, setShowContent] = useState(true)
   const [showHeader, setShowHeader] = useState(true)
@@ -76,6 +77,7 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
   }
 
   const moveToTargetPos = (collapseOnly = false) => {
+    if (rAFRef.current) return
     if (collapseOnly && collapsedRef.current != true) return
     if (matrixPosRef.current === null) return
     const { x, y } = posRef.current
@@ -103,7 +105,12 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
   const interacting = resizing
   const posRef   = useRef(pos)
   const rAFRef   = useRef()
-  useEffect(() => { posRef.current = pos }, [pos])
+  useEffect(() => { 
+    posRef.current = pos 
+    if (frameRef.current) {
+      frameRef.current.style.transform =`translate3d(${pos.x}px, ${pos.y}px, 0)`;
+    }
+  }, [pos])
 
   useEffect(() => {
     if (!targetPos) return
@@ -134,7 +141,14 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
       const delta_x = unit_x * delta
       const delta_y = unit_y * delta
 
-      setPos({ x: x + delta_x, y: y + delta_y })
+      posRef.current = { x: x + delta_x, y: y + delta_y }
+      if (frameRef.current) {
+        frameRef.current.style.transform = `translate3d(${posRef.current.x}px, ${posRef.current.y}px, 0)`
+      }
+      if (dist - delta < 1.0) {
+        setPos(targetPos)
+        return
+      }
       rAFRef.current = requestAnimationFrame(tick)
     }
     rAFRef.current = requestAnimationFrame(tick)
@@ -162,16 +176,19 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
   if (!visible) return null
   return (
     <div
+      ref={frameRef}
       className={`modal-frame ${className} 
         ${collapsed ? 'collapsed' : ''}
         ${interacting ? 'no-transition' : ''}`}
       style={{
-        left: pos.x,
-        top: pos.y,
+        left: 0,
+        top: 0,
+        transform: `translate3d(${pos.x}px, ${pos.y}px, 0)`,
         width: size.width,
         height: size.height,
         position: 'fixed',
-        zIndex: zIndexRef.current
+        zIndex: zIndexRef.current,
+        willChange: 'transform'
       }}
       onClick={updateZIndex}
     >

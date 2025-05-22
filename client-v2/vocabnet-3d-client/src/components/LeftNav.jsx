@@ -9,6 +9,7 @@ const LeftNav = forwardRef(function LeftNav(props, ref) {
     onCollapse
   } = props
 
+  const leftnavRef = useRef()
   const [open, setOpen] = useState(false)
   const openRef = useRef(open)
   const [targetPos, setTargetPos] = useState({x : 32, y : 32})
@@ -18,10 +19,14 @@ const LeftNav = forwardRef(function LeftNav(props, ref) {
   const [pos, setPos] = useState({ x: 32, y: 32})
   const [lastExpandPos, setLastExpandPos] = useState(null)
   const lastExpandRef = useRef(lastExpandPos)
-  const leftnavRef = useRef()
   const rAFRef   = useRef()
   const posRef   = useRef(pos)
-  useEffect(() => { posRef.current = pos }, [pos])
+  useEffect(() => { 
+    posRef.current = pos 
+    if (leftnavRef.current) {
+      leftnavRef.current.style.transform =`translate3d(${pos.x}px, ${pos.y}px, 0)`;
+    }
+  }, [pos])
   useEffect(() => {
     lastExpandRef.current = lastExpandPos
   }, [lastExpandPos])
@@ -107,7 +112,14 @@ const LeftNav = forwardRef(function LeftNav(props, ref) {
       const delta_x = unit_x * delta
       const delta_y = unit_y * delta
 
-      setPos({ x: x + delta_x, y: y + delta_y })
+      posRef.current = { x: x + delta_x, y: y + delta_y }
+      if (leftnavRef.current) {
+        leftnavRef.current.style.transform = `translate3d(${posRef.current.x}px, ${posRef.current.y}px, 0)`
+      }
+      if (dist - delta < 1.0) {
+        setPos(targetPosRef.current)
+        return
+      }
       rAFRef.current = requestAnimationFrame(tick)
     }
     rAFRef.current = requestAnimationFrame(tick)
@@ -138,10 +150,12 @@ const LeftNav = forwardRef(function LeftNav(props, ref) {
       ref={leftnavRef}
       className={`ln-box ${open ? 'open' : ''}`}
       style={{
-        left: pos.x,
-        top: pos.y,
+        left: 0,
+        top: 0,
+        transform: `translate3d(${pos.x}px, ${pos.y}px, 0)`,
         width: open ? 160 : 40,
-        height: open ? expandedH : 40
+        height: open ? expandedH : 40,
+        willChange: 'transform'
       }}
     >
       {/* single drag / click handle */}
