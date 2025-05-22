@@ -2,21 +2,15 @@ import { useState, useRef, useEffect, useImperativeHandle, forwardRef } from 're
 import './LeftNav.css'
 import './WordModal.css'
 import './DataModal.css'
-import SettingModal from './SettingModal'
 
 const LeftNav = forwardRef(function LeftNav(props, ref) {
   const { 
-    onModalOpen,
-    onModalClose,
-    settings, 
-    onUpdateSettings,
     handleLeftnavClick,
     onCollapse
   } = props
 
   const [open, setOpen] = useState(false)
   const openRef = useRef(open)
-  const [openSettingModal, setOpenSettingModal] = useState(false)
   const [targetPos, setTargetPos] = useState({x : 32, y : 32})
   const targetPosRef = useRef(targetPos)
   const [enableMoveToTarget, setEnableMoveToTarget] = useState(false)
@@ -45,11 +39,6 @@ const LeftNav = forwardRef(function LeftNav(props, ref) {
       enableMoveToTargetRef.current = enable
     }
   }))
-
-  const onSettingModalClose = ()=>{
-    onModalClose()
-    setOpenSettingModal(false)
-  }
 
   const dragRef = useRef(null)
   const startDrag = e => {
@@ -129,7 +118,7 @@ const LeftNav = forwardRef(function LeftNav(props, ref) {
   const items = [
     { label: 'Add Data',    onClick: () => { handleLeftnavClick('add-data')}},
     { label: 'Remove Data', onClick: () => { handleLeftnavClick('remove-data')}},
-    { label: 'Settings',    onClick: () => {onModalOpen();setOpenSettingModal(true);}},
+    { label: 'Settings',    onClick: () => { handleLeftnavClick('settings')}},
     { label: 'Search Word', onClick: () => { handleLeftnavClick('search-word')}},
     { label: 'Search Tags', onClick: () => { handleLeftnavClick('search-tags')}},
     { label: 'Collapse',    onClick: () => {
@@ -178,13 +167,6 @@ const LeftNav = forwardRef(function LeftNav(props, ref) {
           ))}
         </ul>
       )}
-      
-      <SettingModal 
-        open={openSettingModal}
-        settings={settings} 
-        onUpdate={onUpdateSettings} 
-        onClose={onSettingModalClose} 
-      />
     </div>
   )
 })

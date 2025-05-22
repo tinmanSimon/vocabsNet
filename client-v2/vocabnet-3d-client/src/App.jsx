@@ -10,6 +10,7 @@ import LeftNav from './components/LeftNav'
 import WelcomeBanner from "./components/WelcomeBanner"
 import WordModal from './components/WordModal'
 import SearchModal from './components/SearchModal'
+import SettingModal from './components/SettingModal'
 import SearchTagsModal from './components/SearchTagsModal'
 import DataModal from './components/DataModal'
 import { searchWord, searchByTags }  from './api/api'
@@ -35,7 +36,6 @@ function App() {
   const wordRef = useRef()
   const searchTagsRef = useRef()
   const [searchModalOpen, setSearchModalOpen] = useState(false)
-  const [modalOpen, setModalOpen] = useState(false)
   const settingsRef = useRef(settings)
   const graphRef = useRef(null);
   const controlsRef = useRef()
@@ -48,6 +48,8 @@ function App() {
   const matrixRef = useRef(null);
   const leftnavRef = useRef(null);
   const [zIndexCount, setZIndexCount] = useState(0) 
+  const settingRef = useRef(null)
+  const [settingModalOpen, setSettingModalOpen] = useState(false)
 
   useEffect(() => {
     tagDictRef.current = tagDict
@@ -283,6 +285,14 @@ function App() {
         }
         removeDataRef.current?.expand({alreadyExpanded: alreadyExpanded})
         break
+
+      case 'settings':
+        alreadyExpanded = settingModalOpen
+        if (!settingModalOpen) {
+          setSettingModalOpen(true)
+        }
+        settingRef.current?.expand({alreadyExpanded: alreadyExpanded})
+        break
     
       case 'search-word':
         alreadyExpanded = searchModalOpen
@@ -316,17 +326,15 @@ function App() {
         {showLogin && <LoginModal onLogin={handleLogin} error={loginError} />}
         {!showLogin && (
           <>
+
             <LeftNav 
               ref={leftnavRef}
-              onModalOpen={()=>{setModalOpen(true)}}
-              onModalClose={()=>{setModalOpen(false)}}
-              settings={settings}
-              onUpdateSettings={handleUpdateSettings}
               handleLeftnavClick={handleLeftnavClick}
               onCollapse={() => {
                 matrixRef.current?.observeModal(leftnavRef);
               }}
             />
+
             <Canvas camera={{ position: [0, 0, 50], fov: 60 }} style={{ background: 'lightblue' }}>
               <ambientLight />
               <pointLight position={[10, 10, 10]} />
@@ -341,7 +349,7 @@ function App() {
                   ref={graphRef} 
                   orbitControlsRef={controlsRef}
                   onWordClick={handleWordClick}
-                  pauseInteraction={noteModal.open || searchModalOpen || modalOpen || searchTagsModal.open || openAddDataModal || openRemoveDataModal}
+                  pauseInteraction={noteModal.open || searchModalOpen || searchTagsModal.open || openAddDataModal || openRemoveDataModal || settingModalOpen}
                 />
               }
               <OrbitControls ref={controlsRef}/>
@@ -366,6 +374,23 @@ function App() {
               zIndexCount={zIndexCount}
               setZIndexCount={setZIndexCount}
             />
+
+            <SettingModal 
+              ref={settingRef}
+              open={settingModalOpen}
+              settings={settings} 
+              onUpdate={handleUpdateSettings} 
+              onClose={() => {
+                setSettingModalOpen(false)
+                matrixRef.current?.unObserveModal(settingRef)
+              }} 
+              onCollapse={() => {
+                matrixRef.current?.observeModal(settingRef);
+              }}
+              zIndexCount={zIndexCount}
+              setZIndexCount={setZIndexCount}
+            />
+
             <SearchModal
               ref={searchRef}
               open={searchModalOpen}
@@ -380,6 +405,7 @@ function App() {
               zIndexCount={zIndexCount}
               setZIndexCount={setZIndexCount}
             />
+
             <SearchTagsModal
               ref={searchTagsRef}
               open={searchTagsModal.open}
@@ -397,6 +423,7 @@ function App() {
               zIndexCount={zIndexCount}
               setZIndexCount={setZIndexCount}
             />
+
             <DataModal 
               username={username} 
               open={openAddDataModal}
