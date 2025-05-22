@@ -92,7 +92,7 @@ const SettingModal = forwardRef(function SettingModal (props, ref) {
           <input
             type="number"
             name="graph_size"
-            value={local.graph_size ?? 0}
+            value={String(local.graph_size ?? 0)}
             onChange={handleChange}
             min={0}
             style={{ width: '80px', height: '20px' }}
