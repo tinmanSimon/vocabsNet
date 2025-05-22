@@ -197,7 +197,7 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
           </div>
         }
 
-        {['n', 'ne', 'nw'].map(dir => (
+        {['n', 'e', 'w', 'ne', 'nw'].map(dir => (
           <div
             key={dir}
             className={`resize-handle resize-handle-${dir}`}
