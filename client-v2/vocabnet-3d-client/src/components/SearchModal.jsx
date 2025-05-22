@@ -29,7 +29,7 @@ const SearchModal = forwardRef(function SearchModal(props, ref) {
       submitButtonText = "Search"
       collapseOnClose={true}
       initialism = { <img
-        src="src/assets/search.png"
+        src="../assets/search.png"
         alt="icon"
         className="header-icon-img"
       />}
