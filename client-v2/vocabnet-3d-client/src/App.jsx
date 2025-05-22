@@ -26,7 +26,7 @@ function App() {
   const [noteDict, setNoteDict] = useState({})
   const [settings, setSettings] = useState(() => {
     const cached = localStorage.getItem('app-settings')
-    return cached ? JSON.parse(cached) : { showNoteOnClick: false }
+    return cached ? JSON.parse(cached) : { showNoteOnClick: true }
   })
   const [openAddDataModal, setOpenAddDataModal] = useState(false)
   const [openRemoveDataModal, setOpenRemoveDataModal] = useState(false)
