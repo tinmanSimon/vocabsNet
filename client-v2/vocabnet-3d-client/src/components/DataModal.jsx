@@ -5,11 +5,14 @@ import EdgeNameInput from './EdgeNameInput'
 import ModalScaffold from './ModalScaffold'
 
 const DataModal = forwardRef(function DataModal(props, ref) {
-  const { open, username, mode, onClose, onSubmit, existingEdges, onCollapse } = props
+  const { 
+    open, username, mode, onClose, onSubmit, existingEdges, 
+    onCollapse,zIndexCount, setZIndexCount 
+  } = props
   const scaffoldRef = useRef()
 
   useImperativeHandle(ref, () => ({
-    expand: () => scaffoldRef.current?.expand?.(),
+    expand: (params) => scaffoldRef.current?.expand?.(params),
     isCollapsed: () => scaffoldRef.current?.isCollapsed?.(),
     setTargetPosition: (pos) => {
       scaffoldRef.current?.setTargetPosition(pos)
@@ -82,6 +85,8 @@ const DataModal = forwardRef(function DataModal(props, ref) {
       initialPos={{ x: 200, y: 80 }}
       initialSize={{ width: 560, height: 240 }}
       onCollapse={onCollapse}
+      zIndexCount={zIndexCount}
+      setZIndexCount={setZIndexCount}
     >
       <div className="wm-content" style={{ overflowY: 'auto', gap: 8 }}>
         {/* toolbar */}

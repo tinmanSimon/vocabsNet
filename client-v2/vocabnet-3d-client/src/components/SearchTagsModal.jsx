@@ -7,7 +7,8 @@ import ModalScaffold from './ModalScaffold'
 const SearchTagsModal = forwardRef(function SearchTagsModal(props, ref) {
   const {
     open, existingTags, results,           
-    onSearch, onWordClick, onClose, onCollapse
+    onSearch, onWordClick, onClose, onCollapse, 
+    zIndexCount, setZIndexCount
   } = props
 
     const [tags,setTags]=useState([])
@@ -15,7 +16,7 @@ const SearchTagsModal = forwardRef(function SearchTagsModal(props, ref) {
     useEffect(()=>{if(open){setTags([])}},[open])
 
     useImperativeHandle(ref, () => ({
-        expand: () => searchTagsRef.current?.expand?.(),
+        expand: (params) => searchTagsRef.current?.expand?.(params),
         isCollapsed: () => searchTagsRef.current?.isCollapsed?.(),
         setTargetPosition: (pos) => {
             searchTagsRef.current?.setTargetPosition(pos)
@@ -42,6 +43,8 @@ const SearchTagsModal = forwardRef(function SearchTagsModal(props, ref) {
             initialPos={{ x: 200, y: 80 }}
             initialSize={{ width: 400, height: 330 }}
             onCollapse={onCollapse}
+            zIndexCount={zIndexCount}
+            setZIndexCount={setZIndexCount}
             >
             <div className="wm-content" style={{gap:12}}>
                 <TagInput value={tags} onChange={setTags} existingTags={existingTags}/>

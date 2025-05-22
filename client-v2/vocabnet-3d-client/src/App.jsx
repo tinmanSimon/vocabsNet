@@ -47,7 +47,7 @@ function App() {
   const [searchTagsModal,setSearchTagsModal]=useState({open:false,results:[]})
   const matrixRef = useRef(null);
   const leftnavRef = useRef(null);
-
+  const [zIndexCount, setZIndexCount] = useState(0) 
 
   useEffect(() => {
     tagDictRef.current = tagDict
@@ -206,6 +206,7 @@ function App() {
     if (!settingsRef.current.showNoteOnClick) return 
     const existingNote = noteDictRef.current[name] || ''
     setNoteModal({ open:true, name, note: existingNote })
+    setZIndexCount(prev => prev + 1)
   }
 
   /* ─── persist note change ─── */
@@ -265,37 +266,38 @@ function App() {
   }
 
   const handleLeftnavClick = (menu_id) => {
+    let alreadyExpanded = false
     switch (menu_id) {
       case 'add-data':
-        if (openAddDataModal) {
-          addDataRef.current?.expand()
-        } else {
+        alreadyExpanded = openAddDataModal
+        if (!openAddDataModal) {
           setOpenAddDataModal(true)
         }
+        addDataRef.current?.expand({alreadyExpanded: alreadyExpanded})
         break
     
       case 'remove-data':
-        if (openRemoveDataModal) {
-          removeDataRef.current?.expand()
-        } else {
+        alreadyExpanded = openRemoveDataModal
+        if (!openRemoveDataModal) {
           setOpenRemoveDataModal(true)
         }
+        removeDataRef.current?.expand({alreadyExpanded: alreadyExpanded})
         break
     
       case 'search-word':
-        if (searchModalOpen) {
-          searchRef.current?.expand()
-        } else {
+        alreadyExpanded = searchModalOpen
+        if (!searchModalOpen) {
           setSearchModalOpen(true)
         }
+        searchRef.current?.expand({alreadyExpanded: alreadyExpanded})
         break
 
       case 'search-tags':
-        if (searchTagsModal.open) {
-          searchTagsRef.current?.expand()
-        } else {
+        alreadyExpanded = searchTagsModal.open
+        if (!searchTagsModal.open) {
           setSearchTagsModal({open:true,results:[]})
         }
+        searchTagsRef.current?.expand({alreadyExpanded: alreadyExpanded})
         break
     
       default:
@@ -361,6 +363,8 @@ function App() {
               onCollapse={() => {
                 matrixRef.current?.observeModal(wordRef);
               }}
+              zIndexCount={zIndexCount}
+              setZIndexCount={setZIndexCount}
             />
             <SearchModal
               ref={searchRef}
@@ -373,6 +377,8 @@ function App() {
               onCollapse={() => {
                 matrixRef.current?.observeModal(searchRef);
               }}
+              zIndexCount={zIndexCount}
+              setZIndexCount={setZIndexCount}
             />
             <SearchTagsModal
               ref={searchTagsRef}
@@ -388,6 +394,8 @@ function App() {
               onCollapse={() => {
                 matrixRef.current?.observeModal(searchTagsRef);
               }}
+              zIndexCount={zIndexCount}
+              setZIndexCount={setZIndexCount}
             />
             <DataModal 
               username={username} 
@@ -403,6 +411,8 @@ function App() {
               onCollapse={() => {
                 matrixRef.current?.observeModal(addDataRef);
               }}
+              zIndexCount={zIndexCount}
+              setZIndexCount={setZIndexCount}
             />
 
             <DataModal 
@@ -419,6 +429,8 @@ function App() {
               onCollapse={() => {
                 matrixRef.current?.observeModal(removeDataRef);
               }}
+              zIndexCount={zIndexCount}
+              setZIndexCount={setZIndexCount}
             />
             
             <ModalsMatrix ref={matrixRef}/>

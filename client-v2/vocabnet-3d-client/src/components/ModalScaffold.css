@@ -18,7 +18,6 @@
 
 .modal-frame {
     position:fixed;
-    z-index:2000;
     min-width:1px;
     min-height:1px;
     background:#fff;
@@ -168,14 +167,12 @@
   .resize-handle {
     position:absolute;
     background:transparent;
-    z-index:2000;
   }
 
 /* ── Shared handles ─────────────────────────── */
 .resize-handle {
     position: absolute;
     background: transparent;
-    z-index: 2000;
   }
   
   /* ── Vertical handles (north/south) ─────────── */

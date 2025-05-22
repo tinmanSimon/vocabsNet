@@ -1,6 +1,5 @@
 .wm-box{
     position:fixed;
-    z-index:2000;
     min-width:330px;
     min-height:330px;
     background:#fff;
@@ -107,7 +106,6 @@
   border-radius: 4px;
   max-height: 96px;
   overflow: auto;
-  z-index: 2000;
   margin-top: 4px;
 }
 .wm-suggest-item{padding:4px 8px;cursor:pointer;font-size:14px;}

@@ -63,7 +63,6 @@ const ModalsMatrix = forwardRef(({ onPositionChange }, ref) => {
                   }
               });
             }
-            
         }
     }), [pos]);
 

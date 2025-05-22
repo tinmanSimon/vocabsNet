@@ -4,7 +4,7 @@ import './DataModal.css'
 import ModalScaffold from './ModalScaffold'
 
 const SearchModal = forwardRef(function SearchModal(props, ref) {
-  const { open, onSearch, onClose, onCollapse } = props
+  const { open, onSearch, onClose, onCollapse, zIndexCount, setZIndexCount} = props
 
   /* clear field each time modal opens */
   const [term, setTerm] = useState('')
@@ -12,7 +12,7 @@ const SearchModal = forwardRef(function SearchModal(props, ref) {
   useEffect(() => { if (open) setTerm('') }, [open])
 
   useImperativeHandle(ref, () => ({
-    expand: () => searchRef.current?.expand?.(),
+    expand: (params) => searchRef.current?.expand?.(params),
     isCollapsed: () => searchRef.current?.isCollapsed?.(),
     setTargetPosition: (pos) => {
       searchRef.current?.setTargetPosition(pos)
@@ -39,6 +39,8 @@ const SearchModal = forwardRef(function SearchModal(props, ref) {
       initialPos={{ x: 200, y: 80 }}
       initialSize={{ width: 320, height: 160 }}
       onCollapse={onCollapse}
+      zIndexCount={zIndexCount}
+      setZIndexCount={setZIndexCount}
     >
       <div className="wm-content" style={{ justifyContent: 'center' }}>
         <input

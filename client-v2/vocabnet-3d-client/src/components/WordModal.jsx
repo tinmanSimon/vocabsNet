@@ -14,7 +14,9 @@ const WordModal = forwardRef(function WordModal(props, ref) {
     existingTags = [],
     debounceMs = 800,
     name = 'Word Note',
-    onCollapse
+    onCollapse,
+    zIndexCount, 
+    setZIndexCount
   } = props
 
   /* ───────────────── note + history (unchanged) ───────────────── */
@@ -27,7 +29,7 @@ const WordModal = forwardRef(function WordModal(props, ref) {
   const [ready, setReady] = useState(false)
 
   useImperativeHandle(ref, () => ({
-    expand: () => wordRef.current?.expand?.(),
+    expand: (params) => wordRef.current?.expand?.(params),
     isCollapsed: () => wordRef.current?.isCollapsed?.(),
     setTargetPosition: (pos) => {
       wordRef.current?.setTargetPosition(pos)
@@ -104,6 +106,8 @@ const WordModal = forwardRef(function WordModal(props, ref) {
       initialPos={{ x: 200, y: 80 }}
       initialSize={{ width: 330, height: 330 }}
       onCollapse={onCollapse}
+      zIndexCount={zIndexCount}
+      setZIndexCount={setZIndexCount}
     >
       {/* ── BODY that can scroll ──  */}
       <div className="wm-body">

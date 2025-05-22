@@ -17,7 +17,9 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
     initialism='B',
     initialPos = { x: 200, y: 100 },
     initialSize = { width: 500, height: 300 },
-    onCollapse     = null
+    onCollapse     = null,
+    zIndexCount,
+    setZIndexCount
   } = props
 
   const [collapsed, setCollapsed] = useState(false)
@@ -30,6 +32,7 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
   const [lastExpandPos, setLastExpandPos] = useState(null)
   const lastExpandRef = useRef(lastExpandPos)
   const collapsedRef = useRef(collapsed)
+  const zIndexRef = useRef(1)
   useEffect(() => {
     collapsedRef.current = collapsed
   }, [collapsed])
@@ -38,13 +41,17 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
     lastExpandRef.current = lastExpandPos
   }, [lastExpandPos])
 
-  const expand = () => {
-    setCollapsed(false)
-    collapsedRef.current = false
-    setShowContent(false)
-    setShowHeader(false)
-    setTimeout(() => {setShowContent(true)}, 800) 
-    setTimeout(() => {setShowHeader(true)}, 500) 
+  const expand = (params) => {
+    if (collapsedRef.current === true) {
+      setCollapsed(false)
+      collapsedRef.current = false
+      setShowContent(false)
+      setShowHeader(false)
+      setTimeout(() => {setShowContent(true)}, 800) 
+      setTimeout(() => {setShowHeader(true)}, 500) 
+      moveToTargetPos()
+    }
+    updateZIndex()
   }
 
   useImperativeHandle(ref, () => ({
@@ -65,7 +72,6 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
         return
       }
       expand()
-      moveToTargetPos()
     }
   }
 
@@ -83,9 +89,17 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
     }
   }
 
+  const updateZIndex = () => {
+    zIndexRef.current = zIndexCount + 1
+    setZIndexCount(prev => prev + 1)
+  }
+
   const {
     pos, size, startDrag, startResize, setPos, resizing
-  } = useDragResize({ minWidth, minHeight, initialPos, initialSize, onClick: onHeaderClick, moveToTargetPos })
+  } = useDragResize({ 
+    minWidth, minHeight, initialPos, initialSize, 
+    onClick: onHeaderClick, moveToTargetPos
+  })
   const interacting = resizing
   const posRef   = useRef(pos)
   const rAFRef   = useRef()
@@ -156,12 +170,17 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
         top: pos.y,
         width: size.width,
         height: size.height,
-        position: 'fixed'
+        position: 'fixed',
+        zIndex: zIndexRef.current
       }}
+      onClick={updateZIndex}
     >
       <div className={`modal-header
         ${!collapsed ? 'header-lock-height' : ''}`} 
-        onMouseDown={startDrag}
+        onMouseDown={(e)=>{
+          updateZIndex()
+          startDrag(e)
+        }}
       >
         { showHeader &&
           <span className={collapsed ? 'fade-out' : 'fade-in'}>
