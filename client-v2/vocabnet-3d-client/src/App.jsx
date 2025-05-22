@@ -316,10 +316,10 @@ function App() {
   }
 
   useEffect(() => {
-    if (matrixRef.current && leftnavRef.current) {
+    if (isAuthenticated && matrixRef.current && leftnavRef.current) {
       matrixRef.current.observeModal(leftnavRef);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   return (
       <div style={{ width: '100vw', height: '100vh' }}>
