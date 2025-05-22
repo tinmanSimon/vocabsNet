@@ -113,17 +113,22 @@ const LeftNav = forwardRef(function LeftNav(props, ref) {
       const delta_y = unit_y * delta
 
       posRef.current = { x: x + delta_x, y: y + delta_y }
-      if (leftnavRef.current) {
+      if ((delta_x*delta_x + delta_y*delta_y) > .16 && leftnavRef.current) {
         leftnavRef.current.style.transform = `translate3d(${posRef.current.x}px, ${posRef.current.y}px, 0)`
       }
       if (dist - delta < 1.0) {
         setPos(targetPosRef.current)
+        cancelAnimationFrame(rAFRef.current)
+        rAFRef.current = null  
         return
       }
       rAFRef.current = requestAnimationFrame(tick)
     }
     rAFRef.current = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(rAFRef.current)
+    return () => {
+      cancelAnimationFrame(rAFRef.current)
+      rAFRef.current = null  
+    }
   }, [targetPos])
 
   /* ----- menu items ----- */

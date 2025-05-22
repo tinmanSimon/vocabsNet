@@ -142,17 +142,22 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
       const delta_y = unit_y * delta
 
       posRef.current = { x: x + delta_x, y: y + delta_y }
-      if (frameRef.current) {
+      if ((delta_x*delta_x + delta_y*delta_y) > .16 && frameRef.current) {
         frameRef.current.style.transform = `translate3d(${posRef.current.x}px, ${posRef.current.y}px, 0)`
       }
       if (dist - delta < 1.0) {
         setPos(targetPos)
+        cancelAnimationFrame(rAFRef.current)
+        rAFRef.current = null  
         return
       }
       rAFRef.current = requestAnimationFrame(tick)
     }
     rAFRef.current = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(rAFRef.current)
+    return () => {
+      cancelAnimationFrame(rAFRef.current)
+      rAFRef.current = null  
+    }
   }, [targetPos])
 
   const handleClose = () => {

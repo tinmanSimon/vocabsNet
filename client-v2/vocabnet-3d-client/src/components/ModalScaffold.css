@@ -29,6 +29,7 @@
     resize:none;
     transition: width 1.5s ease, height 1.5s ease, border-radius 1.5s ease;
     perspective: 1px;
+    contain: layout paint;
   }
 
 .modal-frame.collapsed {
