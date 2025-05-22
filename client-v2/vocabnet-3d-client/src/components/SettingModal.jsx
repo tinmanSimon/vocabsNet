@@ -2,6 +2,7 @@ import { useState, useEffect, useImperativeHandle, useRef, forwardRef } from 're
 import './DataModal.css'
 import './ModalScaffold.css'
 import ModalScaffold from './ModalScaffold'
+import settingsIcon from '../assets/settings.png';
 
 /**
  * SettingsModal – now using the common ModalScaffold wrapper so it behaves
@@ -56,7 +57,7 @@ const SettingModal = forwardRef(function SettingModal (props, ref) {
       onSubmit={handleSubmit}
       submitButtonText="Save"
       collapseOnClose={true}
-      initialism={<img src="src/assets/settings.png" alt="settings" className="header-icon-img" />}
+      initialism={<img src={settingsIcon} alt="settings" className="header-icon-img" />}
       minWidth={360}
       minHeight={220}
       initialPos={{ x: 260, y: 120 }}

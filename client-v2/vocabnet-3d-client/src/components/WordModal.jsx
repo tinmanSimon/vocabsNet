@@ -3,6 +3,7 @@ import TagInput from './TagInput'
 import './WordModal.css'
 import './DataModal.css'
 import ModalScaffold from './ModalScaffold'
+import noteIcon from '../assets/note.png';
 
 const WordModal = forwardRef(function WordModal(props, ref) {
   const {
@@ -97,7 +98,7 @@ const WordModal = forwardRef(function WordModal(props, ref) {
       visible={open && ready}
       collapseOnClose={true}
       initialism = { <img
-        src="src/assets/note.png"
+        src={noteIcon}
         alt="icon"
         className="header-icon-img"
       />}

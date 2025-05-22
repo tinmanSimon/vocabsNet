@@ -3,6 +3,7 @@ import TagInput,{ TagChip } from './TagInput'
 import './WordModal.css'
 import './DataModal.css'
 import ModalScaffold from './ModalScaffold'
+import searchTagsIcon from '../assets/tags.png';
 
 const SearchTagsModal = forwardRef(function SearchTagsModal(props, ref) {
   const {
@@ -33,7 +34,7 @@ const SearchTagsModal = forwardRef(function SearchTagsModal(props, ref) {
             submitButtonText = "Search Tags"
             collapseOnClose={true}
             initialism = { <img
-                src="src/assets/tags.png"
+                src={searchTagsIcon}
                 alt="icon"
                 className="header-icon-img"
             />}

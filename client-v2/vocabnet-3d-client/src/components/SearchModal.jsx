@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useImperativeHandle, forwardRef } from 're
 import './WordModal.css'
 import './DataModal.css'
 import ModalScaffold from './ModalScaffold'
-import searchIcon from 'src/assets/search.svg';
+import searchIcon from '../assets/search.png';
 
 const SearchModal = forwardRef(function SearchModal(props, ref) {
   const { open, onSearch, onClose, onCollapse, zIndexCount, setZIndexCount} = props
