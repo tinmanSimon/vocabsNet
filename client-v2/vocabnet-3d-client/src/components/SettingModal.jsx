@@ -42,7 +42,7 @@ const SettingModal = forwardRef(function SettingModal (props, ref) {
 
   const handleSubmit = () => {
     onUpdate(local)
-    onClose()
+    scaffoldRef.current?.collapse?.()
   }
 
   /* ────────────────────────────────────────── render ──────────────────────────────────────── */
@@ -65,15 +65,25 @@ const SettingModal = forwardRef(function SettingModal (props, ref) {
       zIndexCount={zIndexCount}
       setZIndexCount={setZIndexCount}
     >
-      <div className="dm-content" style={{ gap: '12px' }}>
+      <div
+        className="dm-content"
+        style={{
+          display: 'flex',          // flex container
+          flexDirection: 'column',  // stack the two labels
+          justifyContent: 'center', // vertical-center inside the box
+          gap: '12px',
+          margin: '20px 20px'          // space on both left & right
+        }}
+      >
+
         <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          Show note on word click
           <input
             type="checkbox"
             name="showNoteOnClick"
             checked={local.showNoteOnClick}
             onChange={handleChange}
           />
-          Show note on word click
         </label>
 
         <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -88,6 +98,7 @@ const SettingModal = forwardRef(function SettingModal (props, ref) {
           />
         </label>
       </div>
+
     </ModalScaffold>
   )
 })

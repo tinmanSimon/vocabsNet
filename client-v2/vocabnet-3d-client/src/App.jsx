@@ -349,7 +349,14 @@ function App() {
                   ref={graphRef} 
                   orbitControlsRef={controlsRef}
                   onWordClick={handleWordClick}
-                  pauseInteraction={noteModal.open || searchModalOpen || searchTagsModal.open || openAddDataModal || openRemoveDataModal || settingModalOpen}
+                  pauseInteraction={
+                    (noteModal.open && !wordRef.current.isCollapsed()) ||
+                    (searchModalOpen && !searchRef.current.isCollapsed()) ||
+                    (searchTagsModal.open && !searchTagsRef.current.isCollapsed()) ||
+                    (openAddDataModal && !addDataRef.current.isCollapsed()) ||
+                    (openRemoveDataModal && !removeDataRef.current.isCollapsed()) ||
+                    (settingModalOpen && !settingRef.current.isCollapsed())
+                  }
                 />
               }
               <OrbitControls ref={controlsRef}/>
