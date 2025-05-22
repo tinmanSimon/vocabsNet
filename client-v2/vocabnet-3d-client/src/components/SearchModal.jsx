@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useImperativeHandle, forwardRef } from 're
 import './WordModal.css'
 import './DataModal.css'
 import ModalScaffold from './ModalScaffold'
+import searchIcon from 'src/assets/search.svg';
 
 const SearchModal = forwardRef(function SearchModal(props, ref) {
   const { open, onSearch, onClose, onCollapse, zIndexCount, setZIndexCount} = props
@@ -29,7 +30,7 @@ const SearchModal = forwardRef(function SearchModal(props, ref) {
       submitButtonText = "Search"
       collapseOnClose={true}
       initialism = { <img
-        src="../assets/search.png"
+        src={searchIcon}
         alt="icon"
         className="header-icon-img"
       />}
