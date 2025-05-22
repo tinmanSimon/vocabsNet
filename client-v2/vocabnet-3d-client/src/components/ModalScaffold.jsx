@@ -196,6 +196,14 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
             <span className={`remove ${collapsed ? 'fade-in' : 'fade-out'}`} onClick={handleClose}>✕</span>
           </div>
         }
+
+        {['n', 'ne', 'nw'].map(dir => (
+          <div
+            key={dir}
+            className={`resize-handle resize-handle-${dir}`}
+            onMouseDown={(e) => startResize(e, dir)}
+          />
+        ))}
       </div>
 
       {!collapsed && showContent && (
@@ -209,7 +217,7 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
             <button className="btn-cancel" onClick={handleClose}>Cancel</button>
           </div>
 
-          {['n', 'e', 's', 'w', 'ne', 'se', 'sw', 'nw'].map(dir => (
+          {['e', 's', 'w', 'se', 'sw'].map(dir => (
             <div
               key={dir}
               className={`resize-handle resize-handle-${dir}`}
