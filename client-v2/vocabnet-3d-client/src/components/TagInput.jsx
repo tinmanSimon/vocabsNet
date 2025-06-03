@@ -50,9 +50,8 @@ export default function TagInput({
     const [hover,setHover]=useState(-1)
     const [focused, setFocused] = useState(false)
     const dragFrom=useRef(null)
-
-    const listRef = useRef(null)
     const itemRefs = useRef([])
+    const keyboardInputDelay = useRef(0)
 
     const addTag=useCallback(t=>{
         t=t.trim();if(!t||value.includes(t))return
@@ -68,14 +67,26 @@ export default function TagInput({
             e.preventDefault()
             setHover(i => {
               const next = Math.min(i + 1, filtered.length - 1)
-              setTimeout(() => itemRefs.current[next]?.scrollIntoView({ block: 'nearest' }), 0)
+              setTimeout(() => {
+                keyboardInputDelay.current += 1
+                setTimeout(() => {
+                  keyboardInputDelay.current -= 1
+                }, 300)
+                itemRefs.current[next]?.scrollIntoView({ block: 'nearest' })
+              }, 0)
               return next
             })
           } else if (e.key === 'ArrowUp') {
             e.preventDefault()
             setHover(i => {
               const next = Math.max(i - 1, 0)
-              setTimeout(() => itemRefs.current[next]?.scrollIntoView({ block: 'nearest' }), 0)
+              setTimeout(() => {
+                keyboardInputDelay.current += 1
+                setTimeout(() => {
+                  keyboardInputDelay.current -= 1
+                }, 300)
+                itemRefs.current[next]?.scrollIntoView({ block: 'nearest' })
+              }, 0)
               return next
             })
           } else if (e.key === 'Enter') {
@@ -126,8 +137,11 @@ export default function TagInput({
                         key={s}
                         ref={el => itemRefs.current[i] = el}
                         className={'wm-suggest-item' + (i === hover ? ' hover' : '')}
-                        onMouseEnter={() => setHover(i)}
-                        onMouseLeave={() => setHover(-1)}
+                        onMouseEnter={() => {
+                          if (keyboardInputDelay.current === 0) {
+                            setHover(i)
+                          }
+                        }}
                         onMouseDown={e => { e.preventDefault(); addTag(s) }}
                     >
                         {s}

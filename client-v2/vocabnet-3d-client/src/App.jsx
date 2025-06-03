@@ -235,7 +235,7 @@ function App() {
         return Array.from(tagSet)
       })
     } finally {
-      wordRef.current?.collapse()
+      console.log(noteModal.name, "updated")
     }
   }
 

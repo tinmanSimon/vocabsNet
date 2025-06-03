@@ -104,12 +104,14 @@
   background: #fff;
   border: 1px solid #ccc;
   border-radius: 4px;
-  max-height: 96px;
+  max-height: 86px;
   overflow: auto;
   margin-top: 4px;
+  z-index: 100;
+  scroll-behavior: smooth;
 }
 .wm-suggest-item{padding:4px 8px;cursor:pointer;font-size:14px;}
-.wm-suggest-item.hover,.wm-suggest-item:hover{
+.wm-suggest-item.hover {
   background:#2c3e50;color:#fff;
 }
 
