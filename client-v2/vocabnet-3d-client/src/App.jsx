@@ -194,7 +194,11 @@ function App() {
       graphRef.current?.applyPayload(createdData); 
       setExistingEdges(prev => {
         const edgeSet = new Set(prev)
-        for (const edge of createdData.edges) edgeSet.add(edge.edge_name)
+        if (Array.isArray(createdData.edges)) {
+          for (const edge of createdData.edges) {
+            edgeSet.add(edge.edge_name);
+          }
+        }
         return Array.from(edgeSet)
       })
     } else if (data.mode === "remove-data") {
