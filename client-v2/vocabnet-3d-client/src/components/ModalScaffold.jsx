@@ -203,6 +203,10 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
           updateZIndex()
           startDrag(e)
         }}
+        onTouchStart={(e)=>{
+          updateZIndex()
+          startDrag(e)
+        }}
       >
         { showHeader &&
           <span className={collapsed ? 'fade-out' : 'fade-in'}>
@@ -224,6 +228,7 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
             key={dir}
             className={`resize-handle resize-handle-${dir}`}
             onMouseDown={(e) => startResize(e, dir)}
+            onTouchStart={(e) => startResize(e, dir)}
           />
         ))}
       </div>
@@ -244,6 +249,7 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
               key={dir}
               className={`resize-handle resize-handle-${dir}`}
               onMouseDown={(e) => startResize(e, dir)}
+              onTouchStart={(e) => startResize(e, dir)}
             />
           ))}
         </div>
