@@ -46,27 +46,58 @@ const LeftNav = forwardRef(function LeftNav(props, ref) {
   }))
 
   const dragRef = useRef(null)
+
+  const getPoint = (e) => {
+    if (e.touches?.length)       return e.touches[0]
+    if (e.changedTouches?.length) return e.changedTouches[0]
+    return e 
+  }
+
+  const lockPageScroll = () => {
+    document.body.style.overscrollBehavior = 'contain'; // blocks pull-to-refresh
+    document.body.style.touchAction        = 'none';    // blocks pan/zoom
+  };
+
+  const unlockPageScroll = () => {
+    document.body.style.overscrollBehavior = '';
+    document.body.style.touchAction        = '';
+  };
+
   const startDrag = e => {
-    dragRef.current = { x: e.clientX, y: e.clientY, origin: pos }
+    lockPageScroll()
+    const isTouchStart = e.type === 'touchstart'
+    if (!isTouchStart) e.preventDefault();
+    const { clientX, clientY } = getPoint(e)
+    dragRef.current = { x: clientX, y: clientY, origin: pos }
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
+    window.addEventListener('touchmove',   onMove, { passive:false })
+    window.addEventListener('touchend',    onUp)
+    window.addEventListener('touchcancel', onUp)
   }
   const onMove = e => {
+    e.preventDefault()
     const { x, y, origin } = dragRef.current
-    setPos({ x: origin.x + e.clientX - x, y: origin.y + e.clientY - y })
+    const { clientX, clientY } = getPoint(e)
+    setPos({ x: origin.x + clientX - x, y: origin.y + clientY - y })
   }
   const onUp = e => {
     window.removeEventListener('mousemove', onMove)
     window.removeEventListener('mouseup', onUp)
+    window.removeEventListener('touchmove',   onMove)
+    window.removeEventListener('touchend',    onUp)
+    window.removeEventListener('touchcancel', onUp)
+    unlockPageScroll()
 
     if (!open) {
+      const { clientX, clientY } = getPoint(e)
       const moved = Math.hypot(
-        e.clientX - dragRef.current.x,
-        e.clientY - dragRef.current.y
+        clientX - dragRef.current.x,
+        clientY - dragRef.current.y
       ) > 3
       const targetDist = Math.hypot(
-        e.clientX - targetPosRef.current.x,
-        e.clientY - targetPosRef.current.y
+        clientX - targetPosRef.current.x,
+        clientY - targetPosRef.current.y
       )
       if (!moved) {
         setOpen(true)
@@ -167,6 +198,7 @@ const LeftNav = forwardRef(function LeftNav(props, ref) {
       <div
         className="ln-handle"
         onMouseDown={startDrag}
+        onTouchStart={startDrag}
       >
         {!open && '☰'}
         {open && 'Menu'}

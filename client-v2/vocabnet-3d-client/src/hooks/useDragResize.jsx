@@ -18,8 +18,8 @@ export default function useDragResize({
   const dragRef = useRef(null)
 
   const lockPageScroll = () => {
-    document.body.style.overscrollBehavior = 'contain'; // blocks pull-to-refresh
-    document.body.style.touchAction        = 'none';    // blocks pan/zoom
+    document.body.style.overscrollBehavior = 'contain'
+    document.body.style.touchAction        = 'none'
   };
 
   const unlockPageScroll = () => {
@@ -34,7 +34,8 @@ export default function useDragResize({
   }
 
   const startDrag = useCallback((e) => {
-    e.preventDefault();
+    const isTouchStart = e.type === 'touchstart'
+    if (!isTouchStart) e.preventDefault();
     lockPageScroll();
     const { clientX, clientY } = getPoint(e)
     dragRef.current = {
@@ -52,7 +53,7 @@ export default function useDragResize({
   }, [pos])
 
   const moveDrag = useCallback((e) => {
-    e.preventDefault();
+    e.preventDefault()
     const ref = dragRef.current
     const { clientX, clientY } = getPoint(e)
     const dx = clientX - ref.sx
