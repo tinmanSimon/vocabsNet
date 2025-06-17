@@ -47,7 +47,7 @@ function App() {
   const [searchTagsModal,setSearchTagsModal]=useState({open:false,results:[]})
   const matrixRef = useRef(null);
   const leftnavRef = useRef(null);
-  const [zIndexCount, setZIndexCount] = useState(0) 
+  const [zIndexCount, setZIndexCount] = useState(2) 
   const settingRef = useRef(null)
   const [settingModalOpen, setSettingModalOpen] = useState(false)
 
@@ -212,6 +212,7 @@ function App() {
     if (!settingsRef.current.showNoteOnClick) return 
     const existingNote = noteDictRef.current[name] || ''
     setNoteModal({ open:true, name, note: existingNote })
+    wordRef.current.setZIndex(zIndexCount + 1)
     setZIndexCount(prev => prev + 1)
   }
 

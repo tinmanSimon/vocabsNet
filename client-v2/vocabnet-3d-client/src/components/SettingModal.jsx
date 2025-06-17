@@ -46,6 +46,20 @@ const SettingModal = forwardRef(function SettingModal (props, ref) {
     scaffoldRef.current?.collapse?.()
   }
 
+  const getInitSize = () => {
+    return { width: 360, height: 220 }
+  }
+
+  const getModalInitPos = () => {
+    const { width, height } = getInitSize()
+    const centerX = Math.floor(window.innerWidth / 2 - width / 2) 
+    const centerY = Math.floor(window.innerHeight / 2 - height / 2) 
+    return {
+      x: Math.min(centerX, 200),
+      y: Math.min(centerY, 80),
+    }
+  }
+
   /* ────────────────────────────────────────── render ──────────────────────────────────────── */
   return (
     <ModalScaffold
@@ -60,8 +74,8 @@ const SettingModal = forwardRef(function SettingModal (props, ref) {
       initialism={<img src={settingsIcon} alt="settings" className="header-icon-img" />}
       minWidth={360}
       minHeight={220}
-      initialPos={{ x: 260, y: 120 }}
-      initialSize={{ width: 360, height: 220 }}
+      initialPos={getModalInitPos()}
+      initialSize={getInitSize()}
       onCollapse={onCollapse}
       zIndexCount={zIndexCount}
       setZIndexCount={setZIndexCount}

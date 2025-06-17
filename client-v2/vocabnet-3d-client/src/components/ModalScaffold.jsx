@@ -63,7 +63,8 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
       setMatrixPos(pos)
       matrixPosRef.current = pos
     },
-    collapse: () => {handleClose()}
+    collapse: () => {handleClose()},
+    setZIndex: (num) => {updateZIndex(num)}
   }))
 
   const onHeaderClick = (e) => {
@@ -92,7 +93,7 @@ const ModalScaffold = forwardRef(function ModalScaffold(props, ref) {
   }
 
   const updateZIndex = () => {
-    zIndexRef.current = zIndexCount + 1
+    zIndexRef.current = (collapsedRef.current === true) ? 1 : zIndexCount + 1
     setZIndexCount(prev => prev + 1)
   }
 

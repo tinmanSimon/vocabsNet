@@ -1,6 +1,6 @@
 /* ------ container box morphs ------ */
 .ln-box {
-    position:fixed; z-index:9999; user-select:none;
+    position:fixed; z-index:2; user-select:none;
     transition: width 1.5s ease, height 1.5s ease, border-radius 1.5s ease;
     border-radius:8px;            /* fully rounded when closed */
     box-shadow:0 2px 6px rgba(0,0,0,.25);

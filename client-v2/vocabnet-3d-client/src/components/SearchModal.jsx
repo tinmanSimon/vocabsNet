@@ -20,6 +20,20 @@ const SearchModal = forwardRef(function SearchModal(props, ref) {
     }
   }))
 
+  const getInitSize = () => {
+    return { width: 320, height: 160 }
+  }
+
+  const getModalInitPos = () => {
+    const { width, height } = getInitSize()
+    const centerX = Math.floor(window.innerWidth / 2 - width / 2) 
+    const centerY = Math.floor(window.innerHeight / 2 - height / 2) 
+    return {
+      x: Math.min(centerX, 200),
+      y: Math.min(centerY, 80),
+    }
+  }
+
   return (
     <ModalScaffold
       ref={searchRef}
@@ -37,8 +51,8 @@ const SearchModal = forwardRef(function SearchModal(props, ref) {
       visible={open}
       minWidth={320}
       minHeight={160}
-      initialPos={{ x: 200, y: 80 }}
-      initialSize={{ width: 320, height: 160 }}
+      initialPos={getModalInitPos()}
+      initialSize={getInitSize()}
       onCollapse={onCollapse}
       zIndexCount={zIndexCount}
       setZIndexCount={setZIndexCount}

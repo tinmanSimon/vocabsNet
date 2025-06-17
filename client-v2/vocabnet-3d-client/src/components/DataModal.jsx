@@ -69,6 +69,20 @@ const DataModal = forwardRef(function DataModal(props, ref) {
     initWordsEdges()
   }
 
+  const getInitSize = () => {
+    return { width: 560, height: 240 }
+  }
+
+  const getModalInitPos = () => {
+    const { width, height } = getInitSize()
+    const centerX = Math.floor(window.innerWidth / 2 - width / 2) 
+    const centerY = Math.floor(window.innerHeight / 2 - height / 2) 
+    return {
+      x: Math.min(centerX, 200),
+      y: Math.min(centerY, 80),
+    }
+  }
+
   return (
     <ModalScaffold
       ref={scaffoldRef}
@@ -82,8 +96,8 @@ const DataModal = forwardRef(function DataModal(props, ref) {
       collapseOnClose={true}
       minWidth={560}
       minHeight={240}
-      initialPos={{ x: 200, y: 80 }}
-      initialSize={{ width: 560, height: 240 }}
+      initialPos={getModalInitPos()}
+      initialSize={getInitSize()}
       onCollapse={onCollapse}
       zIndexCount={zIndexCount}
       setZIndexCount={setZIndexCount}

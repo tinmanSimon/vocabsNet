@@ -35,7 +35,8 @@ const WordModal = forwardRef(function WordModal(props, ref) {
     setTargetPosition: (pos) => {
       wordRef.current?.setTargetPosition(pos)
     },
-    collapse: () =>{wordRef.current?.collapse?.()}
+    collapse: () => {wordRef.current?.collapse?.()},
+    setZIndex: (num) => {wordRef.current?.setZIndex(num)}
   }))
 
   useEffect(() => {
@@ -88,6 +89,20 @@ const WordModal = forwardRef(function WordModal(props, ref) {
 
   const [tags, setTags] = useState(initialTags)
 
+  const getInitSize = () => {
+    return { width: 330, height: 330 }
+  }
+
+  const getModalInitPos = () => {
+    const { width, height } = getInitSize()
+    const centerX = Math.floor(window.innerWidth / 2 - width / 2) 
+    const centerY = Math.floor(window.innerHeight / 2 - height / 2) 
+    return {
+      x: Math.min(centerX, 200),
+      y: Math.min(centerY, 80),
+    }
+  }
+
   return (
     <ModalScaffold
       ref={wordRef}
@@ -104,8 +119,8 @@ const WordModal = forwardRef(function WordModal(props, ref) {
       />}
       minWidth={330}
       minHeight={330}
-      initialPos={{ x: 200, y: 80 }}
-      initialSize={{ width: 330, height: 330 }}
+      initialPos={getModalInitPos()}
+      initialSize={getInitSize()}
       onCollapse={onCollapse}
       zIndexCount={zIndexCount}
       setZIndexCount={setZIndexCount}
